@@ -167,7 +167,11 @@
       "prompts": {
         "action": "What would you like to do?",
         "review_type": "Select review type:",
-        "comment": "Enter your review comment:"
+        "comment": {
+          "approve": "Enter approval comment:",
+          "request_changes": "Please describe the required changes in detail:",
+          "comment": "Enter general comment:"
+        }
       },
       "actions": {
         "view": "View PR content",
@@ -201,10 +205,13 @@
         "unknown": "Unknown"
       },
       "error": {
+        "file_content_failed": "Failed to get content for file: {{file}}",
+        "files_failed": "Failed to get changed files",
+        "read_file_failed": "Failed to read file: {{file}}",
         "checkout_failed": "Error occurred while checking out branch: {{error}}",
         "browser_open_failed": "Error occurred while opening PR in browser: {{error}}",
-        "read_file_failed": "Failed to read file: {{file}}",
-        "files_failed": "Failed to get changed files"
+        "submit_failed": "Failed to submit review: {{error}}",
+        "comment_required": "Review comment is required"
       },
       "warning": {
         "no_changes": "No changed files found to review"

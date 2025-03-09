@@ -11,3 +11,4 @@ src/**/__tests__/**
 !.gitignore
 !tsconfig.json
 !package.json
+!README.md

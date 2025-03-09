@@ -1,40 +1,73 @@
 import { t } from "../../i18n/index.js";
 import { loadConfig } from "../../core/config.js";
-import { getPullRequest, getPullRequestStatus } from "../../core/github.js";
+import {
+  getPullRequest,
+  getPullRequestStatus,
+  getOctokit,
+} from "../../core/github.js";
 import { getCurrentRepoInfo } from "../../utils/git.js";
 import { AIFeatures } from "../../core/ai-features.js";
 import inquirer from "inquirer";
 import { exec } from "child_process";
 import { promisify } from "util";
 import { log } from "../../utils/logger.js";
-import { readFile } from "fs/promises";
 
 const execAsync = promisify(exec);
 
-async function getFileContent(filePath: string): Promise<string> {
-  try {
-    return await readFile(filePath, "utf-8");
-  } catch (error) {
-    log.error(t("commands.review.error.read_file_failed", { file: filePath }));
-    return "";
-  }
-}
-
 async function getChangedFiles(
+  owner: string,
+  repo: string,
   prNumber: number,
 ): Promise<Array<{ path: string; content: string }>> {
   try {
-    const { stdout } = await execAsync(`git diff --name-only HEAD~1 HEAD`);
-    const files = stdout.split("\n").filter(Boolean);
+    // GitHub API를 사용하여 PR의 변경된 파일 목록을 가져옵니다
+    const client = await getOctokit();
+    const { data: pr } = await client.rest.pulls.get({
+      owner,
+      repo,
+      pull_number: prNumber,
+    });
 
+    const { data: files } = await client.rest.pulls.listFiles({
+      owner,
+      repo,
+      pull_number: prNumber,
+    });
+
+    // 각 파일의 내용을 가져옵니다
     const fileContents = await Promise.all(
-      files.map(async (path) => ({
-        path,
-        content: await getFileContent(path),
-      })),
+      files.map(async (file) => {
+        try {
+          // 파일이 삭제된 경우 제외
+          if (file.status === "removed") {
+            return null;
+          }
+
+          // GitHub API를 통해 파일 내용을 가져옵니다
+          const { data: blob } = await client.rest.git.getBlob({
+            owner,
+            repo,
+            file_sha: file.sha,
+          });
+
+          return {
+            path: file.filename,
+            content: Buffer.from(blob.content, "base64").toString("utf-8"),
+          };
+        } catch (error) {
+          log.warn(
+            t("commands.review.error.file_content_failed", {
+              file: file.filename,
+            }),
+          );
+          return null;
+        }
+      }),
     );
 
-    return fileContents;
+    return fileContents.filter(
+      (file): file is { path: string; content: string } => file !== null,
+    );
   } catch (error) {
     log.error(t("commands.review.error.files_failed"));
     return [];
@@ -135,7 +168,11 @@ export async function reviewCommand(prNumber: string): Promise<void> {
 
         log.info(t("commands.review.info.ai_review_start"));
         const ai = new AIFeatures();
-        const files = await getChangedFiles(pr.number);
+        const files = await getChangedFiles(
+          repoInfo.owner,
+          repoInfo.repo,
+          pr.number,
+        );
 
         if (files.length === 0) {
           log.warn(t("commands.review.warning.no_changes"));
@@ -176,10 +213,28 @@ export async function reviewCommand(prNumber: string): Promise<void> {
           {
             type: "input",
             name: "comment",
-            message: t("commands.review.prompts.comment"),
+            message: (answers) => {
+              const type = answers.reviewType.toLowerCase();
+              return t(`commands.review.prompts.comment.${type}`);
+            },
+            validate: (value: string) =>
+              value.length > 0 || t("commands.review.error.comment_required"),
           },
         ]);
-        // TODO: Implement review submission
+
+        try {
+          const client = await getOctokit();
+          await client.rest.pulls.createReview({
+            owner: repoInfo.owner,
+            repo: repoInfo.repo,
+            pull_number: pr.number,
+            event: reviewType,
+            body: comment,
+          });
+          log.info(t("common.success.review_submitted"));
+        } catch (error) {
+          log.error(t("commands.review.error.submit_failed"), error);
+        }
         break;
 
       case "checkout":
@@ -216,7 +271,7 @@ export async function reviewCommand(prNumber: string): Promise<void> {
         break;
     }
   } catch (error) {
-    log.error(t("common.error.unknown"), String(error));
+    log.error(t("common.error.unknown"), error);
     process.exit(1);
   }
 }
