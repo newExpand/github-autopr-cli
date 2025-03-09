@@ -518,7 +518,7 @@
         "analyze": "Please review the following code and suggest improvements:\n{{files}}\n\nPlease review the following items:\n1. Code quality\n2. Performance\n3. Security\n4. Test coverage\n5. Documentation"
       },
       "conflict_resolution": {
-        "analyze": "Please suggest how to resolve the following Git conflicts:\n{{conflicts}}"
+        "analyze": "Please analyze the following merge conflicts and suggest resolutions:\n\n{{conflicts}}\n\nPR Context:{{context}}\n\nFor each conflict:\n1. Explain the nature of the conflict\n2. Suggest the best resolution approach\n3. Provide specific guidance on which changes to keep\n4. Consider the context and impact of the changes\n\nWrite EVERYTHING in English."
       },
       "commit_message": {
         "analyze": "Please analyze the following changes and write a commit message:\nCurrent message: {{message}}\nChanges: {{diff}}\n\nPlease write ONLY the commit message in the following format. Do not include any additional explanations or formatting:\n\ntype(scope): subject\n\nbody\n- change 1\n- change 2\n\nActual example:\nfeat(auth): add login functionality\n\nImplement user authentication system\n- Add JWT-based authentication\n- Create login API endpoint\n- Implement authentication middleware"
