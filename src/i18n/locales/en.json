@@ -162,12 +162,17 @@
         "status": "Status: {{status}}",
         "merge_status": "Merge Status: {{status}}",
         "url": "URL: {{url}}",
-        "ai_review_start": "Starting AI code review..."
+        "ai_review_start": "Starting AI code review...",
+        "file_stats": "Changed files: {{total}} (processed: {{processed}}, +{{additions}}/-{{deletions}}, total changes: {{changes}}) from {{base_branch}} to {{head_branch}}"
       },
       "prompts": {
         "action": "What would you like to do?",
         "review_type": "Select review type:",
-        "comment": "Enter your review comment:"
+        "comment": {
+          "approve": "Enter approval comment:",
+          "request_changes": "Please describe the required changes in detail:",
+          "comment": "Enter general comment:"
+        }
       },
       "actions": {
         "view": "View PR content",
@@ -201,13 +206,18 @@
         "unknown": "Unknown"
       },
       "error": {
+        "file_content_failed": "Failed to get content for file: {{file}}",
+        "files_failed": "Failed to get changed files",
+        "read_file_failed": "Failed to read file: {{file}}",
         "checkout_failed": "Error occurred while checking out branch: {{error}}",
         "browser_open_failed": "Error occurred while opening PR in browser: {{error}}",
-        "read_file_failed": "Failed to read file: {{file}}",
-        "files_failed": "Failed to get changed files"
+        "submit_failed": "Failed to submit review: {{error}}",
+        "comment_required": "Review comment is required",
+        "pr_closed": "Cannot review a closed or merged PR"
       },
       "warning": {
-        "no_changes": "No changed files found to review"
+        "no_changes": "No changed files found to review",
+        "file_too_large": "File {{file}} is too large or binary, skipping"
       }
     },
     "update": {
@@ -439,6 +449,49 @@
       "commit_message": {
         "analyze": "Please analyze the following changes and write a commit message:\nCurrent message: {{message}}\nChanges: {{diff}}\n\nPlease write ONLY the commit message in the following format. Do not include any additional explanations or formatting:\n\ntype(scope): subject\n\nbody\n- change 1\n- change 2\n\nActual example:\nfeat(auth): add login functionality\n\nImplement user authentication system\n- Add JWT-based authentication\n- Create login API endpoint\n- Implement authentication middleware"
       }
+    },
+    "reviewer_group": {
+      "description": "Manage reviewer groups",
+      "add": {
+        "description": "Add a new reviewer group",
+        "argument": {
+          "name": "Name of the reviewer group"
+        },
+        "option": {
+          "members": "Comma-separated list of GitHub usernames",
+          "strategy": "Rotation strategy (round-robin, random, least-busy)"
+        },
+        "success": "Reviewer group '{{name}}' has been added successfully"
+      },
+      "remove": {
+        "description": "Remove a reviewer group",
+        "argument": {
+          "name": "Name of the reviewer group to remove"
+        },
+        "success": "Reviewer group '{{name}}' has been removed successfully",
+        "error": {
+          "not_found": "Reviewer group '{{name}}' not found"
+        }
+      },
+      "update": {
+        "description": "Update a reviewer group",
+        "argument": {
+          "name": "Name of the reviewer group to update"
+        },
+        "option": {
+          "members": "Comma-separated list of GitHub usernames",
+          "strategy": "Rotation strategy (round-robin, random, least-busy)"
+        },
+        "success": "Reviewer group '{{name}}' has been updated successfully",
+        "error": {
+          "not_found": "Reviewer group '{{name}}' not found"
+        }
+      },
+      "list": {
+        "description": "List all reviewer groups",
+        "no_groups": "No reviewer groups found",
+        "group_info": "Group: {{name}}\n  Members: {{members}}\n  Strategy: {{strategy}}"
+      }
     }
   },
   "ai": {
@@ -475,7 +528,7 @@
         "analyze": "Please review the following code and suggest improvements:\n{{files}}\n\nPlease review the following items:\n1. Code quality\n2. Performance\n3. Security\n4. Test coverage\n5. Documentation"
       },
       "conflict_resolution": {
-        "analyze": "Please suggest how to resolve the following Git conflicts:\n{{conflicts}}"
+        "analyze": "Please analyze the following merge conflicts and suggest resolutions:\n\n{{conflicts}}\n\nPR Context:{{context}}\n\nFor each conflict:\n1. Explain the nature of the conflict\n2. Suggest the best resolution approach\n3. Provide specific guidance on which changes to keep\n4. Consider the context and impact of the changes\n\nWrite EVERYTHING in English."
       },
       "commit_message": {
         "analyze": "Please analyze the following changes and write a commit message:\nCurrent message: {{message}}\nChanges: {{diff}}\n\nPlease write ONLY the commit message in the following format. Do not include any additional explanations or formatting:\n\ntype(scope): subject\n\nbody\n- change 1\n- change 2\n\nActual example:\nfeat(auth): add login functionality\n\nImplement user authentication system\n- Add JWT-based authentication\n- Create login API endpoint\n- Implement authentication middleware"

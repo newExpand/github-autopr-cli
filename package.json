@@ -1,5 +1,5 @@
 {
-  "name": "autopr-cli",
+  "name": "github-autopr-cli",
   "version": "0.1.0",
   "description": "GitHub PR 자동화 CLI 도구",
   "type": "module",

@@ -1,8 +1,6 @@
 import { AIManager } from "./ai-manager.js";
 import { log } from "../utils/logger.js";
 import { t } from "../i18n/index.js";
-import OpenAI from "openai";
-import { ChatCompletionCreateParams } from "openai/resources/chat/completions";
 import type { AIProvider } from "./ai-manager.js";
 import dotenv from "dotenv";
 
@@ -50,26 +48,49 @@ export class AIFeatures {
     let currentFiles: string[] = [];
     let currentDiff = "";
     const diffLines = diffContent.split("\n");
+    let currentTokenCount = 0;
 
     for (const line of diffLines) {
       if (line.startsWith("diff --git")) {
         // 새로운 파일의 diff 시작
-        if (
-          currentDiff &&
-          this.getApproximateTokenCount(currentDiff) > this.MAX_CHUNK_TOKENS
-        ) {
+        if (currentTokenCount > this.MAX_CHUNK_TOKENS) {
+          // 현재 청크가 토큰 제한을 초과하면 새로운 청크 시작
+          if (currentDiff) {
+            chunks.push({
+              files: [...currentFiles],
+              diff: currentDiff,
+            });
+            currentFiles = [];
+            currentDiff = "";
+            currentTokenCount = 0;
+          }
+        }
+
+        // 파일 경로 추출 및 현재 파일 목록에 추가
+        const filePath = line.split(" ")[2].substring(2); // b/파일경로 에서 파일경로만 추출
+        if (files.includes(filePath)) {
+          currentFiles.push(filePath);
+        }
+      }
+
+      // 현재 라인의 토큰 수 추정
+      const lineTokens = this.getApproximateTokenCount(line);
+
+      // 토큰 제한을 초과하면 새로운 청크 시작
+      if (currentTokenCount + lineTokens > this.MAX_CHUNK_TOKENS) {
+        if (currentDiff) {
           chunks.push({
             files: [...currentFiles],
             diff: currentDiff,
           });
           currentFiles = [];
           currentDiff = "";
+          currentTokenCount = 0;
         }
-        const filePath = line.split(" ")[2].substring(2); // b/파일경로 에서 파일경로만 추출
-        currentFiles.push(filePath);
       }
 
       currentDiff += line + "\n";
+      currentTokenCount += lineTokens;
     }
 
     // 마지막 청크 추가
@@ -195,6 +216,16 @@ export class AIFeatures {
 
   async suggestConflictResolution(
     conflicts: Array<{ file: string; conflict: string }>,
+    prContext?: {
+      title: string;
+      description: string;
+      changedFiles: Array<{
+        filename: string;
+        additions: number;
+        deletions: number;
+        changes: number;
+      }>;
+    },
   ): Promise<string> {
     const conflictsStr = conflicts
       .map((c) => {
@@ -206,8 +237,18 @@ export class AIFeatures {
       })
       .join("\n\n");
 
+    const contextStr = prContext
+      ? `\nPR Title: ${prContext.title}\nPR Description: ${prContext.description}\nChanged Files:\n${prContext.changedFiles
+          .map(
+            (f) =>
+              `- ${f.filename} (additions: ${f.additions}, deletions: ${f.deletions}, changes: ${f.changes})`,
+          )
+          .join("\n")}`
+      : "";
+
     const prompt = t("ai.prompts.conflict_resolution.analyze", {
       conflicts: conflictsStr,
+      context: contextStr,
     });
 
     try {

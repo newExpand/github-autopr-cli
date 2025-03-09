@@ -164,13 +164,17 @@
         "status": "상태: {{status}}",
         "merge_status": "병합 상태: {{status}}",
         "url": "URL: {{url}}",
-        "ai_review_start": "AI 코드 리뷰를 시작합니다..."
+        "ai_review_start": "AI 코드 리뷰를 시작합니다...",
+        "file_stats": "변경된 파일: {{total}}개 (처리됨: {{processed}}개, +{{additions}}/-{{deletions}}, 총 변경: {{changes}}) {{base_branch}}에서 {{head_branch}}로"
       },
       "prompts": {
         "action": "어떤 작업을 하시겠습니까?",
         "review_type": "리뷰 타입을 선택하세요:",
-        "comment": "리뷰 코멘트를 입력하세요:",
-        "ai_review": "AI 코드 리뷰"
+        "comment": {
+          "approve": "승인 코멘트를 입력하세요:",
+          "request_changes": "수정이 필요한 내용을 자세히 설명해주세요:",
+          "comment": "일반 코멘트를 입력하세요:"
+        }
       },
       "actions": {
         "view": "PR 내용 보기",
@@ -191,9 +195,9 @@
         "comment": "코멘트"
       },
       "success": {
-        "checkout": "브랜치가 성공적으로 체크아웃되었습니다.",
-        "opened": "GitHub PR 페이지가 브라우저에서 열렸습니다.",
-        "cancelled": "작업이 취소되었습니다."
+        "checkout": "브랜치가 성공적으로 체크아웃되었습니다",
+        "opened": "GitHub PR 페이지가 브라우저에서 열렸습니다",
+        "cancelled": "작업이 취소되었습니다"
       },
       "status": {
         "draft": "초안",
@@ -204,10 +208,18 @@
         "unknown": "알 수 없음"
       },
       "error": {
+        "file_content_failed": "파일 내용을 가져오는데 실패했습니다: {{file}}",
+        "files_failed": "변경된 파일 목록을 가져오는데 실패했습니다",
+        "read_file_failed": "파일 읽기 실패: {{file}}",
         "checkout_failed": "브랜치 체크아웃 중 오류가 발생했습니다: {{error}}",
         "browser_open_failed": "브라우저에서 PR을 여는 중 오류가 발생했습니다: {{error}}",
-        "read_file_failed": "파일 읽기 실패: {{file}}",
-        "files_failed": "변경된 파일 목록을 가져오는데 실패했습니다"
+        "submit_failed": "리뷰 제출에 실패했습니다: {{error}}",
+        "comment_required": "리뷰 코멘트를 입력해주세요",
+        "pr_closed": "닫히거나 병합된 PR은 리뷰할 수 없습니다"
+      },
+      "warning": {
+        "no_changes": "리뷰할 변경된 파일을 찾을 수 없습니다",
+        "file_too_large": "파일 {{file}}이(가) 너무 크거나 이진 파일이어서 건너뜁니다"
       }
     },
     "update": {
@@ -443,6 +455,49 @@
       "commit_message": {
         "analyze": "Please analyze the following changes and generate a commit message IN KOREAN:\nCurrent message: {{message}}\nChanges: {{diff}}\n\nPlease write the commit message in the following format. Do not include any additional explanations or formatting, just the commit message:\n\ntype(scope): Subject in Korean\n\nBody in Korean\n- Change 1\n- Change 2\n\nExample:\nfeat(인증): 로그인 기능 추가\n\n사용자 인증 시스템 구현\n- JWT 기반 인증 추가\n- 로그인 API 구현\n- 인증 미들웨어 추가\n\nImportant notes:\n1. Write everything in Korean except for this instruction\n2. Use conventional commit types (feat, fix, docs, etc)\n3. Keep the subject line concise and clear\n4. List actual changes from the diff in the body\n5. Do not make assumptions or guesses"
       }
+    },
+    "reviewer_group": {
+      "description": "리뷰어 그룹 관리",
+      "add": {
+        "description": "새로운 리뷰어 그룹 추가",
+        "argument": {
+          "name": "리뷰어 그룹 이름"
+        },
+        "option": {
+          "members": "GitHub 사용자명 목록 (쉼표로 구분)",
+          "strategy": "순환 전략 (round-robin, random, least-busy)"
+        },
+        "success": "리뷰어 그룹 '{{name}}'이(가) 성공적으로 추가되었습니다"
+      },
+      "remove": {
+        "description": "리뷰어 그룹 제거",
+        "argument": {
+          "name": "제거할 리뷰어 그룹 이름"
+        },
+        "success": "리뷰어 그룹 '{{name}}'이(가) 성공적으로 제거되었습니다",
+        "error": {
+          "not_found": "리뷰어 그룹 '{{name}}'을(를) 찾을 수 없습니다"
+        }
+      },
+      "update": {
+        "description": "리뷰어 그룹 업데이트",
+        "argument": {
+          "name": "업데이트할 리뷰어 그룹 이름"
+        },
+        "option": {
+          "members": "GitHub 사용자명 목록 (쉼표로 구분)",
+          "strategy": "순환 전략 (round-robin, random, least-busy)"
+        },
+        "success": "리뷰어 그룹 '{{name}}'이(가) 성공적으로 업데이트되었습니다",
+        "error": {
+          "not_found": "리뷰어 그룹 '{{name}}'을(를) 찾을 수 없습니다"
+        }
+      },
+      "list": {
+        "description": "모든 리뷰어 그룹 목록 조회",
+        "no_groups": "등록된 리뷰어 그룹이 없습니다",
+        "group_info": "그룹: {{name}}\n  멤버: {{members}}\n  전략: {{strategy}}"
+      }
     }
   },
   "ai": {
@@ -479,7 +534,7 @@
         "analyze": "Please review the following code files and provide feedback IN KOREAN:\n\n{{files}}\n\nReview requirements:\n1. Code quality and best practices\n2. Potential bugs or edge cases\n3. Performance considerations\n4. Security vulnerabilities\n5. Test coverage\n\nProvide specific, actionable feedback for each issue found. Write EVERYTHING in Korean."
       },
       "conflict_resolution": {
-        "analyze": "Please analyze the following merge conflicts and suggest resolutions IN KOREAN:\n\n{{conflicts}}\n\nFor each conflict:\n1. Explain the nature of the conflict\n2. Suggest the best resolution approach\n3. Provide specific guidance on which changes to keep\n4. Consider the context and impact of the changes\n\nWrite EVERYTHING in Korean."
+        "analyze": "Please analyze the following merge conflicts and suggest resolutions:\n\n{{conflicts}}\n\nPR Context:{{context}}\n\nFor each conflict:\n1. Explain the nature of the conflict\n2. Suggest the best resolution approach\n3. Provide specific guidance on which changes to keep\n4. Consider the context and impact of the changes\n\nWrite EVERYTHING in Korean."
       },
       "commit_message": {
         "analyze": "Please analyze the following changes and generate a commit message IN KOREAN:\nCurrent message: {{message}}\nChanges: {{diff}}\n\nPlease write the commit message in the following format. Do not include any additional explanations or formatting, just the commit message:\n\ntype(scope): Subject in Korean\n\nBody in Korean\n- Change 1\n- Change 2\n\nExample:\nfeat(인증): 로그인 기능 추가\n\n사용자 인증 시스템 구현\n- JWT 기반 인증 추가\n- 로그인 API 구현\n- 인증 미들웨어 추가\n\nImportant notes:\n1. Write EVERYTHING in Korean except for this instruction\n2. Use conventional commit types (feat, fix, docs, etc)\n3. Keep the subject line concise and clear\n4. List actual changes from the diff in the body\n5. Do not make assumptions or guesses"

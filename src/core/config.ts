@@ -33,7 +33,7 @@ const DEFAULT_PROJECT_CONFIG: ProjectConfig = {
       pattern: "feat/*",
       type: "feat" as const,
       draft: true,
-      labels: [t("config.branch_patterns.labels.feature")],
+      labels: ["feature"],
       template: "feature",
       autoAssignReviewers: true,
       reviewers: [],
@@ -43,7 +43,7 @@ const DEFAULT_PROJECT_CONFIG: ProjectConfig = {
       pattern: "fix/*",
       type: "fix" as const,
       draft: true,
-      labels: [t("config.branch_patterns.labels.bug")],
+      labels: ["bug"],
       template: "bugfix",
       autoAssignReviewers: true,
       reviewers: [],
@@ -53,7 +53,7 @@ const DEFAULT_PROJECT_CONFIG: ProjectConfig = {
       pattern: "refactor/*",
       type: "refactor" as const,
       draft: true,
-      labels: [t("config.branch_patterns.labels.refactor")],
+      labels: ["refactor"],
       template: "refactor",
       autoAssignReviewers: true,
       reviewers: [],
@@ -63,7 +63,7 @@ const DEFAULT_PROJECT_CONFIG: ProjectConfig = {
       pattern: "docs/*",
       type: "docs" as const,
       draft: false,
-      labels: [t("config.branch_patterns.labels.documentation")],
+      labels: ["documentation"],
       template: "docs",
       autoAssignReviewers: false,
       reviewers: [],
@@ -73,7 +73,7 @@ const DEFAULT_PROJECT_CONFIG: ProjectConfig = {
       pattern: "chore/*",
       type: "chore" as const,
       draft: false,
-      labels: [t("config.branch_patterns.labels.chore")],
+      labels: ["chore"],
       template: "chore",
       autoAssignReviewers: false,
       reviewers: [],
@@ -83,7 +83,7 @@ const DEFAULT_PROJECT_CONFIG: ProjectConfig = {
       pattern: "test/*",
       type: "test" as const,
       draft: true,
-      labels: [t("config.branch_patterns.labels.test")],
+      labels: ["test"],
       template: "test",
       autoAssignReviewers: true,
       reviewers: [],
@@ -111,6 +111,13 @@ export async function loadProjectConfig(): Promise<ProjectConfig> {
   try {
     const configData = await readFile(PROJECT_CONFIG_FILE, "utf-8");
     const config = JSON.parse(configData);
+
+    if (config.reviewerGroups) {
+      config.reviewerGroups = config.reviewerGroups.map((group: unknown) =>
+        ReviewerGroupSchema.parse(group),
+      );
+    }
+
     return ProjectConfigSchema.parse(config);
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === "ENOENT") {
@@ -177,6 +184,12 @@ export async function updateProjectConfig(
     ...currentConfig,
     ...updates,
   };
+
+  if (updates.reviewerGroups) {
+    newConfig.reviewerGroups = updates.reviewerGroups.map((group: unknown) =>
+      ReviewerGroupSchema.parse(group),
+    );
+  }
 
   const validatedConfig = ProjectConfigSchema.parse(newConfig);
   await saveProjectConfig(validatedConfig);

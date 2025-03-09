@@ -15,6 +15,7 @@ import { execSync } from "child_process";
 import { existsSync } from "fs";
 import { resolve } from "path";
 import os from "os";
+import { getOctokit } from "../../core/github.js";
 
 interface ConflictFile {
   file: string;
@@ -39,7 +40,38 @@ async function handleConflicts(
 
       if (aiEnabled) {
         log.info(t("commands.merge.conflict.ai_suggestion_start"));
-        const suggestions = await ai.suggestConflictResolution(conflicts);
+
+        // PR의 전체 컨텍스트를 가져옵니다
+        const client = await getOctokit();
+        const { data: pr } = await client.rest.pulls.get({
+          owner,
+          repo,
+          pull_number: prNumber,
+        });
+
+        // PR의 변경사항 정보를 가져옵니다
+        const { data: files } = await client.rest.pulls.listFiles({
+          owner,
+          repo,
+          pull_number: prNumber,
+        });
+
+        // AI에 전달할 추가 컨텍스트를 구성합니다
+        const prContext = {
+          title: pr.title,
+          description: pr.body || "",
+          changedFiles: files.map((f) => ({
+            filename: f.filename,
+            additions: f.additions,
+            deletions: f.deletions,
+            changes: f.changes,
+          })),
+        };
+
+        const suggestions = await ai.suggestConflictResolution(
+          conflicts,
+          prContext,
+        );
 
         log.info("\n" + t("commands.merge.conflict.ai_suggestions"));
         log.info("-------------------");

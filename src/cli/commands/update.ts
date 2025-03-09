@@ -27,11 +27,10 @@ export async function updateCommand(prNumber: string): Promise<void> {
 
     log.info("\n" + t("commands.update.info.title"));
     log.info(`#${pr.number} ${pr.title}`);
+    const status = pr.draft ? "draft" : "ready";
     log.info(
       t("commands.update.info.current_status", {
-        status: pr.draft
-          ? t("commands.review.status.draft")
-          : t("commands.review.status.ready"),
+        status: t(`commands.review.status.${status}`),
       }),
     );
 
@@ -53,10 +52,13 @@ export async function updateCommand(prNumber: string): Promise<void> {
       return;
     }
 
-    const updates: any = {
+    const updates = {
       owner: repoInfo.owner,
       repo: repoInfo.repo,
       pull_number: pr.number,
+      title: pr.title,
+      body: pr.body || "",
+      draft: pr.draft,
     };
 
     for (const action of actions) {
@@ -106,10 +108,24 @@ export async function updateCommand(prNumber: string): Promise<void> {
       }
     }
 
-    await updatePullRequest(updates);
-    log.info(t("commands.update.success.all"));
-  } catch (error) {
-    log.error(t("common.error.unknown"), String(error));
+    try {
+      await updatePullRequest(updates);
+      log.info(t("commands.update.success.all"));
+    } catch (updateError: any) {
+      log.error("Update failed:", updateError.message);
+      if (updateError.response) {
+        log.error(
+          "API Response:",
+          JSON.stringify(updateError.response.data, null, 2),
+        );
+      }
+      process.exit(1);
+    }
+  } catch (error: any) {
+    log.error(t("common.error.unknown"), error.message);
+    if (error.response) {
+      log.error("API Response:", JSON.stringify(error.response.data, null, 2));
+    }
     process.exit(1);
   }
 }
