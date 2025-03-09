@@ -439,6 +439,49 @@
       "commit_message": {
         "analyze": "Please analyze the following changes and write a commit message:\nCurrent message: {{message}}\nChanges: {{diff}}\n\nPlease write ONLY the commit message in the following format. Do not include any additional explanations or formatting:\n\ntype(scope): subject\n\nbody\n- change 1\n- change 2\n\nActual example:\nfeat(auth): add login functionality\n\nImplement user authentication system\n- Add JWT-based authentication\n- Create login API endpoint\n- Implement authentication middleware"
       }
+    },
+    "reviewer_group": {
+      "description": "Manage reviewer groups",
+      "add": {
+        "description": "Add a new reviewer group",
+        "argument": {
+          "name": "Name of the reviewer group"
+        },
+        "option": {
+          "members": "Comma-separated list of GitHub usernames",
+          "strategy": "Rotation strategy (round-robin, random, least-busy)"
+        },
+        "success": "Reviewer group '{{name}}' has been added successfully"
+      },
+      "remove": {
+        "description": "Remove a reviewer group",
+        "argument": {
+          "name": "Name of the reviewer group to remove"
+        },
+        "success": "Reviewer group '{{name}}' has been removed successfully",
+        "error": {
+          "not_found": "Reviewer group '{{name}}' not found"
+        }
+      },
+      "update": {
+        "description": "Update a reviewer group",
+        "argument": {
+          "name": "Name of the reviewer group to update"
+        },
+        "option": {
+          "members": "Comma-separated list of GitHub usernames",
+          "strategy": "Rotation strategy (round-robin, random, least-busy)"
+        },
+        "success": "Reviewer group '{{name}}' has been updated successfully",
+        "error": {
+          "not_found": "Reviewer group '{{name}}' not found"
+        }
+      },
+      "list": {
+        "description": "List all reviewer groups",
+        "no_groups": "No reviewer groups found",
+        "group_info": "Group: {{name}}\n  Members: {{members}}\n  Strategy: {{strategy}}"
+      }
     }
   },
   "ai": {

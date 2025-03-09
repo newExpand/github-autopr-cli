@@ -13,6 +13,7 @@ import { createCollaboratorCommand } from "./commands/collaborator.js";
 import { commitCommand } from "./commands/commit.js";
 import { loadConfig } from "../core/config.js";
 import { log } from "../utils/logger.js";
+import { createReviewerGroupCommand } from "./commands/reviewer-group.js";
 
 const program = new Command();
 
@@ -86,6 +87,9 @@ async function main() {
 
     // Collaborator 관리 명령어
     program.addCommand(createCollaboratorCommand());
+
+    // 새로운 reviewer-group 명령어 추가
+    program.addCommand(createReviewerGroupCommand());
 
     await program.parseAsync();
   } catch (error) {
