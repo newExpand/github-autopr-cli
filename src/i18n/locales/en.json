@@ -224,7 +224,7 @@
       "description": "Update PR information",
       "info": {
         "title": "PR Information",
-        "current_status": "Current status: {status}"
+        "current_status": "Current status: {{status}}"
       },
       "prompts": {
         "action": "Select items to update (use spacebar to select)",
@@ -240,6 +240,10 @@
       "success": {
         "all": "All selected items have been updated",
         "cancelled": "Operation cancelled"
+      },
+      "status": {
+        "draft": "Draft",
+        "ready": "Ready for review"
       }
     },
     "merge": {
