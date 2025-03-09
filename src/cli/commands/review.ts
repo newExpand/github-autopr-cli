@@ -14,11 +14,22 @@ import { log } from "../../utils/logger.js";
 
 const execAsync = promisify(exec);
 
+interface FileContent {
+  path: string;
+  content: string;
+  status: "added" | "modified" | "renamed" | "copied" | "changed" | "unchanged";
+  additions: number;
+  deletions: number;
+  changes: number;
+  base_ref: string;
+  head_ref: string;
+}
+
 async function getChangedFiles(
   owner: string,
   repo: string,
   prNumber: number,
-): Promise<Array<{ path: string; content: string }>> {
+): Promise<FileContent[]> {
   try {
     // GitHub API를 사용하여 PR의 변경된 파일 목록을 가져옵니다
     const client = await getOctokit();
@@ -28,6 +39,12 @@ async function getChangedFiles(
       pull_number: prNumber,
     });
 
+    // PR이 닫혀있거나 병합된 경우 처리
+    if (pr.state !== "open") {
+      throw new Error(t("commands.review.error.pr_closed"));
+    }
+
+    // PR의 변경된 파일 목록을 가져옵니다
     const { data: files } = await client.rest.pulls.listFiles({
       owner,
       repo,
@@ -44,16 +61,34 @@ async function getChangedFiles(
           }
 
           // GitHub API를 통해 파일 내용을 가져옵니다
+          // PR의 head 브랜치에서 파일 내용을 가져옵니다
           const { data: blob } = await client.rest.git.getBlob({
             owner,
             repo,
             file_sha: file.sha,
           });
 
+          // 파일 내용이 이진 파일이거나 너무 큰 경우 건너뜁니다
+          if (blob.encoding !== "base64" || (blob.size ?? 0) > 1024 * 1024) {
+            // 1MB 제한
+            log.warn(
+              t("commands.review.warning.file_too_large", {
+                file: file.filename,
+              }),
+            );
+            return null;
+          }
+
           return {
             path: file.filename,
             content: Buffer.from(blob.content, "base64").toString("utf-8"),
-          };
+            status: file.status,
+            additions: file.additions,
+            deletions: file.deletions,
+            changes: file.changes,
+            base_ref: pr.base.ref,
+            head_ref: pr.head.ref,
+          } as FileContent;
         } catch (error) {
           log.warn(
             t("commands.review.error.file_content_failed", {
@@ -65,11 +100,17 @@ async function getChangedFiles(
       }),
     );
 
-    return fileContents.filter(
-      (file): file is { path: string; content: string } => file !== null,
-    );
+    return fileContents.filter((file): file is FileContent => file !== null);
   } catch (error) {
-    log.error(t("commands.review.error.files_failed"));
+    if (error instanceof Error) {
+      log.error(
+        t(
+          `commands.review.error.${error.message === "pr_closed" ? "pr_closed" : "files_failed"}`,
+        ),
+      );
+    } else {
+      log.error(t("commands.review.error.files_failed"));
+    }
     return [];
   }
 }
@@ -94,6 +135,13 @@ export async function reviewCommand(prNumber: string): Promise<void> {
       pull_number: parseInt(prNumber, 10),
     });
 
+    // 파일 변경 통계 정보 가져오기
+    const files = await getChangedFiles(
+      repoInfo.owner,
+      repoInfo.repo,
+      pr.number,
+    );
+
     // PR 상태 확인
     const status = await getPullRequestStatus({
       owner: repoInfo.owner,
@@ -116,7 +164,29 @@ export async function reviewCommand(prNumber: string): Promise<void> {
         status: t(`commands.review.status.${status.toLowerCase()}`),
       }),
     );
-    log.info(t("commands.review.info.url", { url: pr.html_url }) + "\n");
+    log.info(t("commands.review.info.url", { url: pr.html_url }));
+
+    // 파일 변경 통계 출력
+    const stats = {
+      total: files.length,
+      processed: files.filter((f) => f !== null).length,
+      additions: files.reduce((sum, file) => sum + file.additions, 0),
+      deletions: files.reduce((sum, file) => sum + file.deletions, 0),
+      changes: files.reduce((sum, file) => sum + file.changes, 0),
+    };
+
+    log.info(
+      t("commands.review.info.file_stats", {
+        total: stats.total,
+        processed: stats.processed,
+        additions: stats.additions,
+        deletions: stats.deletions,
+        changes: stats.changes,
+        base_branch: pr.base.ref,
+        head_branch: pr.head.ref,
+      }),
+    );
+    log.info("\n");
 
     let aiEnabled = false;
 

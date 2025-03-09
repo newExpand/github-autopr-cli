@@ -162,7 +162,8 @@
         "status": "Status: {{status}}",
         "merge_status": "Merge Status: {{status}}",
         "url": "URL: {{url}}",
-        "ai_review_start": "Starting AI code review..."
+        "ai_review_start": "Starting AI code review...",
+        "file_stats": "Changed files: {{total}} (processed: {{processed}}, +{{additions}}/-{{deletions}}, total changes: {{changes}}) from {{base_branch}} to {{head_branch}}"
       },
       "prompts": {
         "action": "What would you like to do?",
@@ -211,10 +212,12 @@
         "checkout_failed": "Error occurred while checking out branch: {{error}}",
         "browser_open_failed": "Error occurred while opening PR in browser: {{error}}",
         "submit_failed": "Failed to submit review: {{error}}",
-        "comment_required": "Review comment is required"
+        "comment_required": "Review comment is required",
+        "pr_closed": "Cannot review a closed or merged PR"
       },
       "warning": {
-        "no_changes": "No changed files found to review"
+        "no_changes": "No changed files found to review",
+        "file_too_large": "File {{file}} is too large or binary, skipping"
       }
     },
     "update": {
