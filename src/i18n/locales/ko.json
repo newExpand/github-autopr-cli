@@ -1,0 +1,555 @@
+{
+  "common": {
+    "error": {
+      "unknown": "알 수 없는 오류가 발생했습니다",
+      "github_token": "GitHub 토큰이 설정되지 않았습니다. 'autopr init' 명령어를 실행해주세요",
+      "invalid_branch": "유효하지 않은 브랜치 이름입니다",
+      "network": "네트워크 오류가 발생했습니다",
+      "not_git_repo": "현재 디렉토리가 git 저장소가 아닙니다",
+      "no_commits": "브랜치에 커밋이 없어 PR을 생성할 수 없습니다. 변경사항을 커밋하고 푸시해주세요.",
+      "pr_exists": "이 브랜치에 대한 PR이 이미 존재합니다.",
+      "base_modified": "대상 브랜치가 수정되었습니다. 대상 브랜치의 최신 변경사항을 병합해주세요.",
+      "get_invitation_status": "초대 상태 조회에 실패했습니다: {{error}}",
+      "get_invitation_statuses": "초대 상태 목록 조회에 실패했습니다: {{error}}",
+      "get_conflicts": "충돌 정보 조회에 실패했습니다: {{error}}"
+    },
+    "warning": {
+      "merge_conflict": "⚠️ 이 PR에는 해결해야 할 병합 충돌이 있습니다",
+      "merge_status_unknown": "⚠️ GitHub에서 병합 가능 여부를 계산 중입니다",
+      "invalid_reviewers": "⚠️ 다음 리뷰어들은 저장소 collaborator가 아니므로 제외됩니다: {{reviewers}}",
+      "no_changes": "리뷰할 변경된 파일을 찾을 수 없습니다"
+    },
+    "success": {
+      "init": "autopr 초기화가 완료되었습니다",
+      "pr_created": "Pull Request가 성공적으로 생성되었습니다",
+      "config_updated": "설정이 성공적으로 업데이트되었습니다",
+      "review_submitted": "리뷰가 성공적으로 등록되었습니다"
+    },
+    "cli": {
+      "description": "GitHub PR 자동화 CLI 도구"
+    },
+    "branch_pattern": {
+      "no_config": "⚠️ 설정을 찾을 수 없습니다.",
+      "matching_start": "\n🔍 브랜치 패턴 매칭 시작",
+      "current_branch": "📁 현재 브랜치: {{branch}}",
+      "available_patterns": "📋 사용 가능한 패턴:",
+      "pattern_item": "  - {{pattern}} ({{type}})",
+      "match_success": "✓ 브랜치 '{{branch}}'이(가) 패턴 '{{pattern}}'과(와) 일치합니다.",
+      "match_fail": "✗ 브랜치 '{{branch}}'이(가) 패턴 '{{pattern}}'과(와) 일치하지 않습니다.",
+      "matched_pattern": "\n✅ 매칭된 패턴:",
+      "pattern_info": "  - 패턴: {{pattern}}\n  - 타입: {{type}}\n  - Draft: {{draft}}\n  - 라벨: {{labels}}\n  - 템플릿: {{template}}",
+      "no_match": "\n❌ 매칭되는 패턴이 없습니다.",
+      "yes": "예",
+      "no": "아니오",
+      "none": "없음",
+      "default": "기본"
+    },
+    "template": {
+      "default": {
+        "changes": "## 변경 사항",
+        "changes_placeholder": "- ",
+        "tests": "## 테스트",
+        "unit_test": "- [ ] 단위 테스트",
+        "integration_test": "- [ ] 통합 테스트",
+        "reviewer_checklist": "## 리뷰어 체크리스트",
+        "code_clarity": "- [ ] 코드가 명확하고 이해하기 쉬운가요?",
+        "test_coverage": "- [ ] 변경 사항이 잘 테스트되었나요?",
+        "performance": "- [ ] 성능에 문제가 없나요?"
+      }
+    }
+  },
+  "oauth": {
+    "device_flow": {
+      "initializing": "Device Flow 초기화 시작...",
+      "client_id": "Client ID: {{clientId}}",
+      "request_data": "요청 데이터:",
+      "response_status": "응답 상태:",
+      "response_headers": "응답 헤더:",
+      "error_response": "에러 응답 내용:",
+      "response_data": "응답 데이터:",
+      "init_failed": "Device Flow 초기화 실패: {{status}} - {{error}}"
+    },
+    "token": {
+      "request_failed": "토큰 요청 실패: {{status}}",
+      "expired": "인증 시간이 만료되었습니다. 다시 시도해주세요.",
+      "error": "토큰 요청 중 오류: {{error}}",
+      "missing": "액세스 토큰을 받지 못했습니다"
+    },
+    "auth": {
+      "starting": "GitHub 인증을 시작합니다...",
+      "instructions": "다음 단계를 따라 GitHub 인증을 완료해주세요:",
+      "open_url": "1. 브라우저에서 다음 URL을 열어주세요: {{url}}",
+      "enter_code": "2. 다음 코드를 입력해주세요: {{code}}",
+      "waiting": "브라우저에서 인증을 완료하면 자동으로 다음 단계로 진행됩니다...",
+      "time_limit": "(제한 시간: {{minutes}}분)",
+      "success": "GitHub 인증이 성공적으로 완료되었습니다!",
+      "failed": "GitHub 인증 실패: {{error}}",
+      "browser_open_failed": "브라우저를 자동으로 열지 못했습니다. URL을 수동으로 열어주세요."
+    }
+  },
+  "commands": {
+    "init": {
+      "description": "autopr 설정 초기화",
+      "prompts": {
+        "token": "GitHub 토큰을 입력하세요",
+        "default_branch": "기본 브랜치 이름을 입력하세요",
+        "reviewers": "기본 리뷰어를 입력하세요 (쉼표로 구분)",
+        "language": "선호하는 언어를 선택하세요",
+        "update_token": "GitHub 토큰이 이미 설정되어 있습니다. 변경하시겠습니까?",
+        "auth_method": "GitHub 인증 방법을 선택하세요:",
+        "auth_choices": {
+          "oauth": "브라우저로 GitHub 인증하기",
+          "manual": "토큰 직접 입력하기"
+        },
+        "update_language": "현재 언어가 {{language}}로 설정되어 있습니다. 변경하시겠습니까?",
+        "setup_hooks": "자동 PR 생성을 위한 Git 훅을 설정하시겠습니까?",
+        "setup_ai": "AI 기능을 설정하시겠습니까?",
+        "select_ai_provider": "AI 제공자를 선택하세요:",
+        "enter_api_key": "{{provider}} API 키를 입력하세요:",
+        "select_model": "사용할 모델을 선택하세요:"
+      },
+      "info": {
+        "creating_env": "새로운 .env 파일을 생성합니다",
+        "ai_config_saved": "AI 설정이 .env 파일에 저장되었습니다"
+      },
+      "error": {
+        "git_hooks": "Git 훅 설정 중 오류가 발생했습니다: {{error}}",
+        "invalid_token": "GitHub 토큰이 유효하지 않습니다",
+        "model_fetch_failed": "모델 목록을 가져오는데 실패했습니다. 기본 모델을 사용합니다.",
+        "ai_config_save_failed": "AI 설정 저장에 실패했습니다: {{error}}"
+      }
+    },
+    "new": {
+      "description": "새로운 Pull Request 생성",
+      "error": {
+        "main_branch": "{{branch}} 브랜치에서 직접 PR을 생성할 수 없습니다. 새로운 브랜치를 먼저 생성해주세요.",
+        "create_failed": "PR 생성 실패: {{error}}",
+        "diff_failed": "변경사항 내용을 가져오는데 실패했습니다",
+        "files_failed": "변경된 파일 목록을 가져오는데 실패했습니다"
+      },
+      "prompts": {
+        "title": "PR 제목을 입력하세요",
+        "body": "PR 설명을 입력하세요",
+        "reviewers": "리뷰어를 입력하세요 (건너뛰려면 엔터)",
+        "use_ai_description": "AI가 생성한 설명을 사용하시겠습니까?",
+        "edit_ai_description": "AI가 생성한 설명을 수정하시겠습니까?"
+      },
+      "info": {
+        "creating": "Pull Request 생성 중...",
+        "adding_reviewers": "리뷰어 추가 중...",
+        "reviewers_added": "리뷰어가 추가되었습니다: {{reviewers}}",
+        "generating_description": "AI를 사용하여 PR 설명을 생성하는 중...",
+        "generated_description": "AI가 생성한 설명:"
+      },
+      "warning": {
+        "ai_description_failed": "AI 설명 생성에 실패했습니다. 수동 입력으로 전환합니다"
+      }
+    },
+    "list": {
+      "description": "Pull Request 목록 조회",
+      "no_prs": "Pull Request를 찾을 수 없습니다",
+      "open_prs": "\n현재 열려있는 Pull Requests:\n",
+      "pr_number_title": "#{{number}} {{title}}",
+      "author": "작성자: {{login}}",
+      "status": "상태: {{status}}",
+      "merge_status": "병합 상태: {{status}}",
+      "url": "URL: {{url}}"
+    },
+    "review": {
+      "description": "Pull Request 리뷰",
+      "not_found": "Pull Request를 찾을 수 없습니다",
+      "info": {
+        "title": "Pull Request 정보:",
+        "author": "작성자: {{author}}",
+        "status": "상태: {{status}}",
+        "merge_status": "병합 상태: {{status}}",
+        "url": "URL: {{url}}",
+        "ai_review_start": "AI 코드 리뷰를 시작합니다..."
+      },
+      "prompts": {
+        "action": "어떤 작업을 하시겠습니까?",
+        "review_type": "리뷰 타입을 선택하세요:",
+        "comment": "리뷰 코멘트를 입력하세요:",
+        "ai_review": "AI 코드 리뷰"
+      },
+      "actions": {
+        "view": "PR 내용 보기",
+        "review": "리뷰 작성하기",
+        "checkout": "브랜치 체크아웃",
+        "open": "GitHub에서 열기",
+        "cancel": "취소",
+        "ai_review": "AI 코드 리뷰"
+      },
+      "content": {
+        "title": "PR 내용:",
+        "empty": "(내용 없음)",
+        "ai_review_title": "AI 코드 리뷰 결과:"
+      },
+      "review_types": {
+        "approve": "승인",
+        "request_changes": "수정 요청",
+        "comment": "코멘트"
+      },
+      "success": {
+        "checkout": "브랜치가 성공적으로 체크아웃되었습니다.",
+        "opened": "GitHub PR 페이지가 브라우저에서 열렸습니다.",
+        "cancelled": "작업이 취소되었습니다."
+      },
+      "status": {
+        "draft": "초안",
+        "ready": "리뷰 준비됨",
+        "checking": "확인 중",
+        "conflicting": "충돌 있음",
+        "mergeable": "병합 가능",
+        "unknown": "알 수 없음"
+      },
+      "error": {
+        "checkout_failed": "브랜치 체크아웃 중 오류가 발생했습니다: {{error}}",
+        "browser_open_failed": "브라우저에서 PR을 여는 중 오류가 발생했습니다: {{error}}",
+        "read_file_failed": "파일 읽기 실패: {{file}}",
+        "files_failed": "변경된 파일 목록을 가져오는데 실패했습니다"
+      }
+    },
+    "update": {
+      "description": "PR 정보를 업데이트합니다",
+      "info": {
+        "title": "PR 정보",
+        "current_status": "현재 상태: {status}"
+      },
+      "prompts": {
+        "action": "수정할 항목을 선택하세요 (스페이스바로 선택)",
+        "new_title": "새로운 제목을 입력하세요",
+        "new_body": "새로운 내용을 입력하세요",
+        "new_status": "새로운 상태를 선택하세요"
+      },
+      "actions": {
+        "title": "제목 수정",
+        "body": "내용 수정",
+        "status": "상태 변경"
+      },
+      "success": {
+        "all": "선택한 항목이 모두 업데이트되었습니다",
+        "cancelled": "작업이 취소되었습니다"
+      }
+    },
+    "merge": {
+      "description": "PR을 병합합니다",
+      "info": {
+        "title": "PR 정보",
+        "author": "작성자: {{author}}",
+        "branch": "브랜치: {{branch}}",
+        "base_branch": "대상 브랜치: {{branch}}",
+        "checking_conflicts": "충돌 확인 중...",
+        "cancelled": "병합이 취소되었습니다"
+      },
+      "prompts": {
+        "merge_method": "병합 방법을 선택하세요",
+        "commit_title": "커밋 제목을 입력하세요",
+        "commit_message": "커밋 메시지를 입력하세요",
+        "delete_branch": "병합 후 브랜치를 삭제하시겠습니까?",
+        "confirm": "PR을 병합하시겠습니까?",
+        "change_base": "대상 브랜치를 변경하시겠습니까?",
+        "select_base": "대상 브랜치를 선택하세요",
+        "confirm_base_change": "대상 브랜치를 {{from}}에서 {{to}}로 변경하시겠습니까?",
+        "confirm_many_files": "정말로 모든 파일을 열어서 충돌을 해결하시겠습니까?",
+        "start_resolution": "충돌 해결을 시작할까요? (충돌이 있는 파일들을 편집기로 열어드립니다)"
+      },
+      "methods": {
+        "merge": "일반 병합 (Merge)",
+        "squash": "스쿼시 병합 (Squash)",
+        "rebase": "리베이스 병합 (Rebase)"
+      },
+      "success": {
+        "merged": "PR이 성공적으로 병합되었습니다",
+        "cancelled": "작업이 취소되었습니다",
+        "base_changed": "대상 브랜치가 {{branch}}로 변경되었습니다"
+      },
+      "error": {
+        "pr_closed": "이미 닫힌 PR입니다",
+        "not_mergeable": "병합할 수 없는 상태입니다",
+        "base_change_failed": "대상 브랜치 변경에 실패했습니다. 충돌이 있을 수 있습니다.",
+        "branch_switch_failed": "브랜치 전환에 실패했습니다",
+        "manual_switch": "수동으로 브랜치를 전환해주세요: git checkout {{branch}}",
+        "file_not_found": "파일이 존재하지 않습니다: {{file}}",
+        "cannot_open_file": "파일 {{file}}을(를) 열 수 없습니다: {{error}}",
+        "cleanup_failed": "로컬 브랜치 정리 중 오류가 발생했습니다: {{error}}",
+        "manual_cleanup": "수동으로 브랜치를 정리해주세요"
+      },
+      "warning": {
+        "branch_delete_failed": "브랜치 삭제에 실패했습니다"
+      },
+      "conflict": {
+        "found": "⚠️ 충돌이 발견되었습니다:",
+        "file_info": "- {{file}} (변경사항: {{changes}}줄)",
+        "blocks": "충돌 블록 수: {{count}}개",
+        "block_info": "충돌 위치: {{start}}~{{end}}줄",
+        "base_content": "기존 코드:",
+        "head_content": "변경된 코드:",
+        "resolve_guide": "\n충돌 해결 방법:\n1. 충돌이 발생한 파일을 열어서 충돌 부분을 확인합니다.\n2. <<<<<<< HEAD, =======, >>>>>>> 구분자를 기준으로 충돌 부분을 찾습니다.\n3. 원하는 코드를 선택하고 구분자를 제거합니다.\n4. 변경사항을 커밋하고 PR을 업데이트합니다.\n",
+        "continue_prompt": "충돌이 있지만 계속 진행하시겠습니까?",
+        "none": "✓ 충돌이 없습니다.",
+        "no_actual_conflicts": "실제 충돌이 있는 파일이 없습니다. GitHub API의 상태가 업데이트되지 않았을 수 있습니다.",
+        "actual_files": "\n실제 충돌이 있는 파일 ({{count}}개):",
+        "branch_mismatch": "\n현재 브랜치({{current}})가 충돌이 있는 브랜치({{target}})와 다릅니다.",
+        "switching_branch": "충돌 해결을 위해 해당 브랜치로 전환합니다...",
+        "branch_switched": "브랜치를 {{branch}}로 전환했습니다",
+        "help_message": "\n충돌 해결을 위한 도움을 드리겠습니다.",
+        "detected_editor": "📝 감지된 편집기: {{editor}}",
+        "files_to_open": "📂 열릴 파일 수: {{count}}개",
+        "steps": {
+          "checkout": "1. 충돌이 있는 파일들을 체크아웃합니다",
+          "open": "2. 충돌이 있는 파일들을 편집기로 열어드립니다",
+          "resolve": "3. 충돌을 해결하고 변경사항을 커밋합니다",
+          "update": "4. PR을 업데이트합니다"
+        },
+        "many_files": "\n주의: {{count}}개의 파일을 열어야 합니다.",
+        "checking_out_files": "\n충돌이 있는 파일들을 체크아웃합니다...",
+        "opening_files": "\n충돌이 있는 파일들을 편집기로 열어드립니다...",
+        "trying_to_open": "파일을 열려고 시도합니다: {{file}}",
+        "file_opened": "파일을 열었습니다: {{file}}",
+        "next_steps": "\n충돌 해결 후 다음 명령어를 실행하세요:",
+        "run_again": "\n그 다음 다시 '{{command}}' 명령어를 실행하세요.",
+        "ai_suggestion_start": "AI 충돌 해결 제안을 시작합니다...",
+        "ai_suggestions": "AI 충돌 해결 제안:",
+        "use_ai_suggestions": "AI가 제안한 충돌 해결 방법을 사용하시겠습니까?",
+        "manual_resolution": "수동으로 충돌을 해결합니다",
+        "ai_suggestion_failed": "AI 충돌 해결 제안을 가져오는데 실패했습니다"
+      },
+      "editor": {
+        "default": "기본 프로그램"
+      },
+      "cleanup": {
+        "start": "\n로컬 브랜치를 정리합니다...",
+        "switching_branch": "{{branch}} 브랜치로 전환합니다...",
+        "pulling_changes": "원격의 변경사항을 가져옵니다...",
+        "deleting_branch": "로컬의 {{branch}} 브랜치를 삭제합니다...",
+        "branch_deleted": "로컬 브랜치가 삭제되었습니다.",
+        "branch_already_deleted": "로컬 브랜치가 이미 삭제되었습니다."
+      }
+    },
+    "collaborator": {
+      "description": "저장소 collaborator 관리",
+      "invite": {
+        "description": "새로운 collaborator 초대"
+      },
+      "list": {
+        "description": "collaborator 목록 조회",
+        "title": "\n현재 Collaborator 목록:\n",
+        "item": "- {{username}} ({{permission}})"
+      },
+      "remove": {
+        "description": "collaborator 제거"
+      },
+      "status": {
+        "description": "collaborator 초대 상태 확인",
+        "pending": "대기 중",
+        "accepted": "수락됨",
+        "expired": "만료됨",
+        "no_invitation": "{{username}}에 대한 초대가 없습니다",
+        "no_invitations": "초대된 collaborator가 없습니다",
+        "all_title": "\n모든 Collaborator 초대 상태:\n",
+        "info": "{{username}}의 초대 상태:\n- 상태: {{status}}\n- 초대일시: {{invitedAt}}\n- 만료일시: {{expiresAt}}"
+      },
+      "status_all": {
+        "description": "모든 collaborator 초대 상태 확인"
+      },
+      "prompts": {
+        "permission": "권한을 선택하세요",
+        "confirm_remove": "{{username}}을(를) collaborator에서 제거하시겠습니까?",
+        "select_to_remove": "제거할 collaborator를 선택하세요 (스페이스바로 선택)",
+        "confirm_remove_multiple": "선택한 {{count}}명의 collaborator를 제거하시겠습니까?"
+      },
+      "permissions": {
+        "pull": "읽기 (Pull)",
+        "push": "쓰기 (Push)",
+        "admin": "관리자 (Admin)"
+      },
+      "success": {
+        "invited": "{{username}}에게 collaborator 초대를 보냈습니다",
+        "removed": "{{username}}을(를) collaborator에서 제거했습니다",
+        "cancelled": "작업이 취소되었습니다",
+        "all_removed": "선택한 collaborator들이 모두 제거되었습니다"
+      },
+      "no_collaborators": "등록된 collaborator가 없습니다"
+    },
+    "lang": {
+      "description": "언어 설정 관리",
+      "argument": {
+        "language_code": "언어 코드 (en/ko)"
+      },
+      "error": {
+        "unsupported": "지원하지 않는 언어입니다: {{language}}",
+        "supported_list": "지원 언어: {{languages}}"
+      },
+      "success": {
+        "changed": "언어가 {{language}}로 변경되었습니다",
+        "current": "현재 언어: {{language}}"
+      }
+    },
+    "hook": {
+      "description": "Git 훅 이벤트 처리",
+      "post_checkout": {
+        "description": "브랜치 체크아웃 후 처리",
+        "argument": {
+          "branch": "브랜치 이름"
+        },
+        "info": {
+          "new_branch": "새로운 브랜치가 생성되었습니다.",
+          "push_instruction": "작업 완료 후 'git push -u origin {{branch}}'를 실행하면",
+          "auto_pr": "자동으로 Draft PR이 생성됩니다.",
+          "draft_created": "Draft PR이 생성되었습니다. 작업 완료 후 'Ready for Review'로 변경해주세요."
+        }
+      }
+    },
+    "commit": {
+      "description": "AI를 사용하여 커밋 메시지 개선 또는 제안",
+      "options": {
+        "all": "모든 변경사항을 스테이징하고 커밋",
+        "patch": "대화형으로 변경사항을 선택하여 스테이징"
+      },
+      "args": {
+        "subcommand": "improve - 기존 커밋 메시지 개선",
+        "message": "개선할 커밋 메시지 (improve 서브커맨드와 함께 사용)"
+      },
+      "help": {
+        "examples": "사용 예시",
+        "default": "스테이지된 변경사항을 분석하여 새로운 커밋 메시지 생성",
+        "all": "모든 변경사항을 스테이징하고 새로운 커밋 메시지 생성",
+        "improve_last": "가장 최근 커밋의 메시지를 개선",
+        "improve_message": "주어진 메시지를 개선",
+        "improve_all": "모든 변경사항을 스테이징하고 최근 커밋 메시지를 개선"
+      },
+      "info": {
+        "patch_mode": "'git add -p' 명령어로 변경사항을 선택적으로 스테이징해주세요",
+        "run_patch_mode": "'git add -p'로 변경사항을 스테이징한 후 다시 커밋 명령어를 실행해주세요",
+        "improving_message": "AI를 사용하여 커밋 메시지를 개선하는 중...",
+        "analyzing_changes": "커밋 메시지 제안을 위해 변경사항을 분석하는 중...",
+        "suggested_message": "제안된 커밋 메시지:"
+      },
+      "error": {
+        "staging_failed": "변경사항 스테이징에 실패했습니다",
+        "diff_failed": "스테이지된 변경사항을 가져오는데 실패했습니다",
+        "no_staged_changes": "스테이지된 변경사항이 없습니다. 'git add'를 사용하여 변경사항을 스테이지해주세요",
+        "invalid_subcommand": "잘못된 서브커맨드입니다. 'improve' 또는 'suggest'를 사용하세요",
+        "commit_failed": "커밋 생성에 실패했습니다"
+      },
+      "prompts": {
+        "use_message": "이 커밋 메시지를 사용하시겠습니까?",
+        "edit_message": "커밋 메시지 수정:"
+      },
+      "success": {
+        "committed": "개선된 메시지로 커밋이 성공적으로 생성되었습니다"
+      },
+      "commit_message": {
+        "analyze": "Please analyze the following changes and generate a commit message IN KOREAN:\nCurrent message: {{message}}\nChanges: {{diff}}\n\nPlease write the commit message in the following format. Do not include any additional explanations or formatting, just the commit message:\n\ntype(scope): Subject in Korean\n\nBody in Korean\n- Change 1\n- Change 2\n\nExample:\nfeat(인증): 로그인 기능 추가\n\n사용자 인증 시스템 구현\n- JWT 기반 인증 추가\n- 로그인 API 구현\n- 인증 미들웨어 추가\n\nImportant notes:\n1. Write everything in Korean except for this instruction\n2. Use conventional commit types (feat, fix, docs, etc)\n3. Keep the subject line concise and clear\n4. List actual changes from the diff in the body\n5. Do not make assumptions or guesses"
+      }
+    }
+  },
+  "ai": {
+    "initialization": {
+      "success": "AI 기능이 성공적으로 초기화되었습니다",
+      "failed": "AI 기능 초기화에 실패했습니다"
+    },
+    "error": {
+      "not_initialized": "AI가 초기화되지 않았습니다",
+      "initialization_failed": "AI 초기화 실패: {{error}}",
+      "invalid_provider": "지원하지 않는 AI 제공자입니다",
+      "processing_failed": "AI 처리 중 오류 발생: {{error}}",
+      "pr_description_failed": "PR 설명 생성 실패: {{error}}",
+      "code_review_failed": "코드 리뷰 실패: {{error}}",
+      "conflict_resolution_failed": "충돌 해결 제안 실패: {{error}}",
+      "commit_message_failed": "커밋 메시지 개선 실패: {{error}}"
+    },
+    "format": {
+      "file": {
+        "path": "파일: {{path}}",
+        "content": "내용:\n{{content}}"
+      },
+      "conflict": {
+        "file": "파일: {{file}}",
+        "content": "충돌:\n{{content}}"
+      }
+    },
+    "prompts": {
+      "pr_description": {
+        "analyze": "Please analyze the following changes and generate a PR description IN KOREAN. The description should follow this format:\n\n1. Start with a clear summary of what was changed\n2. Include a checklist of changes based on actual code changes\n3. For each checklist item:\n   - Mark with [V] if directly related to the changes\n   - Leave as [ ] if not relevant\n4. Be specific about what was changed and why\n5. Include technical details when relevant\n6. Use the following template structure and adapt it based on the changes:\n\n{{template}}\n\nFiles changed: {{files}}\n\nDiff content:\n{{diffContent}}\n\nImportant notes:\n1. Write EVERYTHING in Korean\n2. Focus on ACTUAL changes in the files and diff content\n3. Do not make assumptions about changes that are not shown in the diff\n4. Only mark checkboxes with [V] if the item is directly related to the changes in the diff\n5. Keep descriptions factual and based on the actual code changes\n6. Follow the template structure but adapt sections based on the actual changes",
+        "summarize": "Please summarize the following PR descriptions into a single, clear, and concise description IN KOREAN. Maintain the important aspects of each description while removing duplicates and providing a comprehensive overview of all changes:\n\n{{descriptions}}\n\nWhen summarizing, please:\n1. Write EVERYTHING in Korean\n2. Focus on actual code changes\n3. Maintain important checklist items\n4. Include technical details only when necessary\n5. Keep the template structure but adapt it to actual changes"
+      },
+      "code_review": {
+        "analyze": "Please review the following code files and provide feedback IN KOREAN:\n\n{{files}}\n\nReview requirements:\n1. Code quality and best practices\n2. Potential bugs or edge cases\n3. Performance considerations\n4. Security vulnerabilities\n5. Test coverage\n\nProvide specific, actionable feedback for each issue found. Write EVERYTHING in Korean."
+      },
+      "conflict_resolution": {
+        "analyze": "Please analyze the following merge conflicts and suggest resolutions IN KOREAN:\n\n{{conflicts}}\n\nFor each conflict:\n1. Explain the nature of the conflict\n2. Suggest the best resolution approach\n3. Provide specific guidance on which changes to keep\n4. Consider the context and impact of the changes\n\nWrite EVERYTHING in Korean."
+      },
+      "commit_message": {
+        "analyze": "Please analyze the following changes and generate a commit message IN KOREAN:\nCurrent message: {{message}}\nChanges: {{diff}}\n\nPlease write the commit message in the following format. Do not include any additional explanations or formatting, just the commit message:\n\ntype(scope): Subject in Korean\n\nBody in Korean\n- Change 1\n- Change 2\n\nExample:\nfeat(인증): 로그인 기능 추가\n\n사용자 인증 시스템 구현\n- JWT 기반 인증 추가\n- 로그인 API 구현\n- 인증 미들웨어 추가\n\nImportant notes:\n1. Write EVERYTHING in Korean except for this instruction\n2. Use conventional commit types (feat, fix, docs, etc)\n3. Keep the subject line concise and clear\n4. List actual changes from the diff in the body\n5. Do not make assumptions or guesses"
+      }
+    },
+    "models": {
+      "anthropic": {
+        "claude_3_7_sonnet_latest": {
+          "name": "claude-3-7-sonnet-latest",
+          "description": "최신 가장 지능적인 모델"
+        },
+        "claude_3_5_sonnet_latest": {
+          "name": "claude-3-5-sonnet-latest",
+          "description": "이전 가장 지능적인 모델"
+        },
+        "claude_3_5_haiku_latest": {
+          "name": "claude-3-5-haiku-latest",
+          "description": "가장 빠른 모델"
+        },
+        "claude_3_opus_latest": {
+          "name": "claude-3-opus-latest",
+          "description": "복잡한 작업용 강력한 모델"
+        },
+        "claude_3_haiku_20240307": {
+          "name": "claude-3-haiku-20240307",
+          "description": "빠르고 컴팩트한 모델"
+        }
+      },
+      "openai": {
+        "gpt_4": {
+          "name": "gpt-4",
+          "description": "가장 강력한 GPT 모델"
+        },
+        "gpt_3_5_turbo": {
+          "name": "gpt-3.5-turbo",
+          "description": "빠르고 효율적인 모델"
+        }
+      },
+      "github_copilot": {
+        "copilot_chat": {
+          "name": "copilot-chat",
+          "description": "GitHub의 AI 페어 프로그래밍 모델"
+        }
+      }
+    }
+  },
+  "config": {
+    "error": {
+      "load_global_failed": "전역 설정을 불러오는데 실패했습니다: {{error}}",
+      "load_project_failed": "프로젝트 설정을 불러오는데 실패했습니다: {{error}}",
+      "save_global_failed": "전역 설정을 저장하는데 실패했습니다: {{error}}",
+      "save_project_failed": "프로젝트 설정을 저장하는데 실패했습니다: {{error}}"
+    },
+    "branch_patterns": {
+      "types": {
+        "feat": "기능",
+        "fix": "버그 수정",
+        "refactor": "리팩토링",
+        "docs": "문서",
+        "chore": "잡일",
+        "test": "테스트"
+      },
+      "labels": {
+        "feature": "기능",
+        "bug": "버그",
+        "refactor": "리팩토링",
+        "documentation": "문서",
+        "chore": "잡일",
+        "test": "테스트"
+      }
+    }
+  }
+}

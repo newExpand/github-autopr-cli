@@ -1,0 +1,13 @@
+# Ignore everything
+*
+*/*
+
+!src
+!src/**
+src/**/__tests__/**
+
+!.eslintrc.json
+!.prettierrc
+!.gitignore
+!tsconfig.json
+!package.json
