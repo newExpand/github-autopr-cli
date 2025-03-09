@@ -27,11 +27,10 @@ export async function updateCommand(prNumber: string): Promise<void> {
 
     log.info("\n" + t("commands.update.info.title"));
     log.info(`#${pr.number} ${pr.title}`);
+    const status = pr.draft ? "draft" : "ready";
     log.info(
       t("commands.update.info.current_status", {
-        status: pr.draft
-          ? t("commands.review.status.draft")
-          : t("commands.review.status.ready"),
+        status: t(`commands.review.status.${status}`),
       }),
     );
 
