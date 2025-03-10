@@ -1,6 +1,6 @@
 {
   "name": "newexpand-autopr",
-  "version": "0.1.2",
+  "version": "0.1.1",
   "description": "GitHub PR Automation CLI Tool with AI",
   "type": "module",
   "main": "dist/index.js",
@@ -33,9 +33,19 @@
     "pr",
     "automation",
     "ai",
-    "newexpand-autopr"
+    "newexpand-autopr",
+    "pull-request",
+    "code-review",
+    "git",
+    "github-automation",
+    "pr-automation",
+    "ai-code-review",
+    "github-cli",
+    "git-automation",
+    "pr-management",
+    "github-tools"
   ],
-  "author": "newExpand",
+  "author": "newExpandgit",
   "license": "MIT",
   "dependencies": {
     "commander": "^11.1.0",
