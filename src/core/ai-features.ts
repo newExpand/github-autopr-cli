@@ -159,7 +159,7 @@ export class AIFeatures {
   ): Promise<string> {
     try {
       const chunks = await this.chunkPRContent(files, diffContent);
-      let descriptions: string[] = [];
+      const descriptions: string[] = [];
 
       // 각 청크에 대한 설명 생성
       for (const chunk of chunks) {

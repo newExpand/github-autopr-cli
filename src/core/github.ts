@@ -342,7 +342,7 @@ export async function updatePullRequest({
       : "markPullRequestReadyForReview";
 
     try {
-      const response = await client.graphql<GraphQLPullRequestResponse>(
+      const _response = await client.graphql<GraphQLPullRequestResponse>(
         `
         mutation($id: ID!) {
           ${mutation}(input: {pullRequestId: $id}) {
@@ -787,9 +787,9 @@ export async function getPullRequestConflicts(
   }
 }
 
-function findConflictBlocks(
+function _findConflictBlocks(
   headText: string,
-  baseText: string,
+  _baseText: string,
 ): ConflictBlock[] {
   const blocks: ConflictBlock[] = [];
   const lines = headText.split("\n");

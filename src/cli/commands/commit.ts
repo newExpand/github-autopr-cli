@@ -145,7 +145,7 @@ async function checkExistingPR(
 }
 
 // 브랜치가 dev인지 확인하는 함수 추가
-async function isDevToMainPR(branch: string, config: any): Promise<boolean> {
+async function _isDevToMainPR(branch: string, config: any): Promise<boolean> {
   return branch === "dev" && config.defaultBranch === "main";
 }
 
