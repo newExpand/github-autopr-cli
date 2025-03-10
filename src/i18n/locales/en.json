@@ -11,7 +11,8 @@
       "base_modified": "Base branch has been modified. Please merge the latest changes from the base branch.",
       "get_invitation_status": "Failed to get invitation status: {{error}}",
       "get_invitation_statuses": "Failed to get invitation statuses: {{error}}",
-      "get_conflicts": "Failed to get conflict information: {{error}}"
+      "get_conflicts": "Failed to get conflict information: {{error}}",
+      "protected_branch": "Cannot create PR from protected branch '{{branch}}'. Please create a new branch from '{{development}}' or '{{production}}'."
     },
     "warning": {
       "merge_conflict": "⚠️ This PR has merge conflicts that need to be resolved",
@@ -91,7 +92,7 @@
       "description": "Initialize autopr configuration",
       "prompts": {
         "token": "Enter your GitHub token",
-        "default_branch": "Enter your default branch name",
+        "default_branch": "Enter your production branch name (e.g., main, master)",
         "reviewers": "Enter default reviewers (comma separated)",
         "language": "Select your preferred language",
         "update_token": "GitHub token is already set. Would you like to update it?",
@@ -105,7 +106,11 @@
         "setup_ai": "Would you like to set up AI features?",
         "select_ai_provider": "Select AI provider:",
         "enter_api_key": "Enter {{provider}} API key:",
-        "select_model": "Select model to use:"
+        "select_model": "Select model to use:",
+        "development_branch": "Enter your development branch name (e.g., dev, develop, staging)",
+        "customize_release_pr": "Would you like to customize the Release PR template?",
+        "release_pr_title": "Enter Release PR title template (use {development} and {production} as placeholders)",
+        "release_pr_body": "Enter Release PR body template (use {development} and {production} as placeholders)"
       },
       "error": {
         "git_hooks": "Error occurred while setting up Git hooks: {{error}}",
@@ -115,7 +120,11 @@
       },
       "info": {
         "creating_env": "Creating new .env file",
-        "ai_config_saved": "AI configuration saved to .env file"
+        "ai_config_saved": "AI configuration saved to .env file",
+        "branch_strategy": "\nBranch Strategy Configuration:",
+        "development_branch_set": "Development branch set to: {{branch}}",
+        "production_branch_set": "Production branch set to: {{branch}}",
+        "release_template_set": "Release PR template customized"
       }
     },
     "new": {
@@ -124,7 +133,8 @@
         "main_branch": "Cannot create PR from {{branch}} branch. Please create a new branch first.",
         "create_failed": "Failed to create PR: {{error}}",
         "diff_failed": "Failed to get diff content",
-        "files_failed": "Failed to get changed files"
+        "files_failed": "Failed to get changed files",
+        "protected_branch": "Cannot create PR from protected branch '{{branch}}'. Please create a new branch from '{{development}}' or '{{production}}'."
       },
       "info": {
         "generating_description": "Generating PR description using AI...",

@@ -304,6 +304,32 @@ export async function initCommand(): Promise<void> {
       },
       {
         type: "input",
+        name: "developmentBranch",
+        message: t("commands.init.prompts.development_branch"),
+        default: projectConfig.developmentBranch || "dev",
+      },
+      {
+        type: "confirm",
+        name: "customizeReleasePR",
+        message: t("commands.init.prompts.customize_release_pr"),
+        default: false,
+      },
+      {
+        type: "input",
+        name: "releasePRTitle",
+        message: t("commands.init.prompts.release_pr_title"),
+        default: "Release: {development} to {production}",
+        when: (answers) => answers.customizeReleasePR,
+      },
+      {
+        type: "editor",
+        name: "releasePRBody",
+        message: t("commands.init.prompts.release_pr_body"),
+        default: "Merge {development} branch into {production} for release",
+        when: (answers) => answers.customizeReleasePR,
+      },
+      {
+        type: "input",
         name: "defaultReviewers",
         message: t("commands.init.prompts.reviewers"),
         default: projectConfig.defaultReviewers.join(", "),
@@ -326,8 +352,29 @@ export async function initCommand(): Promise<void> {
       await updateConfig({
         ...answers,
         defaultBranch: projectAnswers.defaultBranch,
+        developmentBranch: projectAnswers.developmentBranch,
+        ...(projectAnswers.customizeReleasePR && {
+          releasePRTitle: projectAnswers.releasePRTitle,
+          releasePRBody: projectAnswers.releasePRBody,
+        }),
         defaultReviewers: projectAnswers.defaultReviewers,
       });
+
+      // 브랜치 전략 설정 결과 출력
+      log.info(t("commands.init.info.branch_strategy"));
+      log.info(
+        t("commands.init.info.production_branch_set", {
+          branch: projectAnswers.defaultBranch,
+        }),
+      );
+      log.info(
+        t("commands.init.info.development_branch_set", {
+          branch: projectAnswers.developmentBranch,
+        }),
+      );
+      if (projectAnswers.customizeReleasePR) {
+        log.info(t("commands.init.info.release_template_set"));
+      }
 
       // Git 훅 설정
       if (projectAnswers.setupHooks) {

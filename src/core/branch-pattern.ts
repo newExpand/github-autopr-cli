@@ -269,13 +269,19 @@ export async function createAutoPR(branchName: string): Promise<void> {
   const title = await generatePRTitle(branchName, pattern);
   const body = await generatePRBody(pattern);
 
+  // 브랜치 전략에 따라 base 브랜치 결정
+  const baseBranch =
+    pattern.type === "release"
+      ? config.defaultBranch
+      : config.developmentBranch || config.defaultBranch;
+
   const pr = await createPullRequest({
     owner: repoInfo.owner,
     repo: repoInfo.repo,
     title,
     body,
     head: branchName,
-    base: config.defaultBranch,
+    base: baseBranch,
     draft: pattern.draft,
   });
 
