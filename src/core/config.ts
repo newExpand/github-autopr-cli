@@ -23,6 +23,7 @@ const DEFAULT_GLOBAL_CONFIG: GlobalConfig = {
 
 const DEFAULT_PROJECT_CONFIG: ProjectConfig = {
   defaultBranch: "main",
+  developmentBranch: "dev",
   defaultReviewers: [],
   autoPrEnabled: true,
   defaultLabels: [],
@@ -85,6 +86,16 @@ const DEFAULT_PROJECT_CONFIG: ProjectConfig = {
       draft: true,
       labels: ["test"],
       template: "test",
+      autoAssignReviewers: true,
+      reviewers: [],
+      reviewerGroups: [],
+    },
+    {
+      pattern: "release/*",
+      type: "release" as const,
+      draft: false,
+      labels: ["release"],
+      template: "release",
       autoAssignReviewers: true,
       reviewers: [],
       reviewerGroups: [],

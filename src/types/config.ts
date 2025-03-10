@@ -16,7 +16,7 @@ export const FilePatternSchema = z.object({
 
 export const BranchPatternSchema = z.object({
   pattern: z.string(),
-  type: z.enum(["feat", "fix", "refactor", "docs", "chore", "test"]),
+  type: z.enum(["feat", "fix", "refactor", "docs", "chore", "test", "release"]),
   draft: z.boolean().default(true),
   labels: z.array(z.string()).default([]),
   template: z.string().optional(),
@@ -45,10 +45,21 @@ export const GlobalConfigSchema = z.object({
   language: z.enum(supportedLanguages).default("en"),
 });
 
+export const BranchStrategySchema = z.object({
+  developmentBranch: z.string().default("dev"),
+  releasePRTitle: z.string().default("Release: {development} to {production}"),
+  releasePRBody: z
+    .string()
+    .default("Merge {development} branch into {production} for release"),
+});
+
 export const ProjectConfigSchema = z.object({
   owner: z.string().optional(),
   repo: z.string().optional(),
   defaultBranch: z.string().default("main"),
+  developmentBranch: z.string().default("dev"),
+  releasePRTitle: z.string().optional(),
+  releasePRBody: z.string().optional(),
   defaultReviewers: z.array(z.string()).default([]),
   autoPrEnabled: z.boolean().default(true),
   defaultLabels: z.array(z.string()).default([]),

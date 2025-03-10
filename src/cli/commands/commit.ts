@@ -6,6 +6,8 @@ import { log } from "../../utils/logger.js";
 import { exec } from "child_process";
 import { promisify } from "util";
 import inquirer from "inquirer";
+import { createAutoPR } from "../../core/branch-pattern.js";
+import { getOctokit } from "../../core/github.js";
 
 const execAsync = promisify(exec);
 
@@ -13,6 +15,47 @@ interface CommitOptions {
   all?: boolean;
   patch?: boolean;
   push?: boolean;
+}
+
+// 브랜치 전략 관련 인터페이스 추가
+interface BranchStrategy {
+  developmentBranch: string; // 개발 브랜치 (e.g., 'dev', 'develop', 'staging')
+  productionBranch: string; // 프로덕션 브랜치 (e.g., 'main', 'master', 'production')
+  releasePRTitle: string; // 릴리스 PR 제목 템플릿
+  releasePRBody: string; // 릴리스 PR 본문 템플릿
+}
+
+// 기본 브랜치 전략
+const DEFAULT_BRANCH_STRATEGY: BranchStrategy = {
+  developmentBranch: "dev",
+  productionBranch: "main",
+  releasePRTitle: "Release: {development} to {production}",
+  releasePRBody: "Merge {development} branch into {production} for release",
+};
+
+// 설정에서 브랜치 전략 가져오기
+function getBranchStrategy(config: any): BranchStrategy {
+  const strategy = {
+    developmentBranch:
+      config.developmentBranch || DEFAULT_BRANCH_STRATEGY.developmentBranch,
+    productionBranch:
+      config.defaultBranch || DEFAULT_BRANCH_STRATEGY.productionBranch,
+    releasePRTitle:
+      config.releasePRTitle || DEFAULT_BRANCH_STRATEGY.releasePRTitle,
+    releasePRBody:
+      config.releasePRBody || DEFAULT_BRANCH_STRATEGY.releasePRBody,
+  };
+
+  // 템플릿의 플레이스홀더 치환
+  strategy.releasePRTitle = strategy.releasePRTitle
+    .replace("{development}", strategy.developmentBranch)
+    .replace("{production}", strategy.productionBranch);
+
+  strategy.releasePRBody = strategy.releasePRBody
+    .replace("{development}", strategy.developmentBranch)
+    .replace("{production}", strategy.productionBranch);
+
+  return strategy;
 }
 
 async function stageChanges(options: CommitOptions): Promise<boolean> {
@@ -68,6 +111,42 @@ async function pushToRemote(branch: string): Promise<void> {
     log.error(t("commands.commit.error.push_failed", { error: String(error) }));
     throw error;
   }
+}
+
+// 릴리스 PR인지 확인하는 함수 수정
+async function isReleasePR(
+  branch: string,
+  strategy: BranchStrategy,
+): Promise<boolean> {
+  return branch === strategy.developmentBranch;
+}
+
+// PR이 이미 존재하는지 확인하는 함수는 그대로 유지
+async function checkExistingPR(
+  owner: string,
+  repo: string,
+  branch: string,
+  baseBranch?: string,
+): Promise<boolean> {
+  try {
+    const client = await getOctokit();
+    const { data: pulls } = await client.rest.pulls.list({
+      owner,
+      repo,
+      head: `${owner}:${branch}`,
+      base: baseBranch,
+      state: "open",
+    });
+    return pulls.length > 0;
+  } catch (error) {
+    log.warn(t("commands.commit.warning.pr_check_failed"));
+    return false;
+  }
+}
+
+// 브랜치가 dev인지 확인하는 함수 추가
+async function isDevToMainPR(branch: string, config: any): Promise<boolean> {
+  return branch === "dev" && config.defaultBranch === "main";
 }
 
 export async function commitCommand(
@@ -201,6 +280,57 @@ export async function commitCommand(
       if (options.push) {
         const currentBranch = await getCurrentBranch();
         await pushToRemote(currentBranch);
+
+        // 릴리스 PR인지 확인
+        const branchStrategy = getBranchStrategy(config);
+        const isRelease = await isReleasePR(currentBranch, branchStrategy);
+
+        if (isRelease) {
+          // 릴리스 PR이 없는 경우에만 생성
+          const prExists = await checkExistingPR(
+            repoInfo.owner,
+            repoInfo.repo,
+            currentBranch,
+            branchStrategy.productionBranch,
+          );
+
+          if (!prExists) {
+            try {
+              const client = await getOctokit();
+              await client.rest.pulls.create({
+                owner: repoInfo.owner,
+                repo: repoInfo.repo,
+                title: branchStrategy.releasePRTitle,
+                head: branchStrategy.developmentBranch,
+                base: branchStrategy.productionBranch,
+                body: branchStrategy.releasePRBody,
+              });
+              log.info(t("commands.commit.success.release_pr_created"));
+            } catch (error) {
+              log.error(t("commands.commit.error.release_pr_failed"));
+            }
+          } else {
+            log.info(t("commands.commit.info.release_pr_exists"));
+          }
+        } else {
+          // 일반적인 feature/bugfix PR 처리
+          const prExists = await checkExistingPR(
+            repoInfo.owner,
+            repoInfo.repo,
+            currentBranch,
+            branchStrategy.developmentBranch,
+          );
+
+          if (!prExists) {
+            try {
+              await createAutoPR(currentBranch);
+            } catch (error) {
+              log.error(t("common.error.pr_exists"));
+            }
+          } else {
+            log.info(t("commands.commit.info.pr_exists"));
+          }
+        }
       }
     } catch (error) {
       log.error(t("commands.commit.error.commit_failed"), error);

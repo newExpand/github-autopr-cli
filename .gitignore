@@ -12,3 +12,4 @@ src/**/__tests__/**
 !tsconfig.json
 !package.json
 !README.md
+!README-kr.md
