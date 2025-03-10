@@ -85,6 +85,16 @@ async function getStagedDiff(): Promise<string> {
   }
 }
 
+async function getChangedFiles(): Promise<string[]> {
+  try {
+    const { stdout } = await execAsync("git diff --staged --name-only");
+    return stdout.split("\n").filter(Boolean);
+  } catch (error) {
+    log.error(t("commands.commit.error.files_failed"));
+    return [];
+  }
+}
+
 async function getCurrentCommitMessage(): Promise<string> {
   try {
     const { stdout } = await execAsync("git log -1 --pretty=%B");
@@ -323,7 +333,19 @@ export async function commitCommand(
 
           if (!prExists) {
             try {
-              await createAutoPR(currentBranch);
+              // AI가 활성화된 경우 PR 설명 생성
+              if (aiEnabled) {
+                const ai = new AIFeatures();
+                const diffContent = await getStagedDiff();
+                const files = await getChangedFiles();
+                const prDescription = await ai.generatePRDescription(
+                  files,
+                  diffContent,
+                );
+                await createAutoPR(currentBranch, prDescription);
+              } else {
+                await createAutoPR(currentBranch);
+              }
             } catch (error) {
               log.error(t("common.error.pr_exists"));
             }

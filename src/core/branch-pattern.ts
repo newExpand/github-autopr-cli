@@ -254,7 +254,10 @@ async function selectReviewers(
   return valid;
 }
 
-export async function createAutoPR(branchName: string): Promise<void> {
+export async function createAutoPR(
+  branchName: string,
+  customDescription?: string,
+): Promise<void> {
   const config = await loadConfig();
   if (!config || !config.autoPrEnabled) return;
 
@@ -267,7 +270,7 @@ export async function createAutoPR(branchName: string): Promise<void> {
   }
 
   const title = await generatePRTitle(branchName, pattern);
-  const body = await generatePRBody(pattern);
+  const body = customDescription || (await generatePRBody(pattern));
 
   // 브랜치 전략에 따라 base 브랜치 결정
   const baseBranch =
