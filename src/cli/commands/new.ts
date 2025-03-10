@@ -75,16 +75,25 @@ export async function newCommand(): Promise<void> {
       process.exit(1);
     }
 
-    // main 브랜치 체크
-    if (repoInfo.currentBranch === config.defaultBranch) {
+    // main/master 브랜치 체크
+    if (
+      repoInfo.currentBranch === config.defaultBranch ||
+      repoInfo.currentBranch === config.developmentBranch
+    ) {
       log.error(
-        t("commands.new.error.main_branch", { branch: config.defaultBranch }),
+        t("commands.new.error.protected_branch", {
+          branch: repoInfo.currentBranch,
+          development: config.developmentBranch,
+          production: config.defaultBranch,
+        }),
       );
       process.exit(1);
     }
 
     // 브랜치 패턴 매칭
     const pattern = await findMatchingPattern(repoInfo.currentBranch);
+    if (!pattern) return;
+
     let defaultTitle = repoInfo.currentBranch;
     let defaultBody = "";
 
@@ -190,6 +199,12 @@ export async function newCommand(): Promise<void> {
     log.info(t("commands.new.info.creating"));
 
     try {
+      // 브랜치 전략에 따라 base 브랜치 결정
+      const baseBranch =
+        pattern?.type === "release"
+          ? config.defaultBranch
+          : config.developmentBranch || config.defaultBranch;
+
       const pr = await createPullRequest({
         owner: repoInfo.owner,
         repo: repoInfo.repo,
@@ -198,7 +213,7 @@ export async function newCommand(): Promise<void> {
           ? generatedDescription
           : answers.body || "",
         head: repoInfo.currentBranch,
-        base: config.defaultBranch,
+        base: baseBranch,
         draft: pattern?.draft ?? false,
       });
 

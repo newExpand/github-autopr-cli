@@ -11,7 +11,8 @@
       "base_modified": "대상 브랜치가 수정되었습니다. 대상 브랜치의 최신 변경사항을 병합해주세요.",
       "get_invitation_status": "초대 상태 조회에 실패했습니다: {{error}}",
       "get_invitation_statuses": "초대 상태 목록 조회에 실패했습니다: {{error}}",
-      "get_conflicts": "충돌 정보 조회에 실패했습니다: {{error}}"
+      "get_conflicts": "충돌 정보 조회에 실패했습니다: {{error}}",
+      "protected_branch": "보호된 브랜치 '{{branch}}'에서 직접 PR을 생성할 수 없습니다. '{{development}}' 또는 '{{production}}'에서 새 브랜치를 생성해주세요."
     },
     "warning": {
       "merge_conflict": "⚠️ 이 PR에는 해결해야 할 병합 충돌이 있습니다",
@@ -92,7 +93,11 @@
       "description": "autopr 설정 초기화",
       "prompts": {
         "token": "GitHub 토큰을 입력하세요",
-        "default_branch": "기본 브랜치 이름을 입력하세요",
+        "default_branch": "프로덕션 브랜치 이름을 입력하세요 (예: main, master)",
+        "development_branch": "개발 브랜치 이름을 입력하세요 (예: dev, develop, staging)",
+        "customize_release_pr": "릴리스 PR 템플릿을 커스터마이징하시겠습니까?",
+        "release_pr_title": "릴리스 PR 제목 템플릿을 입력하세요 ({development}와 {production} 플레이스홀더 사용 가능)",
+        "release_pr_body": "릴리스 PR 본문 템플릿을 입력하세요 ({development}와 {production} 플레이스홀더 사용 가능)",
         "reviewers": "기본 리뷰어를 입력하세요 (쉼표로 구분)",
         "language": "선호하는 언어를 선택하세요",
         "update_token": "GitHub 토큰이 이미 설정되어 있습니다. 변경하시겠습니까?",
@@ -110,7 +115,11 @@
       },
       "info": {
         "creating_env": "새로운 .env 파일을 생성합니다",
-        "ai_config_saved": "AI 설정이 .env 파일에 저장되었습니다"
+        "ai_config_saved": "AI 설정이 .env 파일에 저장되었습니다",
+        "branch_strategy": "\n브랜치 전략 설정:",
+        "development_branch_set": "개발 브랜치가 {{branch}}(으)로 설정되었습니다",
+        "production_branch_set": "프로덕션 브랜치가 {{branch}}(으)로 설정되었습니다",
+        "release_template_set": "릴리스 PR 템플릿이 커스터마이징되었습니다"
       },
       "error": {
         "git_hooks": "Git 훅 설정 중 오류가 발생했습니다: {{error}}",
@@ -125,7 +134,8 @@
         "main_branch": "{{branch}} 브랜치에서 직접 PR을 생성할 수 없습니다. 새로운 브랜치를 먼저 생성해주세요.",
         "create_failed": "PR 생성 실패: {{error}}",
         "diff_failed": "변경사항 내용을 가져오는데 실패했습니다",
-        "files_failed": "변경된 파일 목록을 가져오는데 실패했습니다"
+        "files_failed": "변경된 파일 목록을 가져오는데 실패했습니다",
+        "protected_branch": "보호된 브랜치 '{{branch}}'에서 직접 PR을 생성할 수 없습니다. '{{development}}' 또는 '{{production}}'에서 새 브랜치를 생성해주세요."
       },
       "prompts": {
         "title": "PR 제목을 입력하세요",
