@@ -137,20 +137,24 @@
         "protected_branch": "Cannot create PR from protected branch '{{branch}}'. Please create a new branch from '{{development}}' or '{{production}}'."
       },
       "info": {
+        "pr_exists": "PR #{{number}} already exists.",
         "generating_description": "Generating PR description using AI...",
         "generated_description": "AI generated description:",
-        "creating": "Creating Pull Request...",
-        "adding_reviewers": "Adding reviewers...",
-        "reviewers_added": "Reviewers added: {{reviewers}}"
+        "creating": "Creating Pull Request..."
       },
       "warning": {
         "ai_description_failed": "Failed to generate AI description, falling back to manual input"
       },
       "prompts": {
+        "update_existing": "Would you like to update the existing PR?",
         "title": "Enter PR title",
         "body": "Enter PR description",
         "reviewers": "Enter reviewers (press enter to skip)",
         "use_ai_description": "Use AI-generated description?"
+      },
+      "success": {
+        "pr_updated": "PR #{{number}} has been successfully updated.",
+        "cancelled": "Operation cancelled."
       }
     },
     "list": {

@@ -1,7 +1,12 @@
 import inquirer from "inquirer";
 import { t } from "../../i18n/index.js";
 import { loadConfig } from "../../core/config.js";
-import { createPullRequest, addReviewers } from "../../core/github.js";
+import {
+  createPullRequest,
+  addReviewers,
+  updatePullRequest,
+  getOctokit,
+} from "../../core/github.js";
 import { getCurrentRepoInfo } from "../../utils/git.js";
 import { log } from "../../utils/logger.js";
 import { AIFeatures } from "../../core/ai-features.js";
@@ -207,6 +212,64 @@ export async function newCommand(): Promise<void> {
 
       // head 브랜치 참조 형식 수정
       const headBranch = repoInfo.currentBranch;
+
+      // PR이 이미 존재하는지 확인
+      const client = await getOctokit();
+      const existingPRs = await client.rest.pulls.list({
+        owner: repoInfo.owner,
+        repo: repoInfo.repo,
+        head: `${repoInfo.owner}:${headBranch}`,
+        state: "open",
+      });
+
+      if (existingPRs.data.length > 0) {
+        const existingPR = existingPRs.data[0];
+        log.info(
+          t("commands.new.info.pr_exists", { number: existingPR.number }),
+        );
+
+        // 기존 PR 업데이트 여부 확인
+        const { updateExisting } = await inquirer.prompt([
+          {
+            type: "confirm",
+            name: "updateExisting",
+            message: t("commands.new.prompts.update_existing"),
+            default: true,
+          },
+        ]);
+
+        if (updateExisting) {
+          // 기존 PR 업데이트
+          await updatePullRequest({
+            owner: repoInfo.owner,
+            repo: repoInfo.repo,
+            pull_number: existingPR.number,
+            title: answers.title,
+            body: answers.useAIDescription
+              ? generatedDescription
+              : answers.body || "",
+          });
+
+          // 리뷰어 업데이트
+          if (answers.reviewers.length > 0) {
+            await addReviewers({
+              owner: repoInfo.owner,
+              repo: repoInfo.repo,
+              pull_number: existingPR.number,
+              reviewers: answers.reviewers,
+            });
+          }
+
+          log.info(
+            t("commands.new.success.pr_updated", { number: existingPR.number }),
+          );
+          log.info(`PR URL: ${existingPR.html_url}`);
+          return;
+        } else {
+          log.info(t("commands.new.success.cancelled"));
+          return;
+        }
+      }
 
       const pr = await createPullRequest({
         owner: repoInfo.owner,

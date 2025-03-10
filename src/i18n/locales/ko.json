@@ -138,21 +138,24 @@
         "protected_branch": "보호된 브랜치 '{{branch}}'에서 직접 PR을 생성할 수 없습니다. '{{development}}' 또는 '{{production}}'에서 새 브랜치를 생성해주세요."
       },
       "prompts": {
+        "update_existing": "기존 PR을 업데이트하시겠습니까?",
         "title": "PR 제목을 입력하세요",
         "body": "PR 설명을 입력하세요",
         "reviewers": "리뷰어를 입력하세요 (건너뛰려면 엔터)",
-        "use_ai_description": "AI가 생성한 설명을 사용하시겠습니까?",
-        "edit_ai_description": "AI가 생성한 설명을 수정하시겠습니까?"
+        "use_ai_description": "AI가 생성한 설명을 사용하시겠습니까?"
       },
       "info": {
-        "creating": "Pull Request 생성 중...",
-        "adding_reviewers": "리뷰어 추가 중...",
-        "reviewers_added": "리뷰어가 추가되었습니다: {{reviewers}}",
+        "pr_exists": "PR #{{number}}이(가) 이미 존재합니다.",
         "generating_description": "AI를 사용하여 PR 설명을 생성하는 중...",
-        "generated_description": "AI가 생성한 설명:"
+        "generated_description": "AI가 생성한 설명:",
+        "creating": "Pull Request 생성 중..."
       },
       "warning": {
         "ai_description_failed": "AI 설명 생성에 실패했습니다. 수동 입력으로 전환합니다"
+      },
+      "success": {
+        "pr_updated": "PR #{{number}}이(가) 성공적으로 업데이트되었습니다.",
+        "cancelled": "작업이 취소되었습니다."
       }
     },
     "list": {
