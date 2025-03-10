@@ -183,8 +183,6 @@ autopr lang current
 다음 AI 제공자를 지원합니다:
 
 - OpenAI (GPT-4, GPT-3.5-turbo)
-- GitHub Copilot
-- Anthropic (Claude)
 
 AI 기능은 다음 작업을 지원합니다:
 

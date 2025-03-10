@@ -183,8 +183,6 @@ Each pattern can be configured with:
 Supports the following AI providers:
 
 - OpenAI (GPT-4, GPT-3.5-turbo)
-- GitHub Copilot
-- Anthropic (Claude)
 
 AI capabilities include:
 
