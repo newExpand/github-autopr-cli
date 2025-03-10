@@ -555,9 +555,10 @@ export async function mergeCommand(prNumber: string): Promise<void> {
 
     log.info(t("commands.merge.success.merged"));
 
-    // GitHub API를 통한 원격 브랜치 삭제 재시도
+    // GitHub API를 통한 원격 브랜치 삭제
     if (deleteBranch) {
       try {
+        // 1. GitHub API를 통한 삭제 시도
         const client = await getOctokit();
         await client.rest.git.deleteRef({
           owner: repoInfo.owner,
@@ -565,7 +566,14 @@ export async function mergeCommand(prNumber: string): Promise<void> {
           ref: `heads/${pr.head.ref}`,
         });
       } catch (error) {
-        // 이미 삭제된 경우 무시
+        // API 삭제 실패 시 git 명령어로 시도
+        try {
+          execSync(`git push origin --delete ${pr.head.ref}`, {
+            stdio: "pipe",
+          });
+        } catch (pushError) {
+          // 이미 삭제된 경우 무시
+        }
       }
     }
 
@@ -604,23 +612,27 @@ export async function mergeCommand(prNumber: string): Promise<void> {
             execSync(`git branch -D ${pr.head.ref}`, { stdio: "inherit" });
             log.info(t("commands.merge.cleanup.branch_deleted"));
 
-            // 원격 브랜치도 삭제 (이미 GitHub에서 삭제된 경우 무시)
+            // 원격 브랜치 삭제 상태 확인 및 정리
             try {
-              // 원격 브랜치가 존재하는지 확인
-              const remoteBranchExists = execSync(
+              // 원격 브랜치 목록 업데이트
+              execSync("git fetch --prune origin", { stdio: "pipe" });
+
+              // 원격 브랜치가 여전히 존재하는지 확인
+              const remoteExists = execSync(
                 `git ls-remote --heads origin ${pr.head.ref}`,
                 { stdio: "pipe" },
               )
                 .toString()
                 .trim();
 
-              if (remoteBranchExists) {
+              if (remoteExists) {
+                log.info(t("commands.merge.cleanup.deleting_remote_branch"));
                 execSync(`git push origin --delete ${pr.head.ref}`, {
                   stdio: "inherit",
                 });
               }
             } catch (error) {
-              // 원격 브랜치가 이미 삭제된 경우 무시
+              // 원격 브랜치 관련 오류는 무시
             }
           } catch (error) {
             // 브랜치가 이미 없는 경우 무시
