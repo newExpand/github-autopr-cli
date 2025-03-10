@@ -93,8 +93,8 @@ export const log = {
   debug: (message: string, ...meta: any[]) => logger.debug(message, ...meta),
   verbose: (message: string, ...meta: any[]) =>
     logger.verbose(message, ...meta),
-  section: (message: string, ...meta: any[]) => logger.log("section", message),
-  step: (message: string, ...meta: any[]) => logger.log("step", message),
+  section: (message: string, ..._meta: any[]) => logger.log("section", message),
+  step: (message: string, ..._meta: any[]) => logger.log("step", message),
 };
 
 export default logger;

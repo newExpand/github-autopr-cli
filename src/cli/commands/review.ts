@@ -259,7 +259,7 @@ export async function reviewCommand(prNumber: string): Promise<void> {
         }
         break;
 
-      case "review":
+      case "review": {
         const { reviewType, comment } = await inquirer.prompt([
           {
             type: "list",
@@ -306,6 +306,7 @@ export async function reviewCommand(prNumber: string): Promise<void> {
           log.error(t("commands.review.error.submit_failed"), error);
         }
         break;
+      }
 
       case "checkout":
         try {

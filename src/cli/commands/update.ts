@@ -113,7 +113,7 @@ export async function updateCommand(prNumber: string): Promise<void> {
     }
 
     try {
-      const updatedPr = await updatePullRequest(updates);
+      const _updatedPr = await updatePullRequest(updates);
       log.info(t("commands.update.success.all"));
 
       // 상태가 변경된 경우 약간의 지연 후 최신 상태 확인
