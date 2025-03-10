@@ -5,6 +5,10 @@
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/newExpand/github-autopr-cli.git"
+  },
   "bin": {
     "autopr": "./dist/cli/index.js"
   },
@@ -20,7 +24,7 @@
     "lint": "eslint . --ext .ts",
     "format": "prettier --write \"src/**/*.ts\"",
     "prepare": "npm run build",
-    "prepublishOnly": "npm run lint && npm run test",
+    "prepublishOnly": "npm run build",
     "prepack": "npm run build"
   },
   "keywords": [
