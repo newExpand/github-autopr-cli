@@ -240,14 +240,21 @@ export async function newCommand(): Promise<void> {
 
         if (updateExisting) {
           // 기존 PR 업데이트
+          const newBody = `
+# 이전 내용
+${existingPR.body || "(내용 없음)"}
+
+---
+# 업데이트된 내용
+${answers.useAIDescription ? generatedDescription : answers.body || ""}
+`;
+
           await updatePullRequest({
             owner: repoInfo.owner,
             repo: repoInfo.repo,
             pull_number: existingPR.number,
             title: answers.title,
-            body: answers.useAIDescription
-              ? generatedDescription
-              : answers.body || "",
+            body: newBody,
           });
 
           // 리뷰어 업데이트
