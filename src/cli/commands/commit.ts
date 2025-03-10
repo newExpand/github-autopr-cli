@@ -12,6 +12,7 @@ const execAsync = promisify(exec);
 interface CommitOptions {
   all?: boolean;
   patch?: boolean;
+  push?: boolean;
 }
 
 async function stageChanges(options: CommitOptions): Promise<boolean> {
@@ -50,6 +51,25 @@ async function getCurrentCommitMessage(): Promise<string> {
   }
 }
 
+async function getCurrentBranch(): Promise<string> {
+  try {
+    const { stdout } = await execAsync("git rev-parse --abbrev-ref HEAD");
+    return stdout.trim();
+  } catch (error) {
+    throw new Error(t("commands.commit.error.get_branch_failed"));
+  }
+}
+
+async function pushToRemote(branch: string): Promise<void> {
+  try {
+    await execAsync(`git push origin ${branch}`);
+    log.info(t("commands.commit.success.pushed", { branch }));
+  } catch (error) {
+    log.error(t("commands.commit.error.push_failed", { error: String(error) }));
+    throw error;
+  }
+}
+
 export async function commitCommand(
   subcommand?: string,
   message?: string,
@@ -83,6 +103,11 @@ export async function commitCommand(
     if (!aiEnabled && subcommand === "improve") {
       log.error(t("ai.error.not_initialized"));
       process.exit(1);
+    }
+
+    // -a 옵션이 있으면 자동으로 push 옵션도 활성화
+    if (options.all) {
+      options.push = true;
     }
 
     // 변경사항 스테이징
@@ -171,6 +196,12 @@ export async function commitCommand(
     try {
       await execAsync(`git commit -m "${commitMessage.replace(/"/g, '\\"')}"`);
       log.info(t("commands.commit.success.committed"));
+
+      // push 옵션이 활성화된 경우 자동으로 push 실행
+      if (options.push) {
+        const currentBranch = await getCurrentBranch();
+        await pushToRemote(currentBranch);
+      }
     } catch (error) {
       log.error(t("commands.commit.error.commit_failed"), error);
       process.exit(1);

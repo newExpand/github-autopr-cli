@@ -252,9 +252,10 @@
       "description": "PR을 병합합니다",
       "info": {
         "title": "PR 정보",
-        "author": "작성자: {{author}}",
-        "branch": "브랜치: {{branch}}",
-        "base_branch": "대상 브랜치: {{branch}}",
+        "branch_info": "브랜치 정보",
+        "pr_branch": "PR 브랜치: {{branch}}",
+        "target_branch": "대상 브랜치: {{branch}}",
+        "author": "PR 작성자: {{author}}",
         "checking_conflicts": "충돌 확인 중...",
         "cancelled": "병합이 취소되었습니다"
       },
@@ -420,7 +421,7 @@
     "commit": {
       "description": "AI를 사용하여 커밋 메시지 개선 또는 제안",
       "options": {
-        "all": "모든 변경사항을 스테이징하고 커밋",
+        "all_with_push": "모든 변경사항을 스테이징하고 커밋 후 자동으로 push",
         "patch": "대화형으로 변경사항을 선택하여 스테이징"
       },
       "args": {
@@ -433,7 +434,9 @@
         "all": "모든 변경사항을 스테이징하고 새로운 커밋 메시지 생성",
         "improve_last": "가장 최근 커밋의 메시지를 개선",
         "improve_message": "주어진 메시지를 개선",
-        "improve_all": "모든 변경사항을 스테이징하고 최근 커밋 메시지를 개선"
+        "improve_all": "모든 변경사항을 스테이징하고 최근 커밋 메시지를 개선",
+        "all_with_push": "모든 변경사항을 스테이징하고 커밋 후 자동으로 push",
+        "improve_all_with_push": "모든 변경사항을 스테이징하고 최근 커밋 메시지를 개선 후 자동으로 push"
       },
       "info": {
         "patch_mode": "'git add -p' 명령어로 변경사항을 선택적으로 스테이징해주세요",
@@ -447,14 +450,17 @@
         "diff_failed": "스테이지된 변경사항을 가져오는데 실패했습니다",
         "no_staged_changes": "스테이지된 변경사항이 없습니다. 'git add'를 사용하여 변경사항을 스테이지해주세요",
         "invalid_subcommand": "잘못된 서브커맨드입니다. 'improve' 또는 'suggest'를 사용하세요",
-        "commit_failed": "커밋 생성에 실패했습니다"
+        "commit_failed": "커밋 생성에 실패했습니다",
+        "get_branch_failed": "현재 브랜치 정보를 가져오는데 실패했습니다",
+        "push_failed": "원격 저장소로 push하는데 실패했습니다: {{error}}"
       },
       "prompts": {
         "use_message": "이 커밋 메시지를 사용하시겠습니까?",
         "edit_message": "커밋 메시지 수정:"
       },
       "success": {
-        "committed": "개선된 메시지로 커밋이 성공적으로 생성되었습니다"
+        "committed": "개선된 메시지로 커밋이 성공적으로 생성되었습니다",
+        "pushed": "{{branch}} 브랜치가 원격 저장소로 push되었습니다"
       },
       "commit_message": {
         "analyze": "Please analyze the following changes and generate a commit message IN KOREAN:\nCurrent message: {{message}}\nChanges: {{diff}}\n\nPlease write the commit message in the following format. Do not include any additional explanations or formatting, just the commit message:\n\ntype(scope): Subject in Korean\n\nBody in Korean\n- Change 1\n- Change 2\n\nExample:\nfeat(인증): 로그인 기능 추가\n\n사용자 인증 시스템 구현\n- JWT 기반 인증 추가\n- 로그인 API 구현\n- 인증 미들웨어 추가\n\nImportant notes:\n1. Write everything in Korean except for this instruction\n2. Use conventional commit types (feat, fix, docs, etc)\n3. Keep the subject line concise and clear\n4. List actual changes from the diff in the body\n5. Do not make assumptions or guesses"
