@@ -6,6 +6,7 @@ import { log } from "../../utils/logger.js";
 import { exec } from "child_process";
 import { promisify } from "util";
 import inquirer from "inquirer";
+import { createAutoPR } from "../../core/branch-pattern.js";
 
 const execAsync = promisify(exec);
 
@@ -201,6 +202,16 @@ export async function commitCommand(
       if (options.push) {
         const currentBranch = await getCurrentBranch();
         await pushToRemote(currentBranch);
+
+        // -a 옵션으로 push한 경우 자동으로 PR 생성
+        if (options.all) {
+          try {
+            await createAutoPR(currentBranch);
+          } catch (error) {
+            // PR 생성 실패는 치명적이지 않으므로 에러만 로깅
+            log.error(t("common.error.pr_exists"));
+          }
+        }
       }
     } catch (error) {
       log.error(t("commands.commit.error.commit_failed"), error);
