@@ -205,6 +205,9 @@ export async function newCommand(): Promise<void> {
           ? config.defaultBranch
           : config.developmentBranch || config.defaultBranch;
 
+      // head 브랜치 참조 형식 수정
+      const headBranch = `${repoInfo.owner}:${repoInfo.currentBranch}`;
+
       const pr = await createPullRequest({
         owner: repoInfo.owner,
         repo: repoInfo.repo,
@@ -212,7 +215,7 @@ export async function newCommand(): Promise<void> {
         body: answers.useAIDescription
           ? generatedDescription
           : answers.body || "",
-        head: repoInfo.currentBranch,
+        head: headBranch, // 수정된 형식 사용
         base: baseBranch,
         draft: pattern?.draft ?? false,
       });
