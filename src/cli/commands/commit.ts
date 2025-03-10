@@ -6,6 +6,8 @@ import { log } from "../../utils/logger.js";
 import { exec } from "child_process";
 import { promisify } from "util";
 import inquirer from "inquirer";
+import { createAutoPR } from "../../core/branch-pattern.js";
+import { getOctokit } from "../../core/github.js";
 
 const execAsync = promisify(exec);
 
@@ -67,6 +69,27 @@ async function pushToRemote(branch: string): Promise<void> {
   } catch (error) {
     log.error(t("commands.commit.error.push_failed", { error: String(error) }));
     throw error;
+  }
+}
+
+// PR이 이미 존재하는지 확인하는 함수 추가
+async function checkExistingPR(
+  owner: string,
+  repo: string,
+  branch: string,
+): Promise<boolean> {
+  try {
+    const client = await getOctokit();
+    const { data: pulls } = await client.rest.pulls.list({
+      owner,
+      repo,
+      head: `${owner}:${branch}`,
+      state: "open",
+    });
+    return pulls.length > 0;
+  } catch (error) {
+    log.warn(t("commands.commit.warning.pr_check_failed"));
+    return false;
   }
 }
 
@@ -201,6 +224,25 @@ export async function commitCommand(
       if (options.push) {
         const currentBranch = await getCurrentBranch();
         await pushToRemote(currentBranch);
+
+        // -a 옵션으로 push한 경우 PR이 없을 때만 자동으로 PR 생성
+        if (options.all) {
+          const prExists = await checkExistingPR(
+            repoInfo.owner,
+            repoInfo.repo,
+            currentBranch,
+          );
+          if (!prExists) {
+            try {
+              await createAutoPR(currentBranch);
+            } catch (error) {
+              // PR 생성 실패는 치명적이지 않으므로 에러만 로깅
+              log.error(t("common.error.pr_exists"));
+            }
+          } else {
+            log.info(t("commands.commit.info.pr_exists"));
+          }
+        }
       }
     } catch (error) {
       log.error(t("commands.commit.error.commit_failed"), error);
