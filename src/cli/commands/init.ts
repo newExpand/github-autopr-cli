@@ -14,6 +14,7 @@ import dotenv from "dotenv";
 import { constants } from "fs";
 import OpenAI from "openai";
 import { AIManager } from "../../core/ai-manager.js";
+import { Config } from "../../types/config.js";
 
 const AI_PROVIDERS = ["openai", "github-copilot", "anthropic"] as const;
 
@@ -131,7 +132,7 @@ export async function initCommand(): Promise<void> {
     const globalConfig = await loadGlobalConfig();
     const projectConfig = await loadProjectConfig();
 
-    let answers: any = {};
+    const answers: Partial<Config> = {};
 
     // GitHub 토큰 설정
     if (globalConfig.githubToken) {
