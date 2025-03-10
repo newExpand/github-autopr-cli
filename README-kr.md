@@ -1,4 +1,4 @@
-# GitHub AutoPR CLI
+# NewExpand AutoPR
 
 GitHub PR 자동화를 위한 강력한 CLI 도구입니다. PR 생성, 리뷰, 병합 등의 작업을 자동화하고 AI 기능을 통해 더 나은 PR 관리를 지원합니다.
 
@@ -16,7 +16,7 @@ GitHub PR 자동화를 위한 강력한 CLI 도구입니다. PR 생성, 리뷰, 
 ## 설치 방법
 
 ```bash
-npm install -g github-autopr-cli
+npm install -g newexpand-autopr
 ```
 
 ## 초기 설정

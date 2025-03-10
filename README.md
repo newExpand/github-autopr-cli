@@ -1,4 +1,4 @@
-# GitHub AutoPR CLI
+# NewExpand AutoPR
 
 A powerful CLI tool for GitHub PR automation. Streamlines PR creation, review, and merging processes while enhancing PR management through AI capabilities.
 
@@ -16,7 +16,7 @@ A powerful CLI tool for GitHub PR automation. Streamlines PR creation, review, a
 ## Installation
 
 ```bash
-npm install -g github-autopr-cli
+npm install -g newexpand-autopr
 ```
 
 ## Initial Setup
