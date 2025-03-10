@@ -250,9 +250,10 @@
       "description": "Merge a pull request",
       "info": {
         "title": "PR Information",
-        "author": "Author: {{author}}",
-        "branch": "Branch: {{branch}}",
-        "base_branch": "Target Branch: {{branch}}",
+        "branch_info": "Branch Information",
+        "pr_branch": "PR Branch: {{branch}}",
+        "target_branch": "Target Branch: {{branch}}",
+        "author": "PR Author: {{author}}",
         "checking_conflicts": "Checking for conflicts...",
         "cancelled": "Merge cancelled"
       },
@@ -418,7 +419,7 @@
     "commit": {
       "description": "Improve or suggest commit messages using AI",
       "options": {
-        "all": "Stage all changes before committing",
+        "all_with_push": "Stage all changes, commit and automatically push",
         "patch": "Interactively stage changes before committing"
       },
       "args": {
@@ -431,7 +432,9 @@
         "all": "Stage all changes and suggest a new commit message",
         "improve_last": "Improve the most recent commit message",
         "improve_message": "Improve the provided commit message",
-        "improve_all": "Stage all changes and improve the most recent commit message"
+        "improve_all": "Stage all changes and improve the most recent commit message",
+        "all_with_push": "Stage all changes, commit and automatically push",
+        "improve_all_with_push": "Stage all changes, improve the most recent commit message and automatically push"
       },
       "info": {
         "patch_mode": "Please run 'git add -p' to interactively stage changes",
@@ -445,10 +448,13 @@
         "no_staged_changes": "No staged changes found. Please stage your changes first using 'git add'",
         "invalid_subcommand": "Invalid subcommand. Use 'improve' or 'suggest'",
         "commit_failed": "Failed to create commit",
-        "staging_failed": "Failed to stage changes"
+        "staging_failed": "Failed to stage changes",
+        "get_branch_failed": "Failed to get current branch information",
+        "push_failed": "Failed to push to remote repository: {{error}}"
       },
       "success": {
-        "committed": "Successfully created commit with the improved message"
+        "committed": "Successfully created commit with the improved message",
+        "pushed": "Branch {{branch}} has been pushed to remote repository"
       },
       "commit_message": {
         "analyze": "Please analyze the following changes and write a commit message:\nCurrent message: {{message}}\nChanges: {{diff}}\n\nPlease write ONLY the commit message in the following format. Do not include any additional explanations or formatting:\n\ntype(scope): subject\n\nbody\n- change 1\n- change 2\n\nActual example:\nfeat(auth): add login functionality\n\nImplement user authentication system\n- Add JWT-based authentication\n- Create login API endpoint\n- Implement authentication middleware"
