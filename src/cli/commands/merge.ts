@@ -565,12 +565,27 @@ export async function mergeCommand(prNumber: string): Promise<void> {
           repo: repoInfo.repo,
           ref: `heads/${pr.head.ref}`,
         });
-      } catch (error) {
-        // API 삭제 실패 시 git 명령어로 시도
+
+        // 2. git 명령어로 원격 브랜치 삭제 시도
         try {
           execSync(`git push origin --delete ${pr.head.ref}`, {
             stdio: "pipe",
           });
+        } catch (pushError) {
+          // 이미 삭제된 경우 무시
+        }
+
+        // 3. 원격 브랜치 정보 정리
+        execSync("git remote prune origin", { stdio: "pipe" });
+        execSync("git fetch --prune", { stdio: "pipe" });
+      } catch (error) {
+        // API 삭제 실패 시 git 명령어로 재시도
+        try {
+          execSync(`git push origin --delete ${pr.head.ref}`, {
+            stdio: "pipe",
+          });
+          execSync("git remote prune origin", { stdio: "pipe" });
+          execSync("git fetch --prune", { stdio: "pipe" });
         } catch (pushError) {
           // 이미 삭제된 경우 무시
         }
@@ -614,8 +629,9 @@ export async function mergeCommand(prNumber: string): Promise<void> {
 
             // 원격 브랜치 삭제 상태 확인 및 정리
             try {
-              // 원격 브랜치 목록 업데이트
-              execSync("git fetch --prune origin", { stdio: "pipe" });
+              // 원격 브랜치 목록 업데이트 및 정리
+              execSync("git remote prune origin", { stdio: "pipe" });
+              execSync("git fetch --prune", { stdio: "pipe" });
 
               // 원격 브랜치가 여전히 존재하는지 확인
               const remoteExists = execSync(
@@ -630,6 +646,9 @@ export async function mergeCommand(prNumber: string): Promise<void> {
                 execSync(`git push origin --delete ${pr.head.ref}`, {
                   stdio: "inherit",
                 });
+                // 다시 한번 원격 브랜치 정리
+                execSync("git remote prune origin", { stdio: "pipe" });
+                execSync("git fetch --prune", { stdio: "pipe" });
               }
             } catch (error) {
               // 원격 브랜치 관련 오류는 무시
