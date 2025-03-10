@@ -5,6 +5,7 @@ import { t } from "../../i18n/index.js";
 import { exec } from "child_process";
 import { promisify } from "util";
 import { log } from "../../utils/logger.js";
+import { loadConfig } from "../../core/config.js";
 
 const execAsync = promisify(exec);
 
@@ -31,8 +32,24 @@ export function createHookCommand(): Command {
     .argument("<branch>", t("commands.hook.post_checkout.argument.branch"))
     .action(async (branch: string) => {
       try {
-        // main/master 브랜치로의 체크아웃은 무시
-        if (branch === "main" || branch === "master") {
+        // 설정 로드
+        const config = await loadConfig();
+        if (!config) {
+          log.error(t("common.error.config_load_failed"));
+          return;
+        }
+
+        // 보호된 브랜치(production/development)로의 체크아웃은 무시
+        if (
+          branch === config.defaultBranch ||
+          branch === config.developmentBranch
+        ) {
+          return;
+        }
+
+        // merge 명령어에서의 브랜치 전환인 경우 무시
+        const stackTrace = new Error().stack || "";
+        if (stackTrace.includes("mergeCommand")) {
           return;
         }
 
