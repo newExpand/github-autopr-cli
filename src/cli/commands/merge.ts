@@ -555,6 +555,20 @@ export async function mergeCommand(prNumber: string): Promise<void> {
 
     log.info(t("commands.merge.success.merged"));
 
+    // GitHub API를 통한 원격 브랜치 삭제 재시도
+    if (deleteBranch) {
+      try {
+        const client = await getOctokit();
+        await client.rest.git.deleteRef({
+          owner: repoInfo.owner,
+          repo: repoInfo.repo,
+          ref: `heads/${pr.head.ref}`,
+        });
+      } catch (error) {
+        // 이미 삭제된 경우 무시
+      }
+    }
+
     // 로컬 브랜치 정리
     log.info(t("commands.merge.cleanup.start"));
 
