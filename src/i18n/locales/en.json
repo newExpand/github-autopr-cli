@@ -140,7 +140,9 @@
         "pr_exists": "PR #{{number}} already exists.",
         "generating_description": "Generating PR description using AI...",
         "generated_description": "AI generated description:",
-        "creating": "Creating Pull Request..."
+        "creating": "Creating Pull Request...",
+        "adding_reviewers": "Adding reviewers...",
+        "reviewers_added": "Reviewers added: {{reviewers}}"
       },
       "warning": {
         "ai_description_failed": "Failed to generate AI description, falling back to manual input"
@@ -150,11 +152,13 @@
         "title": "Enter PR title",
         "body": "Enter PR description",
         "reviewers": "Enter reviewers (press enter to skip)",
-        "use_ai_description": "Use AI-generated description?"
+        "use_ai_description": "Use AI-generated description?",
+        "edit_ai_description": "Would you like to edit the AI-generated description?"
       },
       "success": {
         "pr_updated": "PR #{{number}} has been successfully updated.",
-        "cancelled": "Operation cancelled."
+        "cancelled": "Operation cancelled.",
+        "pr_created": "Pull Request has been successfully created."
       }
     },
     "list": {
