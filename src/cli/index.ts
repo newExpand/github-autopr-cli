@@ -7,6 +7,7 @@ import { listCommand } from "./commands/list.js";
 import { reviewCommand } from "./commands/review.js";
 import { updateCommand } from "./commands/update.js";
 import { mergeCommand } from "./commands/merge.js";
+import { reopenCommand } from "./commands/reopen.js";
 import { createLangCommand } from "./commands/lang.js";
 import { createHookCommand } from "./commands/hook.js";
 import { createCollaboratorCommand } from "./commands/collaborator.js";
@@ -57,6 +58,11 @@ async function main() {
       .command("merge <pr-number>")
       .description(t("commands.merge.description"))
       .action(mergeCommand);
+
+    program
+      .command("reopen <pr-number>")
+      .description(t("commands.reopen.description"))
+      .action(reopenCommand);
 
     // 커밋 명령어 추가
     program

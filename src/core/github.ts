@@ -312,7 +312,82 @@ export async function updatePullRequest({
 
   const client = await getOctokit();
 
-  // 다른 필드 업데이트는 REST API 사용
+  // draft 상태 변경이 있는 경우 GraphQL API 사용
+  if (draft !== undefined) {
+    log.info("Updating PR draft status using GraphQL API...");
+
+    // PR의 node ID 가져오기
+    const { repository } = await client.graphql<GraphQLPullRequestIdResponse>(
+      `
+      query($owner: String!, $repo: String!, $number: Int!) {
+        repository(owner: $owner, name: $repo) {
+          pullRequest(number: $number) {
+            id
+          }
+        }
+      }
+    `,
+      {
+        owner,
+        repo,
+        number: pull_number,
+      },
+    );
+
+    const prId = repository.pullRequest.id;
+
+    // GraphQL mutation으로 draft 상태 변경
+    const mutation = draft
+      ? "convertPullRequestToDraft"
+      : "markPullRequestReadyForReview";
+
+    try {
+      const response = await client.graphql<GraphQLPullRequestResponse>(
+        `
+        mutation($id: ID!) {
+          ${mutation}(input: {pullRequestId: $id}) {
+            pullRequest {
+              number
+              title
+              body
+              state
+              isDraft
+              url
+              baseRefName
+              headRefName
+              author {
+                login
+              }
+            }
+          }
+        }
+      `,
+        {
+          id: prId,
+        },
+      );
+
+      // 다른 필드 업데이트가 있는 경우
+      if (title || body || state) {
+        await client.rest.pulls.update({
+          owner,
+          repo,
+          pull_number,
+          ...(title && { title }),
+          ...(body && { body }),
+          ...(state && { state }),
+        });
+      }
+
+      const updatedPr = await getPullRequest({ owner, repo, pull_number });
+      return updatedPr;
+    } catch (error: any) {
+      log.error("GraphQL Error:", error);
+      throw error;
+    }
+  }
+
+  // draft 상태 변경이 없는 경우 REST API 사용
   const response = await client.rest.pulls.update({
     owner,
     repo,
@@ -322,19 +397,7 @@ export async function updatePullRequest({
     ...(state && { state }),
   });
 
-  const pr = PullRequestSchema.parse(response.data);
-
-  // PR 상태가 draft인 경우 별도로 처리
-  if (draft !== undefined) {
-    await client.rest.pulls.update({
-      owner,
-      repo,
-      pull_number,
-      draft,
-    });
-  }
-
-  return pr;
+  return PullRequestSchema.parse(response.data);
 }
 
 export async function addReviewers(params: {

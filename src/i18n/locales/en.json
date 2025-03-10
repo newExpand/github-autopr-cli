@@ -224,7 +224,7 @@
       "description": "Update PR information",
       "info": {
         "title": "PR Information",
-        "current_status": "Current status: {status}"
+        "current_status": "Current status: {{status}}"
       },
       "prompts": {
         "action": "Select items to update (use spacebar to select)",
@@ -240,6 +240,10 @@
       "success": {
         "all": "All selected items have been updated",
         "cancelled": "Operation cancelled"
+      },
+      "status": {
+        "draft": "Draft",
+        "ready": "Ready for review"
       }
     },
     "merge": {
@@ -491,6 +495,17 @@
         "description": "List all reviewer groups",
         "no_groups": "No reviewer groups found",
         "group_info": "Group: {{name}}\n  Members: {{members}}\n  Strategy: {{strategy}}"
+      }
+    },
+    "reopen": {
+      "description": "Reopen a closed pull request",
+      "error": {
+        "already_open": "This PR is already open",
+        "merged": "This PR has been merged and cannot be reopened",
+        "cannot_reopen": "This PR cannot be reopened in its current state"
+      },
+      "success": {
+        "reopened": "PR #{{number}} has been reopened"
       }
     }
   },

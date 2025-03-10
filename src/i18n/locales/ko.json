@@ -226,7 +226,7 @@
       "description": "PR 정보를 업데이트합니다",
       "info": {
         "title": "PR 정보",
-        "current_status": "현재 상태: {status}"
+        "current_status": "현재 상태: {{status}}"
       },
       "prompts": {
         "action": "수정할 항목을 선택하세요 (스페이스바로 선택)",
@@ -242,6 +242,10 @@
       "success": {
         "all": "선택한 항목이 모두 업데이트되었습니다",
         "cancelled": "작업이 취소되었습니다"
+      },
+      "status": {
+        "draft": "초안",
+        "ready": "리뷰 준비됨"
       }
     },
     "merge": {
@@ -497,6 +501,17 @@
         "description": "모든 리뷰어 그룹 목록 조회",
         "no_groups": "등록된 리뷰어 그룹이 없습니다",
         "group_info": "그룹: {{name}}\n  멤버: {{members}}\n  전략: {{strategy}}"
+      }
+    },
+    "reopen": {
+      "description": "닫힌 Pull Request를 다시 엽니다",
+      "error": {
+        "already_open": "이 PR은 이미 열려있습니다",
+        "merged": "이 PR은 이미 병합되어 다시 열 수 없습니다",
+        "cannot_reopen": "이 PR은 다시 열 수 없는 상태입니다"
+      },
+      "success": {
+        "reopened": "PR #{{number}}이(가) 다시 열렸습니다"
       }
     }
   },
