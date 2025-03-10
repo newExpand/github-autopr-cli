@@ -260,6 +260,8 @@ async function handleConflicts(
 
 export async function mergeCommand(prNumber: string): Promise<void> {
   try {
+    log.info(`[DEBUG] 병합 명령어 시작 - PR #${prNumber}`);
+
     const config = await loadConfig();
     if (!config) {
       log.error(t("common.error.github_token"));
@@ -272,11 +274,22 @@ export async function mergeCommand(prNumber: string): Promise<void> {
       process.exit(1);
     }
 
+    log.info(
+      `[DEBUG] 저장소 정보 - 소유자: ${repoInfo.owner}, 저장소: ${repoInfo.repo}`,
+    );
+
     let pr = await getPullRequest({
       owner: repoInfo.owner,
       repo: repoInfo.repo,
       pull_number: parseInt(prNumber, 10),
     });
+
+    log.info(
+      `[DEBUG] PR 정보 로드됨 - 상태: ${pr.state}, 병합됨: ${pr.merged}`,
+    );
+    log.info(
+      `[DEBUG] PR 브랜치 정보 - Head: ${pr.head.ref}, Base: ${pr.base.ref}`,
+    );
 
     // PR 정보 표시
     log.section(t("commands.merge.info.title"));
@@ -288,12 +301,18 @@ export async function mergeCommand(prNumber: string): Promise<void> {
 
     // 충돌 확인
     log.section(t("commands.merge.info.checking_conflicts"));
+    log.info("[DEBUG] 충돌 확인 시작");
 
     const conflicts = await getPullRequestConflicts(
       repoInfo.owner,
       repoInfo.repo,
       parseInt(prNumber, 10),
     );
+
+    log.info(`[DEBUG] 충돌 상태: ${conflicts.hasConflicts ? "있음" : "없음"}`);
+    if (conflicts.hasConflicts) {
+      log.info(`[DEBUG] 충돌 파일 수: ${conflicts.conflicts.length}`);
+    }
 
     if (conflicts.hasConflicts) {
       log.warn(t("commands.merge.conflict.found"));
@@ -495,6 +514,8 @@ export async function mergeCommand(prNumber: string): Promise<void> {
       },
     ]);
 
+    log.info(`[DEBUG] 선택된 병합 방법: ${mergeMethod}`);
+
     // 커밋 메시지 입력 (squash 병합의 경우)
     let commitTitle = "";
     let commitMessage = "";
@@ -515,6 +536,7 @@ export async function mergeCommand(prNumber: string): Promise<void> {
       ]);
       commitTitle = title;
       commitMessage = message;
+      log.info("[DEBUG] Squash 커밋 메시지 설정됨");
     }
 
     // 브랜치 삭제 여부 확인
@@ -526,6 +548,8 @@ export async function mergeCommand(prNumber: string): Promise<void> {
         default: true,
       },
     ]);
+
+    log.info(`[DEBUG] 브랜치 삭제 여부: ${deleteBranch}`);
 
     // 최종 확인
     const { confirm } = await inquirer.prompt([
@@ -542,6 +566,8 @@ export async function mergeCommand(prNumber: string): Promise<void> {
       return;
     }
 
+    log.info("[DEBUG] 병합 실행 시작");
+
     // PR 병합 실행
     await mergePullRequest({
       owner: repoInfo.owner,
@@ -554,9 +580,11 @@ export async function mergeCommand(prNumber: string): Promise<void> {
     });
 
     log.info(t("commands.merge.success.merged"));
+    log.info("[DEBUG] 병합 완료");
 
     // 로컬 브랜치 정리
     log.info(t("commands.merge.cleanup.start"));
+    log.info("[DEBUG] 로컬 브랜치 정리 시작");
 
     try {
       // 대상 브랜치로 전환
@@ -564,10 +592,12 @@ export async function mergeCommand(prNumber: string): Promise<void> {
         t("commands.merge.cleanup.switching_branch", { branch: pr.base.ref }),
       );
       execSync(`git checkout ${pr.base.ref}`, { stdio: "inherit" });
+      log.info(`[DEBUG] 브랜치 전환 완료: ${pr.base.ref}`);
 
       // 원격의 변경사항 가져오기
       log.info(t("commands.merge.cleanup.pulling_changes"));
       execSync(`git pull origin ${pr.base.ref}`, { stdio: "inherit" });
+      log.info("[DEBUG] 원격 변경사항 가져오기 완료");
 
       // PR 브랜치가 로컬에 있는 경우 삭제
       if (deleteBranch) {
@@ -579,9 +609,11 @@ export async function mergeCommand(prNumber: string): Promise<void> {
           );
           execSync(`git branch -D ${pr.head.ref}`, { stdio: "inherit" });
           log.info(t("commands.merge.cleanup.branch_deleted"));
+          log.info(`[DEBUG] 로컬 브랜치 삭제 완료: ${pr.head.ref}`);
         } catch (error) {
           // 브랜치가 이미 없는 경우 무시
           log.info(t("commands.merge.cleanup.branch_already_deleted"));
+          log.info("[DEBUG] 브랜치가 이미 삭제되어 있음");
         }
       }
     } catch (error) {
@@ -589,12 +621,18 @@ export async function mergeCommand(prNumber: string): Promise<void> {
         t("commands.merge.error.cleanup_failed", { error: String(error) }),
       );
       log.warn(t("commands.merge.error.manual_cleanup"));
+      log.error("[DEBUG] 로컬 브랜치 정리 실패:", String(error));
     }
   } catch (error) {
     if (error instanceof Error) {
       log.error(error.message);
+      log.error("[DEBUG] 에러 발생:", error.message);
+      if (error.stack) {
+        log.error("[DEBUG] 스택 트레이스:", error.stack);
+      }
     } else {
       log.error(t("common.error.unknown"), String(error));
+      log.error("[DEBUG] 알 수 없는 에러:", String(error));
     }
     process.exit(1);
   }

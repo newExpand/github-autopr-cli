@@ -432,36 +432,62 @@ export async function mergePullRequest({
   const client = await getOctokit();
 
   // PR 상태 확인
+  log.info(`[DEBUG] PR #${pull_number} 병합 시작`);
+  log.info(`[DEBUG] 소유자: ${owner}, 저장소: ${repo}`);
+  log.info(`[DEBUG] 병합 방법: ${merge_method}`);
+
   const pr = await getPullRequest({ owner, repo, pull_number });
+  log.info(`[DEBUG] PR 상태: ${pr.state}`);
+  log.info(`[DEBUG] PR 제목: ${pr.title}`);
+  log.info(`[DEBUG] PR 브랜치: ${pr.head.ref} -> ${pr.base.ref}`);
+
   if (pr.state !== "open") {
+    log.error(`[DEBUG] PR이 열려있지 않음: ${pr.state}`);
     throw new Error(t("commands.merge.error.pr_closed"));
   }
 
   // 병합 가능 상태 확인
   const status = await getPullRequestStatus({ owner, repo, pull_number });
+  log.info(`[DEBUG] 병합 가능 상태: ${status}`);
+
   if (status !== "MERGEABLE") {
+    log.error(`[DEBUG] PR을 병합할 수 없음: ${status}`);
     throw new Error(t("commands.merge.error.not_mergeable"));
   }
 
   // 병합 실행
-  await client.rest.pulls.merge({
-    owner,
-    repo,
-    pull_number,
-    merge_method,
-    commit_title,
-    commit_message,
-  });
+  log.info("[DEBUG] 병합 시도 중...");
+  try {
+    await client.rest.pulls.merge({
+      owner,
+      repo,
+      pull_number,
+      merge_method,
+      commit_title,
+      commit_message,
+    });
+    log.info("[DEBUG] 병합 성공");
+  } catch (error) {
+    log.error(
+      `[DEBUG] 병합 실패: ${error instanceof Error ? error.message : String(error)}`,
+    );
+    throw error;
+  }
 
   // 브랜치 삭제
   if (delete_branch) {
+    log.info(`[DEBUG] 브랜치 삭제 시도: ${pr.head.ref}`);
     try {
       await client.rest.git.deleteRef({
         owner,
         repo,
         ref: `heads/${pr.head.ref}`,
       });
+      log.info("[DEBUG] 브랜치 삭제 성공");
     } catch (error) {
+      log.warn(
+        `[DEBUG] 브랜치 삭제 실패: ${error instanceof Error ? error.message : String(error)}`,
+      );
       log.warn(t("commands.merge.warning.branch_delete_failed"));
     }
   }
