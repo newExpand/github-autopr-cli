@@ -349,6 +349,7 @@
         "switching_branch": "Switching to {{branch}} branch...",
         "pulling_changes": "Pulling remote changes...",
         "deleting_branch": "Deleting local branch {{branch}}...",
+        "deleting_remote_branch": "Deleting remote branch...",
         "branch_deleted": "Local branch has been deleted.",
         "branch_already_deleted": "Local branch was already deleted.",
         "updating_base_branch": "Updating base branch {{branch}}...",
