@@ -303,7 +303,9 @@
         "manual_cleanup": "수동으로 브랜치를 정리해주세요"
       },
       "warning": {
-        "branch_delete_failed": "브랜치 삭제에 실패했습니다"
+        "branch_delete_failed": "브랜치 삭제에 실패했습니다",
+        "base_branch_not_found": "로컬에서 대상 브랜치 {{branch}}을(를) 찾을 수 없습니다",
+        "many_files": "\n주의: {{count}}개의 파일을 열어야 합니다."
       },
       "conflict": {
         "found": "⚠️ 충돌이 발견되었습니다:",
@@ -351,7 +353,11 @@
         "pulling_changes": "원격의 변경사항을 가져옵니다...",
         "deleting_branch": "로컬의 {{branch}} 브랜치를 삭제합니다...",
         "branch_deleted": "로컬 브랜치가 삭제되었습니다.",
-        "branch_already_deleted": "로컬 브랜치가 이미 삭제되었습니다."
+        "branch_already_deleted": "로컬 브랜치가 이미 삭제되었습니다.",
+        "updating_base_branch": "대상 브랜치 {{branch}}을(를) 업데이트합니다...",
+        "switching_to_base": "대상 브랜치 {{branch}}(으)로 전환합니다...",
+        "syncing_with_remote": "원격 저장소와 동기화합니다...",
+        "complete": "정리가 완료되었습니다."
       }
     },
     "collaborator": {

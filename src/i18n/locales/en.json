@@ -301,7 +301,9 @@
         "manual_cleanup": "Please clean up branches manually"
       },
       "warning": {
-        "branch_delete_failed": "Failed to delete branch"
+        "branch_delete_failed": "Failed to delete branch",
+        "base_branch_not_found": "Base branch {{branch}} not found locally",
+        "many_files": "\nWarning: {{count}} files need to be opened."
       },
       "conflict": {
         "found": "⚠️ Conflicts found:",
@@ -327,7 +329,6 @@
           "resolve": "3. Resolve conflicts and commit changes",
           "update": "4. Update PR"
         },
-        "many_files": "\nWarning: {{count}} files need to be opened.",
         "checking_out_files": "\nChecking out files with conflicts...",
         "opening_files": "\nOpening files with conflicts...",
         "trying_to_open": "Attempting to open file: {{file}}",
@@ -349,7 +350,11 @@
         "pulling_changes": "Pulling remote changes...",
         "deleting_branch": "Deleting local branch {{branch}}...",
         "branch_deleted": "Local branch has been deleted.",
-        "branch_already_deleted": "Local branch was already deleted."
+        "branch_already_deleted": "Local branch was already deleted.",
+        "updating_base_branch": "Updating base branch {{branch}}...",
+        "switching_to_base": "Switching to base branch {{branch}}...",
+        "syncing_with_remote": "Syncing with remote repository...",
+        "complete": "Cleanup completed successfully."
       }
     },
     "collaborator": {
