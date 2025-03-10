@@ -592,9 +592,19 @@ export async function mergeCommand(prNumber: string): Promise<void> {
 
             // 원격 브랜치도 삭제 (이미 GitHub에서 삭제된 경우 무시)
             try {
-              execSync(`git push origin --delete ${pr.head.ref}`, {
-                stdio: "inherit",
-              });
+              // 원격 브랜치가 존재하는지 확인
+              const remoteBranchExists = execSync(
+                `git ls-remote --heads origin ${pr.head.ref}`,
+                { stdio: "pipe" },
+              )
+                .toString()
+                .trim();
+
+              if (remoteBranchExists) {
+                execSync(`git push origin --delete ${pr.head.ref}`, {
+                  stdio: "inherit",
+                });
+              }
             } catch (error) {
               // 원격 브랜치가 이미 삭제된 경우 무시
             }
