@@ -559,30 +559,6 @@ export async function mergeCommand(prNumber: string): Promise<void> {
     log.info(t("commands.merge.cleanup.start"));
 
     try {
-      // 현재 브랜치 상태 저장
-      const currentBranch = execSync("git rev-parse --abbrev-ref HEAD")
-        .toString()
-        .trim();
-
-      // 대상 브랜치로 전환하기 전에 변경사항 stash
-      try {
-        execSync("git stash", { stdio: "inherit" });
-        log.info(t("commands.merge.cleanup.changes_stashed"));
-      } catch (error) {
-        // stash할 변경사항이 없는 경우 무시
-      }
-
-      // 대상 브랜치로 전환
-      log.info(
-        t("commands.merge.cleanup.switching_branch", { branch: pr.base.ref }),
-      );
-      execSync(`git checkout ${pr.base.ref}`, { stdio: "inherit" });
-
-      // 원격의 변경사항 가져오기
-      log.info(t("commands.merge.cleanup.pulling_changes"));
-      execSync("git fetch origin", { stdio: "inherit" });
-      execSync(`git reset --hard origin/${pr.base.ref}`, { stdio: "inherit" });
-
       // PR 브랜치가 로컬에 있는 경우 삭제
       if (deleteBranch) {
         try {
@@ -608,31 +584,21 @@ export async function mergeCommand(prNumber: string): Promise<void> {
         }
       }
 
-      // 원래 브랜치로 돌아가기 (만약 대상 브랜치가 아니었다면)
-      if (currentBranch !== pr.base.ref) {
-        try {
-          execSync(`git checkout ${currentBranch}`, { stdio: "inherit" });
-          log.info(
-            t("commands.merge.cleanup.restored_branch", {
-              branch: currentBranch,
-            }),
-          );
+      // 현재 브랜치 확인
+      const currentBranch = execSync("git rev-parse --abbrev-ref HEAD")
+        .toString()
+        .trim();
 
-          // stash 복원
-          try {
-            execSync("git stash pop", { stdio: "inherit" });
-            log.info(t("commands.merge.cleanup.changes_restored"));
-          } catch (error) {
-            // stash가 없는 경우 무시
-          }
-        } catch (error) {
-          log.warn(
-            t("commands.merge.error.branch_restore_failed", {
-              branch: currentBranch,
-            }),
-          );
-        }
-      }
+      // 현재 브랜치 최신화
+      log.info(
+        t("commands.merge.cleanup.updating_current_branch", {
+          branch: currentBranch,
+        }),
+      );
+      execSync("git fetch origin", { stdio: "inherit" });
+      execSync(`git reset --hard origin/${currentBranch}`, {
+        stdio: "inherit",
+      });
 
       log.info(t("commands.merge.cleanup.complete"));
     } catch (error) {
