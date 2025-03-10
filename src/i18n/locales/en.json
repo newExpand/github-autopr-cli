@@ -457,7 +457,9 @@
         "run_patch_mode": "After staging changes with 'git add -p', run the commit command again",
         "improving_message": "Improving commit message using AI...",
         "analyzing_changes": "Analyzing changes to suggest commit message...",
-        "suggested_message": "Suggested commit message:"
+        "suggested_message": "Suggested commit message:",
+        "pr_creation_guide": "Changes have been successfully pushed. Would you like to create a PR?",
+        "run_new_command": "To create a PR, please run 'autopr new' command."
       },
       "error": {
         "diff_failed": "Failed to get staged changes",

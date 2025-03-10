@@ -281,56 +281,9 @@ export async function commitCommand(
         const currentBranch = await getCurrentBranch();
         await pushToRemote(currentBranch);
 
-        // 릴리스 PR인지 확인
-        const branchStrategy = getBranchStrategy(config);
-        const isRelease = await isReleasePR(currentBranch, branchStrategy);
-
-        if (isRelease) {
-          // 릴리스 PR이 없는 경우에만 생성
-          const prExists = await checkExistingPR(
-            repoInfo.owner,
-            repoInfo.repo,
-            currentBranch,
-            branchStrategy.productionBranch,
-          );
-
-          if (!prExists) {
-            try {
-              const client = await getOctokit();
-              await client.rest.pulls.create({
-                owner: repoInfo.owner,
-                repo: repoInfo.repo,
-                title: branchStrategy.releasePRTitle,
-                head: branchStrategy.developmentBranch,
-                base: branchStrategy.productionBranch,
-                body: branchStrategy.releasePRBody,
-              });
-              log.info(t("commands.commit.success.release_pr_created"));
-            } catch (error) {
-              log.error(t("commands.commit.error.release_pr_failed"));
-            }
-          } else {
-            log.info(t("commands.commit.info.release_pr_exists"));
-          }
-        } else {
-          // 일반적인 feature/bugfix PR 처리
-          const prExists = await checkExistingPR(
-            repoInfo.owner,
-            repoInfo.repo,
-            currentBranch,
-            branchStrategy.developmentBranch,
-          );
-
-          if (!prExists) {
-            try {
-              await createAutoPR(currentBranch);
-            } catch (error) {
-              log.error(t("common.error.pr_exists"));
-            }
-          } else {
-            log.info(t("commands.commit.info.pr_exists"));
-          }
-        }
+        // PR 생성 안내 메시지 표시
+        log.info("\n" + t("commands.commit.info.pr_creation_guide"));
+        log.info(t("commands.commit.info.run_new_command"));
       }
     } catch (error) {
       log.error(t("commands.commit.error.commit_failed"), error);

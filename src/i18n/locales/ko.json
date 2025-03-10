@@ -460,7 +460,9 @@
         "run_patch_mode": "'git add -p'로 변경사항을 스테이징한 후 다시 커밋 명령어를 실행해주세요",
         "improving_message": "AI를 사용하여 커밋 메시지를 개선하는 중...",
         "analyzing_changes": "커밋 메시지 제안을 위해 변경사항을 분석하는 중...",
-        "suggested_message": "제안된 커밋 메시지:"
+        "suggested_message": "제안된 커밋 메시지:",
+        "pr_creation_guide": "변경사항이 성공적으로 푸시되었습니다. PR을 생성하시겠습니까?",
+        "run_new_command": "PR을 생성하려면 'autopr new' 명령어를 실행해주세요."
       },
       "error": {
         "staging_failed": "변경사항 스테이징에 실패했습니다",
