@@ -137,6 +137,7 @@
         "protected_branch": "Cannot create PR from protected branch '{{branch}}'. Please create a new branch from '{{development}}' or '{{production}}'."
       },
       "info": {
+        "pr_exists": "PR #{{number}} already exists.",
         "generating_description": "Generating PR description using AI...",
         "generated_description": "AI generated description:",
         "creating": "Creating Pull Request...",
@@ -147,10 +148,17 @@
         "ai_description_failed": "Failed to generate AI description, falling back to manual input"
       },
       "prompts": {
+        "update_existing": "Would you like to update the existing PR?",
         "title": "Enter PR title",
         "body": "Enter PR description",
         "reviewers": "Enter reviewers (press enter to skip)",
-        "use_ai_description": "Use AI-generated description?"
+        "use_ai_description": "Use AI-generated description?",
+        "edit_ai_description": "Would you like to edit the AI-generated description?"
+      },
+      "success": {
+        "pr_updated": "PR #{{number}} has been successfully updated.",
+        "cancelled": "Operation cancelled.",
+        "pr_created": "Pull Request has been successfully created."
       }
     },
     "list": {
@@ -457,7 +465,9 @@
         "run_patch_mode": "After staging changes with 'git add -p', run the commit command again",
         "improving_message": "Improving commit message using AI...",
         "analyzing_changes": "Analyzing changes to suggest commit message...",
-        "suggested_message": "Suggested commit message:"
+        "suggested_message": "Suggested commit message:",
+        "pr_creation_guide": "Changes have been successfully pushed. Would you like to create a PR?",
+        "run_new_command": "To create a PR, please run 'autopr new' command."
       },
       "error": {
         "diff_failed": "Failed to get staged changes",
