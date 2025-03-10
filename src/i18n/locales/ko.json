@@ -502,6 +502,17 @@
         "no_groups": "등록된 리뷰어 그룹이 없습니다",
         "group_info": "그룹: {{name}}\n  멤버: {{members}}\n  전략: {{strategy}}"
       }
+    },
+    "reopen": {
+      "description": "닫힌 Pull Request를 다시 엽니다",
+      "error": {
+        "already_open": "이 PR은 이미 열려있습니다",
+        "merged": "이 PR은 이미 병합되어 다시 열 수 없습니다",
+        "cannot_reopen": "이 PR은 다시 열 수 없는 상태입니다"
+      },
+      "success": {
+        "reopened": "PR #{{number}}이(가) 다시 열렸습니다"
+      }
     }
   },
   "ai": {

@@ -496,6 +496,17 @@
         "no_groups": "No reviewer groups found",
         "group_info": "Group: {{name}}\n  Members: {{members}}\n  Strategy: {{strategy}}"
       }
+    },
+    "reopen": {
+      "description": "Reopen a closed pull request",
+      "error": {
+        "already_open": "This PR is already open",
+        "merged": "This PR has been merged and cannot be reopened",
+        "cannot_reopen": "This PR cannot be reopened in its current state"
+      },
+      "success": {
+        "reopened": "PR #{{number}} has been reopened"
+      }
     }
   },
   "ai": {
