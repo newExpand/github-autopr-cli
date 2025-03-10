@@ -1,16 +1,17 @@
-# github-autopr-cli
+# GitHub AutoPR CLI
 
-A CLI tool for GitHub PR automation. Automates PR creation, review, and merge processes while providing efficient PR management through AI features.
+A powerful CLI tool for GitHub PR automation. Streamlines PR creation, review, and merging processes while enhancing PR management through AI capabilities.
 
 ## Key Features
 
-- 🚀 Automated PR Creation and Management
-- 🤖 AI-powered PR Description Generation
-- 👥 Automatic Reviewer Assignment
-- 🔄 Branch Pattern-based Automation
-- 🌍 Multi-language Support (English/Korean)
-- 🔍 AI Code Review
-- 🤝 Collaborator Management
+- 🤖 AI-powered PR description generation and code review
+- 🔄 Automated PR creation and management
+- 👥 Automatic reviewer assignment and group management
+- 🌍 Multi-language support (English/Korean)
+- 🔍 Conflict resolution assistant
+- 📝 Commit message enhancement
+- 🤝 Collaborator management
+- 🪝 Git hooks automation
 
 ## Installation
 
@@ -20,149 +21,209 @@ npm install -g github-autopr-cli
 
 ## Initial Setup
 
-1. Run initialization command:
+1. Initialize the tool:
 
 ```bash
 autopr init
 ```
 
-2. Setup process:
-   - GitHub Authentication (Browser auth or manual token input)
-   - Default Branch Configuration
-   - Default Reviewers Setup
-   - AI Feature Setup (optional)
-   - Git Hooks Setup (optional)
+2. The initialization process includes:
+   - GitHub authentication (OAuth or token)
+   - Default branch configuration (main/dev)
+   - Default reviewers setup
+   - AI features setup (optional)
+   - Git hooks setup (optional)
+   - Release PR template customization (optional)
 
-## Basic Usage
+## Main Commands
 
-### Creating PRs
+### PR Management
 
 ```bash
 # Create a new PR
 autopr new
 
-# Create PR from current branch changes
-autopr commit -a
-
-# Improve commit message
-autopr commit improve
-
-# Interactively select changes to commit
-autopr commit -p
-
-# Stage changes, commit, and auto-push in one go
-autopr commit -a
-
-# Improve specific commit message
-autopr commit improve "existing commit message"
-```
-
-### Managing PRs
-
-```bash
 # List PRs
 autopr list
 
 # Review PR
-autopr review <PR-number>
+autopr review <pr-number>
+# Available review actions:
+# - View PR content
+# - Run AI code review
+# - Approve/Request changes/Comment
+# - Checkout branch
+# - Open PR in GitHub
 
 # Update PR
-autopr update <PR-number>
+autopr update <pr-number>
+# Updatable items:
+# - Title
+# - Body
+# - Status (Draft/Ready for review)
 
 # Merge PR
-autopr merge <PR-number>
-
-# Merge PR (with squash option)
-autopr merge <PR-number>  # Interactive merge method selection
-# - Regular merge
-# - Squash merge
-# - Rebase merge
+autopr merge <pr-number>
+# Merge options:
+# - Merge method (merge/squash/rebase)
+# - Change target branch
+# - Auto-delete branch
+# - Conflict resolution assistant
 
 # Reopen closed PR
-autopr reopen <PR-number>
+autopr reopen <pr-number>
 ```
 
-### PR Status Management
-
-PRs can have the following statuses:
-
-- Draft: Work in progress
-- Ready for Review: Ready for review
-- Mergeable: Can be merged
-- Conflicting: Has conflicts
-- Checking: Status being verified
-
-When conflicts occur, running `autopr merge` provides automated conflict resolution assistance:
-
-- Automatic conflict file detection
-- Opens conflicting files in editor
-- AI-based conflict resolution suggestions
-- Step-by-step resolution guide
-
-### Collaborator Management
+### Commit Management
 
 ```bash
-# Invite collaborator
-autopr collaborator invite <username>
+# Commit changes (with AI suggestions)
+autopr commit
 
-# List collaborators
-autopr collaborator list
+# Commit all changes and push
+autopr commit -a
 
-# Remove collaborator
-autopr collaborator remove
+# Interactively stage changes before commit
+autopr commit -p
+
+# Improve existing commit message
+autopr commit improve [message]
+
+# Auto-create PR after commit
+# (handled automatically based on branch pattern)
 ```
 
 ### Reviewer Group Management
 
 ```bash
 # Add reviewer group
-autopr reviewer-group add <group-name> -m "reviewer1,reviewer2" -s "round-robin"
+autopr reviewer-group add <name> -m "user1,user2" -s "round-robin"
+# Rotation strategy options:
+# - round-robin: Sequential assignment
+# - random: Random assignment
+# - least-busy: Assign to member with fewest reviews
 
 # List reviewer groups
 autopr reviewer-group list
 
 # Update reviewer group
-autopr reviewer-group update <group-name> -m "reviewer1,reviewer2"
+autopr reviewer-group update <name> -m "user1,user2,user3" -s "random"
 
 # Remove reviewer group
-autopr reviewer-group remove <group-name>
+autopr reviewer-group remove <name>
 ```
+
+### Collaborator Management
+
+```bash
+# Invite collaborator
+autopr collaborator invite <username>
+# Permission levels:
+# - pull: Read access
+# - push: Write access
+# - admin: Admin access
+
+# List collaborators
+autopr collaborator list
+
+# Remove collaborator
+autopr collaborator remove
+
+# Check invitation status
+autopr collaborator status <username>
+
+# Check all invitation statuses
+autopr collaborator status-all
+```
+
+### Git Hook Management
+
+```bash
+# Handle Git hook events
+autopr hook post-checkout <branch>
+# Automatic actions on checkout:
+# - New branch detection
+# - Draft PR creation
+# - Reviewer assignment
+```
+
+### Other Settings
+
+```bash
+# Change language setting
+autopr lang set <ko|en>
+
+# Check current language
+autopr lang current
+```
+
+## Branch Patterns
+
+Supports the following branch patterns by default:
+
+- `feat/*`: New feature development
+- `fix/*`: Bug fixes
+- `refactor/*`: Code refactoring
+- `docs/*`: Documentation changes
+- `chore/*`: Maintenance tasks
+- `test/*`: Test-related changes
+- `release/*`: Release-related changes
+
+Each pattern can be configured with:
+
+- Draft PR status
+- Automatic label assignment
+- PR template selection
+- Automatic reviewer assignment
+- Reviewer group assignment
+- Target branch configuration (development/production)
+
+## AI Features
+
+Supports the following AI providers:
+
+- OpenAI (GPT-4, GPT-3.5-turbo)
+- GitHub Copilot
+- Anthropic (Claude)
+
+AI capabilities include:
+
+- PR description generation
+- Code review suggestions
+- Conflict resolution guidance
+- Commit message improvement
+- Change analysis and summarization
 
 ## Configuration Files
 
 ### .autopr.json
 
-Located in the project root with the following configuration options:
+Manages project-specific settings:
 
 ```json
 {
   "defaultBranch": "main",
-  "defaultReviewers": ["reviewer1", "reviewer2"],
+  "developmentBranch": "dev",
+  "defaultReviewers": [],
   "autoPrEnabled": true,
-  "defaultLabels": ["label1", "label2"],
-  "reviewerGroups": [
-    {
-      "name": "frontend",
-      "members": ["user1", "user2"],
-      "rotationStrategy": "round-robin"
+  "defaultLabels": [],
+  "reviewerGroups": [],
+  "branchPatterns": [],
+  "releasePRTitle": "Release: {development} to {production}",
+  "releasePRBody": "Merge {development} branch into {production} for release",
+  "aiConfig": {
+    "enabled": true,
+    "provider": "openai",
+    "options": {
+      "model": "gpt-4"
     }
-  ],
-  "branchPatterns": [
-    {
-      "pattern": "feat/*",
-      "type": "feat",
-      "draft": true,
-      "labels": ["feature"],
-      "template": "feature",
-      "autoAssignReviewers": true,
-      "reviewers": ["reviewer1"],
-      "reviewerGroups": ["frontend"]
-    }
-  ]
+  }
 }
 ```
 
-### AI Feature Configuration (.env)
+### .env
+
+Manages AI settings:
 
 ```env
 AI_PROVIDER=openai
@@ -170,100 +231,33 @@ AI_API_KEY=your-api-key
 AI_MODEL=gpt-4
 ```
 
-## Branch Patterns
+## Customization
 
-Default branch patterns:
+### PR Templates
 
-- `feat/*`: New features
-- `fix/*`: Bug fixes
-- `refactor/*`: Code refactoring
-- `docs/*`: Documentation changes
-- `chore/*`: Miscellaneous tasks
-- `test/*`: Test-related changes
+Add custom templates in the `.github/PULL_REQUEST_TEMPLATE` directory:
 
-Each pattern supports:
+- `feature.md`
+- `bugfix.md`
+- `refactor.md`
+- `release.md`
+- etc...
 
-- Automatic Draft PR creation
-- Label auto-assignment
-- Reviewer auto-assignment
-- PR template application
+Templates can include:
 
-## PR Templates
+- Change description
+- Checklist
+- Test items
+- Reviewer checklist
+- Screenshots (for UI changes)
+- Related issue links
 
-Default PR templates:
+## System Requirements
 
-- feature: New features
-- bugfix: Bug fixes
-- refactor: Refactoring
-- docs: Documentation
-- chore: Miscellaneous
-- test: Testing
-
-Custom templates can be added to the `.github/PULL_REQUEST_TEMPLATE/` directory.
-
-## AI Features
-
-### Supported Features
-
-- Automatic PR description generation
-- Code review suggestions
-- Commit message improvements
-- Conflict resolution suggestions
-
-### Supported AI Providers
-
-- OpenAI (GPT-4, GPT-3.5-turbo)
-- Anthropic Claude (coming soon)
-- GitHub Copilot (coming soon)
-
-## Language Settings
-
-```bash
-# Change language
-autopr lang set en  # English
-autopr lang set ko  # Korean
-
-# Check current language
-autopr lang current
-```
-
-## Advanced Features
-
-### Commit Features
-
-- AI-based commit message generation
-- Existing commit message improvement
-- Interactive change selection (`-p` option)
-- Automatic push and PR creation (`-a` option)
-
-### Merge Features
-
-- Multiple merge methods (merge, squash, rebase)
-- Automatic conflict detection and resolution
-- Branch cleanup automation
-- Base branch modification
-
-### Review Features
-
-- AI code review
-- Review status management (approve, request changes, comment)
-- File-by-file review
-- Open PR in browser
-
-### Git Hook Features
-
-- post-checkout hook support
-- Automatic PR creation on branch switch
-- Branch pattern-based automation
+- Node.js 16 or higher
+- Git 2.0 or higher
+- GitHub repository
 
 ## License
 
-MIT
-
-## Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feat/amazing-feature`)
-3. Commit your changes (`git commit -m 'feat: add amazing feature'`)
-4. Push to the branch (`git push origin feat/amazing-feature`)
-5. Open a Pull Request
+MIT License
