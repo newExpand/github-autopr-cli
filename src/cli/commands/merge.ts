@@ -559,6 +559,19 @@ export async function mergeCommand(prNumber: string): Promise<void> {
     log.info(t("commands.merge.cleanup.start"));
 
     try {
+      // 현재 브랜치 상태 저장
+      const currentBranch = execSync("git rev-parse --abbrev-ref HEAD")
+        .toString()
+        .trim();
+
+      // 대상 브랜치로 전환하기 전에 변경사항 stash
+      try {
+        execSync("git stash", { stdio: "inherit" });
+        log.info(t("commands.merge.cleanup.changes_stashed"));
+      } catch (error) {
+        // stash할 변경사항이 없는 경우 무시
+      }
+
       // 대상 브랜치로 전환
       log.info(
         t("commands.merge.cleanup.switching_branch", { branch: pr.base.ref }),
@@ -567,7 +580,8 @@ export async function mergeCommand(prNumber: string): Promise<void> {
 
       // 원격의 변경사항 가져오기
       log.info(t("commands.merge.cleanup.pulling_changes"));
-      execSync(`git pull origin ${pr.base.ref}`, { stdio: "inherit" });
+      execSync("git fetch origin", { stdio: "inherit" });
+      execSync(`git reset --hard origin/${pr.base.ref}`, { stdio: "inherit" });
 
       // PR 브랜치가 로컬에 있는 경우 삭제
       if (deleteBranch) {
@@ -579,11 +593,48 @@ export async function mergeCommand(prNumber: string): Promise<void> {
           );
           execSync(`git branch -D ${pr.head.ref}`, { stdio: "inherit" });
           log.info(t("commands.merge.cleanup.branch_deleted"));
+
+          // 원격 브랜치도 삭제 (이미 GitHub에서 삭제된 경우 무시)
+          try {
+            execSync(`git push origin --delete ${pr.head.ref}`, {
+              stdio: "inherit",
+            });
+          } catch (error) {
+            // 원격 브랜치가 이미 삭제된 경우 무시
+          }
         } catch (error) {
           // 브랜치가 이미 없는 경우 무시
           log.info(t("commands.merge.cleanup.branch_already_deleted"));
         }
       }
+
+      // 원래 브랜치로 돌아가기 (만약 대상 브랜치가 아니었다면)
+      if (currentBranch !== pr.base.ref) {
+        try {
+          execSync(`git checkout ${currentBranch}`, { stdio: "inherit" });
+          log.info(
+            t("commands.merge.cleanup.restored_branch", {
+              branch: currentBranch,
+            }),
+          );
+
+          // stash 복원
+          try {
+            execSync("git stash pop", { stdio: "inherit" });
+            log.info(t("commands.merge.cleanup.changes_restored"));
+          } catch (error) {
+            // stash가 없는 경우 무시
+          }
+        } catch (error) {
+          log.warn(
+            t("commands.merge.error.branch_restore_failed", {
+              branch: currentBranch,
+            }),
+          );
+        }
+      }
+
+      log.info(t("commands.merge.cleanup.complete"));
     } catch (error) {
       log.warn(
         t("commands.merge.error.cleanup_failed", { error: String(error) }),
