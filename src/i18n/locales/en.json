@@ -349,6 +349,7 @@
         "switching_branch": "Switching to {{branch}} branch...",
         "pulling_changes": "Pulling remote changes...",
         "deleting_branch": "Deleting local branch {{branch}}...",
+        "deleting_remote_branch": "Deleting remote branch...",
         "branch_deleted": "Local branch has been deleted.",
         "branch_already_deleted": "Local branch was already deleted.",
         "updating_base_branch": "Updating base branch {{branch}}...",
@@ -557,17 +558,17 @@
     },
     "prompts": {
       "pr_description": {
-        "analyze": "Please analyze the following code changes and generate a PR description:\nChanged files: {{files}}\nChanges: {{diffContent}}\n\nPlease write in the following format:\n1. Summary of changes\n2. Main changes\n3. Test plan\n4. Reviewer checkpoints",
-        "summarize": "Please summarize the following PR descriptions into a single, clear, and concise description. Maintain the important aspects of each description while removing duplicates and providing a comprehensive overview of all changes:\n\n{{descriptions}}\n\nWhen summarizing, please:\n1. Focus on actual code changes\n2. Maintain important checklist items\n3. Include technical details only when necessary\n4. Keep the template structure but adapt it to actual changes"
+        "analyze": "Please analyze the following changes and generate a PR description IN ENGLISH. The description should follow this format:\n\n1. Start with a clear summary of what was changed\n2. Include a checklist of changes based on actual code changes\n3. For each checklist item:\n   - Mark with [V] if directly related to the changes\n   - Leave as [ ] if not relevant\n4. Be specific about what was changed and why\n5. Include technical details when relevant\n6. Use the following template structure and adapt it based on the changes:\n\n{{template}}\n\nFiles changed: {{files}}\n\nDiff content:\n{{diffContent}}\n\nImportant notes:\n1. Write EVERYTHING in English\n2. Focus on ACTUAL changes in the files and diff content\n3. Do not make assumptions about changes that are not shown in the diff\n4. Only mark checkboxes with [V] if the item is directly related to the changes in the diff\n5. Keep descriptions factual and based on the actual code changes\n6. Follow the template structure but adapt sections based on the actual changes",
+        "summarize": "Please summarize the following PR descriptions into a single, clear, and concise description IN ENGLISH. Maintain the important aspects of each description while removing duplicates and providing a comprehensive overview of all changes:\n\n{{descriptions}}\n\nWhen summarizing, please:\n1. Write EVERYTHING in English\n2. Focus on actual code changes\n3. Maintain important checklist items\n4. Include technical details only when necessary\n5. Keep the template structure but adapt it to actual changes"
       },
       "code_review": {
-        "analyze": "Please review the following code and suggest improvements:\n{{files}}\n\nPlease review the following items:\n1. Code quality\n2. Performance\n3. Security\n4. Test coverage\n5. Documentation"
+        "analyze": "Please review the following code files and provide feedback IN ENGLISH:\n\n{{files}}\n\nReview requirements:\n1. Code quality and best practices\n2. Potential bugs or edge cases\n3. Performance considerations\n4. Security vulnerabilities\n5. Test coverage\n\nProvide specific, actionable feedback for each issue found. Write EVERYTHING in English."
       },
       "conflict_resolution": {
         "analyze": "Please analyze the following merge conflicts and suggest resolutions:\n\n{{conflicts}}\n\nPR Context:{{context}}\n\nFor each conflict:\n1. Explain the nature of the conflict\n2. Suggest the best resolution approach\n3. Provide specific guidance on which changes to keep\n4. Consider the context and impact of the changes\n\nWrite EVERYTHING in English."
       },
       "commit_message": {
-        "analyze": "Please analyze the following changes and write a commit message:\nCurrent message: {{message}}\nChanges: {{diff}}\n\nPlease write ONLY the commit message in the following format. Do not include any additional explanations or formatting:\n\ntype(scope): subject\n\nbody\n- change 1\n- change 2\n\nActual example:\nfeat(auth): add login functionality\n\nImplement user authentication system\n- Add JWT-based authentication\n- Create login API endpoint\n- Implement authentication middleware"
+        "analyze": "Please analyze the following changes and generate a commit message IN ENGLISH:\nCurrent message: {{message}}\nChanges: {{diff}}\n\nPlease write the commit message in the following format. Do not include any additional explanations or formatting, just the commit message:\n\ntype(scope): Subject in English\n\nBody in English\n- Change 1\n- Change 2\n\nExample:\nfeat(auth): add login functionality\n\nImplement user authentication system\n- Add JWT-based authentication\n- Create login API endpoint\n- Implement authentication middleware\n\nImportant notes:\n1. Write EVERYTHING in English\n2. Use conventional commit types (feat, fix, docs, etc)\n3. Keep the subject line concise and clear\n4. List actual changes from the diff in the body\n5. Do not make assumptions or guesses"
       }
     },
     "models": {

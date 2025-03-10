@@ -352,6 +352,7 @@
         "switching_branch": "{{branch}} 브랜치로 전환합니다...",
         "pulling_changes": "원격의 변경사항을 가져옵니다...",
         "deleting_branch": "로컬의 {{branch}} 브랜치를 삭제합니다...",
+        "deleting_remote_branch": "원격 브랜치를 삭제합니다...",
         "branch_deleted": "로컬 브랜치가 삭제되었습니다.",
         "branch_already_deleted": "로컬 브랜치가 이미 삭제되었습니다.",
         "updating_base_branch": "대상 브랜치 {{branch}}을(를) 업데이트합니다...",

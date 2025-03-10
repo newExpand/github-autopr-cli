@@ -555,35 +555,47 @@ export async function mergeCommand(prNumber: string): Promise<void> {
 
     log.info(t("commands.merge.success.merged"));
 
+    // GitHub API를 통한 원격 브랜치 삭제
+    if (deleteBranch) {
+      try {
+        // 1. GitHub API를 통한 삭제 시도
+        const client = await getOctokit();
+        await client.rest.git.deleteRef({
+          owner: repoInfo.owner,
+          repo: repoInfo.repo,
+          ref: `heads/${pr.head.ref}`,
+        });
+
+        // 2. git 명령어로 원격 브랜치 삭제 시도
+        try {
+          execSync(`git push origin --delete ${pr.head.ref}`, {
+            stdio: "pipe",
+          });
+        } catch (pushError) {
+          // 이미 삭제된 경우 무시
+        }
+
+        // 3. 원격 브랜치 정보 정리
+        execSync("git remote prune origin", { stdio: "pipe" });
+        execSync("git fetch --prune", { stdio: "pipe" });
+      } catch (error) {
+        // API 삭제 실패 시 git 명령어로 재시도
+        try {
+          execSync(`git push origin --delete ${pr.head.ref}`, {
+            stdio: "pipe",
+          });
+          execSync("git remote prune origin", { stdio: "pipe" });
+          execSync("git fetch --prune", { stdio: "pipe" });
+        } catch (pushError) {
+          // 이미 삭제된 경우 무시
+        }
+      }
+    }
+
     // 로컬 브랜치 정리
     log.info(t("commands.merge.cleanup.start"));
 
     try {
-      // PR 브랜치가 로컬에 있는 경우 삭제
-      if (deleteBranch) {
-        try {
-          log.info(
-            t("commands.merge.cleanup.deleting_branch", {
-              branch: pr.head.ref,
-            }),
-          );
-          execSync(`git branch -D ${pr.head.ref}`, { stdio: "inherit" });
-          log.info(t("commands.merge.cleanup.branch_deleted"));
-
-          // 원격 브랜치도 삭제 (이미 GitHub에서 삭제된 경우 무시)
-          try {
-            execSync(`git push origin --delete ${pr.head.ref}`, {
-              stdio: "inherit",
-            });
-          } catch (error) {
-            // 원격 브랜치가 이미 삭제된 경우 무시
-          }
-        } catch (error) {
-          // 브랜치가 이미 없는 경우 무시
-          log.info(t("commands.merge.cleanup.branch_already_deleted"));
-        }
-      }
-
       // 대상 브랜치(base branch) 최신화
       log.info(
         t("commands.merge.cleanup.updating_base_branch", {
@@ -596,13 +608,56 @@ export async function mergeCommand(prNumber: string): Promise<void> {
       const hasLocalBase = localBranches.includes(pr.base.ref);
 
       if (hasLocalBase) {
-        // 대상 브랜치로 전환
+        // 먼저 대상 브랜치로 전환
         log.info(
           t("commands.merge.cleanup.switching_to_base", {
             branch: pr.base.ref,
           }),
         );
         execSync(`git checkout ${pr.base.ref}`, { stdio: "inherit" });
+
+        // PR 브랜치가 로컬에 있는 경우 삭제
+        if (deleteBranch) {
+          try {
+            log.info(
+              t("commands.merge.cleanup.deleting_branch", {
+                branch: pr.head.ref,
+              }),
+            );
+            execSync(`git branch -D ${pr.head.ref}`, { stdio: "inherit" });
+            log.info(t("commands.merge.cleanup.branch_deleted"));
+
+            // 원격 브랜치 삭제 상태 확인 및 정리
+            try {
+              // 원격 브랜치 목록 업데이트 및 정리
+              execSync("git remote prune origin", { stdio: "pipe" });
+              execSync("git fetch --prune", { stdio: "pipe" });
+
+              // 원격 브랜치가 여전히 존재하는지 확인
+              const remoteExists = execSync(
+                `git ls-remote --heads origin ${pr.head.ref}`,
+                { stdio: "pipe" },
+              )
+                .toString()
+                .trim();
+
+              if (remoteExists) {
+                log.info(t("commands.merge.cleanup.deleting_remote_branch"));
+                execSync(`git push origin --delete ${pr.head.ref}`, {
+                  stdio: "inherit",
+                });
+                // 다시 한번 원격 브랜치 정리
+                execSync("git remote prune origin", { stdio: "pipe" });
+                execSync("git fetch --prune", { stdio: "pipe" });
+              }
+            } catch (error) {
+              // 원격 브랜치 관련 오류는 무시
+            }
+          } catch (error) {
+            // 브랜치가 이미 없는 경우 무시
+            log.info(t("commands.merge.cleanup.branch_already_deleted"));
+          }
+        }
 
         // 대상 브랜치 최신화
         log.info(t("commands.merge.cleanup.syncing_with_remote"));
