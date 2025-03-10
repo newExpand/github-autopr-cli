@@ -559,16 +559,6 @@ export async function mergeCommand(prNumber: string): Promise<void> {
     log.info(t("commands.merge.cleanup.start"));
 
     try {
-      // 대상 브랜치로 전환
-      log.info(
-        t("commands.merge.cleanup.switching_branch", { branch: pr.base.ref }),
-      );
-      execSync(`git checkout ${pr.base.ref}`, { stdio: "inherit" });
-
-      // 원격의 변경사항 가져오기
-      log.info(t("commands.merge.cleanup.pulling_changes"));
-      execSync(`git pull origin ${pr.base.ref}`, { stdio: "inherit" });
-
       // PR 브랜치가 로컬에 있는 경우 삭제
       if (deleteBranch) {
         try {
@@ -579,11 +569,38 @@ export async function mergeCommand(prNumber: string): Promise<void> {
           );
           execSync(`git branch -D ${pr.head.ref}`, { stdio: "inherit" });
           log.info(t("commands.merge.cleanup.branch_deleted"));
+
+          // 원격 브랜치도 삭제 (이미 GitHub에서 삭제된 경우 무시)
+          try {
+            execSync(`git push origin --delete ${pr.head.ref}`, {
+              stdio: "inherit",
+            });
+          } catch (error) {
+            // 원격 브랜치가 이미 삭제된 경우 무시
+          }
         } catch (error) {
           // 브랜치가 이미 없는 경우 무시
           log.info(t("commands.merge.cleanup.branch_already_deleted"));
         }
       }
+
+      // 현재 브랜치 확인
+      const currentBranch = execSync("git rev-parse --abbrev-ref HEAD")
+        .toString()
+        .trim();
+
+      // 현재 브랜치 최신화
+      log.info(
+        t("commands.merge.cleanup.updating_current_branch", {
+          branch: currentBranch,
+        }),
+      );
+      execSync("git fetch origin", { stdio: "inherit" });
+      execSync(`git reset --hard origin/${currentBranch}`, {
+        stdio: "inherit",
+      });
+
+      log.info(t("commands.merge.cleanup.complete"));
     } catch (error) {
       log.warn(
         t("commands.merge.error.cleanup_failed", { error: String(error) }),
