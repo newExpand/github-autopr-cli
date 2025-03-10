@@ -584,21 +584,35 @@ export async function mergeCommand(prNumber: string): Promise<void> {
         }
       }
 
-      // 현재 브랜치 확인
-      const currentBranch = execSync("git rev-parse --abbrev-ref HEAD")
-        .toString()
-        .trim();
-
-      // 현재 브랜치 최신화
+      // 대상 브랜치(base branch) 최신화
       log.info(
-        t("commands.merge.cleanup.updating_current_branch", {
-          branch: currentBranch,
+        t("commands.merge.cleanup.updating_base_branch", {
+          branch: pr.base.ref,
         }),
       );
-      execSync("git fetch origin", { stdio: "inherit" });
-      execSync(`git reset --hard origin/${currentBranch}`, {
-        stdio: "inherit",
-      });
+
+      // 로컬에 대상 브랜치가 있는지 확인
+      const localBranches = execSync("git branch --list").toString();
+      const hasLocalBase = localBranches.includes(pr.base.ref);
+
+      if (hasLocalBase) {
+        // 현재 브랜치 저장
+        const currentBranch = execSync("git rev-parse --abbrev-ref HEAD")
+          .toString()
+          .trim();
+
+        // 대상 브랜치로 전환
+        execSync(`git checkout ${pr.base.ref}`, { stdio: "inherit" });
+
+        // 대상 브랜치 최신화
+        execSync("git fetch origin", { stdio: "inherit" });
+        execSync(`git reset --hard origin/${pr.base.ref}`, {
+          stdio: "inherit",
+        });
+
+        // 원래 브랜치로 복귀
+        execSync(`git checkout ${currentBranch}`, { stdio: "inherit" });
+      }
 
       log.info(t("commands.merge.cleanup.complete"));
     } catch (error) {
