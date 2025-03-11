@@ -102,6 +102,7 @@ export async function newCommand(): Promise<void> {
 
     let defaultTitle = repoInfo.currentBranch;
     let defaultBody = "";
+    let generatedTitle = "";
 
     if (pattern) {
       defaultTitle = await generatePRTitle(repoInfo.currentBranch, pattern);
@@ -122,6 +123,18 @@ export async function newCommand(): Promise<void> {
         aiEnabled = ai.isEnabled();
 
         if (aiEnabled) {
+          // AI로 PR 제목 생성
+          try {
+            generatedTitle = await ai.generatePRTitle(
+              changedFiles,
+              diffContent,
+              pattern,
+            );
+            defaultTitle = generatedTitle;
+          } catch (error) {
+            log.warn(t("commands.new.warning.ai_title_failed"));
+          }
+
           log.info(t("commands.new.info.generating_description"));
           // AI에게 템플릿을 함께 전달
           generatedDescription = await ai.generatePRDescription(
