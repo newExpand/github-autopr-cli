@@ -138,6 +138,8 @@
       },
       "info": {
         "pr_exists": "PR #{{number}} already exists.",
+        "generating_title": "Generating PR title using AI...",
+        "generated_title": "AI generated title: {{title}}",
         "generating_description": "Generating PR description using AI...",
         "generated_description": "AI generated description:",
         "creating": "Creating Pull Request...",

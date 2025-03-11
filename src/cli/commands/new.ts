@@ -125,14 +125,19 @@ export async function newCommand(): Promise<void> {
         if (aiEnabled) {
           // AI로 PR 제목 생성
           try {
+            log.info(t("commands.new.info.generating_title"));
             generatedTitle = await ai.generatePRTitle(
               changedFiles,
               diffContent,
               pattern,
             );
-            defaultTitle = generatedTitle;
+            log.info(
+              t("commands.new.info.generated_title", { title: generatedTitle }),
+            );
+            defaultTitle = generatedTitle || defaultTitle;
           } catch (error) {
-            log.warn(t("commands.new.warning.ai_title_failed"));
+            log.warn(t("commands.new.warning.ai_title_failed"), error);
+            log.debug("AI 제목 생성 에러:", error);
           }
 
           log.info(t("commands.new.info.generating_description"));

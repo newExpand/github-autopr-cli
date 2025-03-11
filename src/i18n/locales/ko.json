@@ -148,6 +148,8 @@
       },
       "info": {
         "pr_exists": "PR #{{number}}이(가) 이미 존재합니다.",
+        "generating_title": "AI를 사용하여 PR 제목을 생성하는 중...",
+        "generated_title": "AI가 생성한 제목: {{title}}",
         "generating_description": "AI를 사용하여 PR 설명을 생성하는 중...",
         "generated_description": "AI가 생성한 설명:",
         "creating": "Pull Request 생성 중...",
