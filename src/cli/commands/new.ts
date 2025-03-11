@@ -6,6 +6,7 @@ import {
   addReviewers,
   updatePullRequest,
   getOctokit,
+  checkDraftPRAvailability,
 } from "../../core/github.js";
 import { getCurrentRepoInfo } from "../../utils/git.js";
 import { log } from "../../utils/logger.js";
@@ -213,6 +214,34 @@ export async function newCommand(): Promise<void> {
       // head 브랜치 참조 형식 수정
       const headBranch = repoInfo.currentBranch;
 
+      // draft PR 사용 가능 여부 확인
+      const draftAvailable = await checkDraftPRAvailability({
+        owner: repoInfo.owner,
+        repo: repoInfo.repo,
+      });
+
+      // pattern에서 draft 설정을 가져오되, draft PR 사용 불가능한 경우 false로 설정
+      let isDraft = pattern?.draft ?? false;
+
+      // draft PR 사용 가능한 경우에만 draft 여부를 선택할 수 있도록 함
+      if (draftAvailable && !pattern?.draft) {
+        const { shouldBeDraft } = await inquirer.prompt([
+          {
+            type: "confirm",
+            name: "shouldBeDraft",
+            message: t("commands.new.prompts.create_as_draft"),
+            default: false,
+          },
+        ]);
+        isDraft = shouldBeDraft;
+      } else if (!draftAvailable) {
+        // draft PR 사용 불가능한 경우 강제로 false
+        isDraft = false;
+        if (pattern?.draft) {
+          log.warn(t("commands.new.warning.draft_not_available"));
+        }
+      }
+
       // PR이 이미 존재하는지 확인
       const client = await getOctokit();
       const existingPRs = await client.rest.pulls.list({
@@ -287,7 +316,7 @@ ${answers.useAIDescription ? generatedDescription : answers.body || ""}
           : answers.body || "",
         head: headBranch,
         base: baseBranch,
-        draft: pattern?.draft ?? false,
+        draft: isDraft,
       });
 
       // 리뷰어 추가 시도

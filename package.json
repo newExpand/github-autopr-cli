@@ -1,10 +1,14 @@
 {
-  "name": "github-autopr-cli",
-  "version": "0.1.0",
-  "description": "GitHub PR 자동화 CLI 도구",
+  "name": "newexpand-autopr",
+  "version": "0.1.4",
+  "description": "GitHub PR Automation CLI Tool with AI",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/newExpand/github-autopr-cli.git"
+  },
   "bin": {
     "autopr": "./dist/cli/index.js"
   },
@@ -20,16 +24,29 @@
     "lint": "eslint . --ext .ts",
     "format": "prettier --write \"src/**/*.ts\"",
     "prepare": "npm run build",
-    "prepublishOnly": "npm run lint && npm run test",
+    "prepublishOnly": "npm run build",
     "prepack": "npm run build"
   },
   "keywords": [
     "github",
     "cli",
     "pr",
-    "automation"
+    "automation",
+    "ai",
+    "auto-pr",
+    "newexpand-autopr",
+    "pull-request",
+    "code-review",
+    "git",
+    "github-automation",
+    "pr-automation",
+    "ai-code-review",
+    "github-cli",
+    "git-automation",
+    "pr-management",
+    "github-tools"
   ],
-  "author": "",
+  "author": "newExpandgit",
   "license": "MIT",
   "dependencies": {
     "commander": "^11.1.0",

@@ -143,7 +143,8 @@
         "body": "PR 설명을 입력하세요",
         "reviewers": "리뷰어를 입력하세요 (건너뛰려면 엔터)",
         "use_ai_description": "AI가 생성한 설명을 사용하시겠습니까?",
-        "edit_ai_description": "AI가 생성한 설명을 수정하시겠습니까?"
+        "edit_ai_description": "AI가 생성한 설명을 수정하시겠습니까?",
+        "create_as_draft": "Draft PR로 생성하시겠습니까?"
       },
       "info": {
         "pr_exists": "PR #{{number}}이(가) 이미 존재합니다.",
@@ -154,7 +155,8 @@
         "reviewers_added": "리뷰어가 추가되었습니다: {{reviewers}}"
       },
       "warning": {
-        "ai_description_failed": "AI 설명 생성에 실패했습니다. 수동 입력으로 전환합니다"
+        "ai_description_failed": "AI 설명 생성에 실패했습니다. 수동 입력으로 전환합니다",
+        "draft_not_available": "이 저장소에서는 Draft PR 기능을 사용할 수 없어 일반 PR로 생성합니다."
       },
       "success": {
         "pr_updated": "PR #{{number}}이(가) 성공적으로 업데이트되었습니다.",
@@ -438,7 +440,9 @@
           "new_branch": "새로운 브랜치가 생성되었습니다.",
           "push_instruction": "작업 완료 후 'git push -u origin {{branch}}'를 실행하면",
           "auto_pr": "자동으로 Draft PR이 생성됩니다.",
-          "draft_created": "Draft PR이 생성되었습니다. 작업 완료 후 'Ready for Review'로 변경해주세요."
+          "draft_created": "Draft PR이 생성되었습니다. 작업 완료 후 'Ready for Review'로 변경해주세요.",
+          "regular_pr": "일반 PR이 생성될 예정입니다.",
+          "manual_pr_required": "Draft PR 기능을 사용할 수 없어 수동으로 PR을 생성해주세요."
         }
       }
     },

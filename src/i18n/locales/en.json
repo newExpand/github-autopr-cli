@@ -145,7 +145,8 @@
         "reviewers_added": "Reviewers added: {{reviewers}}"
       },
       "warning": {
-        "ai_description_failed": "Failed to generate AI description, falling back to manual input"
+        "ai_description_failed": "Failed to generate AI description, falling back to manual input",
+        "draft_not_available": "Draft PR feature is not available in this repository. Creating a regular PR instead."
       },
       "prompts": {
         "update_existing": "Would you like to update the existing PR?",
@@ -153,7 +154,8 @@
         "body": "Enter PR description",
         "reviewers": "Enter reviewers (press enter to skip)",
         "use_ai_description": "Use AI-generated description?",
-        "edit_ai_description": "Would you like to edit the AI-generated description?"
+        "edit_ai_description": "Would you like to edit the AI-generated description?",
+        "create_as_draft": "Create as draft PR?"
       },
       "success": {
         "pr_updated": "PR #{{number}} has been successfully updated.",
@@ -436,7 +438,9 @@
           "new_branch": "A new branch has been created.",
           "push_instruction": "After completing your work, run 'git push -u origin {{branch}}'",
           "auto_pr": "A Draft PR will be created automatically.",
-          "draft_created": "Draft PR has been created. Please change it to 'Ready for Review' when your work is complete."
+          "draft_created": "Draft PR has been created. Please change it to 'Ready for Review' when your work is complete.",
+          "regular_pr": "A regular PR will be created.",
+          "manual_pr_required": "Draft PR feature is not available. Please create PR manually."
         }
       }
     },
