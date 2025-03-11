@@ -191,6 +191,26 @@ export class AIFeatures {
     }
   }
 
+  async generatePRTitle(
+    files: string[],
+    diffContent: string,
+    pattern: { type: string },
+  ): Promise<string> {
+    try {
+      const prompt = t("ai.prompts.pr_title.analyze", {
+        files: files.join(", "),
+        diffContent: diffContent,
+        type: pattern.type,
+      });
+
+      const title = await this.processWithAI(prompt, 100);
+      return `[${pattern.type.toUpperCase()}] ${title}`;
+    } catch (error) {
+      log.error(t("ai.error.pr_title_failed"), error);
+      throw error;
+    }
+  }
+
   async reviewCode(
     files: Array<{ path: string; content: string }>,
   ): Promise<string> {
