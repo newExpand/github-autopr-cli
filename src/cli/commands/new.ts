@@ -6,6 +6,7 @@ import {
   addReviewers,
   updatePullRequest,
   getOctokit,
+  checkDraftPRAvailability,
 } from "../../core/github.js";
 import { getCurrentRepoInfo } from "../../utils/git.js";
 import { log } from "../../utils/logger.js";
@@ -101,6 +102,7 @@ export async function newCommand(): Promise<void> {
 
     let defaultTitle = repoInfo.currentBranch;
     let defaultBody = "";
+    let generatedTitle = "";
 
     if (pattern) {
       defaultTitle = await generatePRTitle(repoInfo.currentBranch, pattern);
@@ -121,6 +123,23 @@ export async function newCommand(): Promise<void> {
         aiEnabled = ai.isEnabled();
 
         if (aiEnabled) {
+          // AI로 PR 제목 생성
+          try {
+            log.info(t("commands.new.info.generating_title"));
+            generatedTitle = await ai.generatePRTitle(
+              changedFiles,
+              diffContent,
+              pattern,
+            );
+            log.info(
+              t("commands.new.info.generated_title", { title: generatedTitle }),
+            );
+            defaultTitle = generatedTitle || defaultTitle;
+          } catch (error) {
+            log.warn(t("commands.new.warning.ai_title_failed"), error);
+            log.debug("AI 제목 생성 에러:", error);
+          }
+
           log.info(t("commands.new.info.generating_description"));
           // AI에게 템플릿을 함께 전달
           generatedDescription = await ai.generatePRDescription(
@@ -213,6 +232,34 @@ export async function newCommand(): Promise<void> {
       // head 브랜치 참조 형식 수정
       const headBranch = repoInfo.currentBranch;
 
+      // draft PR 사용 가능 여부 확인
+      const draftAvailable = await checkDraftPRAvailability({
+        owner: repoInfo.owner,
+        repo: repoInfo.repo,
+      });
+
+      // pattern에서 draft 설정을 가져오되, draft PR 사용 불가능한 경우 false로 설정
+      let isDraft = pattern?.draft ?? false;
+
+      // draft PR 사용 가능한 경우 선택권 제공
+      if (draftAvailable) {
+        const { shouldBeDraft } = await inquirer.prompt([
+          {
+            type: "confirm",
+            name: "shouldBeDraft",
+            message: t("commands.new.prompts.create_as_draft"),
+            default: pattern?.draft ?? false,
+          },
+        ]);
+        isDraft = shouldBeDraft;
+      } else {
+        // draft PR 사용 불가능한 경우 강제로 false
+        isDraft = false;
+        if (pattern?.draft) {
+          log.warn(t("commands.new.warning.draft_not_available"));
+        }
+      }
+
       // PR이 이미 존재하는지 확인
       const client = await getOctokit();
       const existingPRs = await client.rest.pulls.list({
@@ -287,7 +334,7 @@ ${answers.useAIDescription ? generatedDescription : answers.body || ""}
           : answers.body || "",
         head: headBranch,
         base: baseBranch,
-        draft: pattern?.draft ?? false,
+        draft: isDraft,
       });
 
       // 리뷰어 추가 시도

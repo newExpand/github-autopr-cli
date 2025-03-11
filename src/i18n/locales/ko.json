@@ -143,10 +143,13 @@
         "body": "PR 설명을 입력하세요",
         "reviewers": "리뷰어를 입력하세요 (건너뛰려면 엔터)",
         "use_ai_description": "AI가 생성한 설명을 사용하시겠습니까?",
-        "edit_ai_description": "AI가 생성한 설명을 수정하시겠습니까?"
+        "edit_ai_description": "AI가 생성한 설명을 수정하시겠습니까?",
+        "create_as_draft": "Draft PR로 생성하시겠습니까?"
       },
       "info": {
         "pr_exists": "PR #{{number}}이(가) 이미 존재합니다.",
+        "generating_title": "AI를 사용하여 PR 제목을 생성하는 중...",
+        "generated_title": "AI가 생성한 제목: {{title}}",
         "generating_description": "AI를 사용하여 PR 설명을 생성하는 중...",
         "generated_description": "AI가 생성한 설명:",
         "creating": "Pull Request 생성 중...",
@@ -154,7 +157,9 @@
         "reviewers_added": "리뷰어가 추가되었습니다: {{reviewers}}"
       },
       "warning": {
-        "ai_description_failed": "AI 설명 생성에 실패했습니다. 수동 입력으로 전환합니다"
+        "ai_description_failed": "AI 설명 생성에 실패했습니다. 수동 입력으로 전환합니다",
+        "ai_title_failed": "AI 제목 생성에 실패했습니다. 기본 제목을 사용합니다",
+        "draft_not_available": "이 저장소에서는 Draft PR 기능을 사용할 수 없어 일반 PR로 생성합니다."
       },
       "success": {
         "pr_updated": "PR #{{number}}이(가) 성공적으로 업데이트되었습니다.",
@@ -438,7 +443,9 @@
           "new_branch": "새로운 브랜치가 생성되었습니다.",
           "push_instruction": "작업 완료 후 'git push -u origin {{branch}}'를 실행하면",
           "auto_pr": "자동으로 Draft PR이 생성됩니다.",
-          "draft_created": "Draft PR이 생성되었습니다. 작업 완료 후 'Ready for Review'로 변경해주세요."
+          "draft_created": "Draft PR이 생성되었습니다. 작업 완료 후 'Ready for Review'로 변경해주세요.",
+          "regular_pr": "일반 PR이 생성될 예정입니다.",
+          "manual_pr_required": "Draft PR 기능을 사용할 수 없어 수동으로 PR을 생성해주세요."
         }
       }
     },
@@ -489,7 +496,7 @@
         "pushed": "{{branch}} 브랜치가 원격 저장소로 push되었습니다"
       },
       "commit_message": {
-        "analyze": "Please analyze the following changes and generate a commit message IN KOREAN:\nCurrent message: {{message}}\nChanges: {{diff}}\n\nPlease write the commit message in the following format. Do not include any additional explanations or formatting, just the commit message:\n\ntype(scope): Subject in Korean\n\nBody in Korean\n- Change 1\n- Change 2\n\nExample:\nfeat(인증): 로그인 기능 추가\n\n사용자 인증 시스템 구현\n- JWT 기반 인증 추가\n- 로그인 API 구현\n- 인증 미들웨어 추가\n\nImportant notes:\n1. Write everything in Korean except for this instruction\n2. Use conventional commit types (feat, fix, docs, etc)\n3. Keep the subject line concise and clear\n4. List actual changes from the diff in the body\n5. Do not make assumptions or guesses"
+        "analyze": "Please analyze the following changes and generate a commit message. Write the output IN KOREAN following this format:\n\ntype(scope): Subject in Korean\n\nBody in Korean\n\nDetailed Changes:\n1. File-specific Changes\n- [filename] Detailed description of changes\n- [filename] Detailed description of changes\n\n2. Functional Changes\n- Description of added/modified functionality\n- Impact on affected areas\n\n3. Performance/Structural Changes\n- Performance improvement details\n- Code structure changes\n\nExample:\nfeat(auth): 로그인 기능 추가\n\n사용자 인증 시스템 구현\n\n상세 변경사항:\n1. 파일별 변경사항\n- [auth/login.ts] JWT 토큰 생성 로직 구현\n- [middleware/auth.ts] 인증 미들웨어 추가\n- [types/auth.ts] 인증 관련 타입 정의 추가\n\n2. 기능적 변경사항\n- JWT 기반 사용자 인증 시스템 구현\n- 로그인/로그아웃 API 엔드포인트 추가\n- 토큰 갱신 기능 구현\n\n3. 성능/구조적 변경사항\n- 토큰 검증 로직 캐싱 처리\n- 인증 실패 시 에러 처리 개선\n\nCurrent message: {{message}}\nChanges: {{diff}}\n\nImportant notes:\n1. Write the ENTIRE output in Korean\n2. Use conventional commit types (feat, fix, docs, etc)\n3. Keep the subject line concise and clear\n4. List ALL changes from the diff, no matter how small\n5. Group related changes together under appropriate categories\n6. Include file names when describing specific changes\n7. Mention any performance impacts or structural changes\n8. Do not make assumptions or guesses - stick to actual changes in the diff\n9. If a change affects multiple files, list all affected files"
       }
     },
     "reviewer_group": {
@@ -560,7 +567,8 @@
       "pr_description_failed": "PR 설명 생성 실패: {{error}}",
       "code_review_failed": "코드 리뷰 실패: {{error}}",
       "conflict_resolution_failed": "충돌 해결 제안 실패: {{error}}",
-      "commit_message_failed": "커밋 메시지 개선 실패: {{error}}"
+      "commit_message_failed": "커밋 메시지 개선 실패: {{error}}",
+      "pr_title_failed": "PR 제목 생성 실패: {{error}}"
     },
     "format": {
       "file": {
@@ -574,8 +582,8 @@
     },
     "prompts": {
       "pr_description": {
-        "analyze": "Please analyze the following changes and generate a PR description IN KOREAN. The description should follow this format:\n\n1. Start with a clear summary of what was changed\n2. Include a checklist of changes based on actual code changes\n3. For each checklist item:\n   - Mark with [V] if directly related to the changes\n   - Leave as [ ] if not relevant\n4. Be specific about what was changed and why\n5. Include technical details when relevant\n6. Use the following template structure and adapt it based on the changes:\n\n{{template}}\n\nFiles changed: {{files}}\n\nDiff content:\n{{diffContent}}\n\nImportant notes:\n1. Write EVERYTHING in Korean\n2. Focus on ACTUAL changes in the files and diff content\n3. Do not make assumptions about changes that are not shown in the diff\n4. Only mark checkboxes with [V] if the item is directly related to the changes in the diff\n5. Keep descriptions factual and based on the actual code changes\n6. Follow the template structure but adapt sections based on the actual changes",
-        "summarize": "Please summarize the following PR descriptions into a single, clear, and concise description IN KOREAN. Maintain the important aspects of each description while removing duplicates and providing a comprehensive overview of all changes:\n\n{{descriptions}}\n\nWhen summarizing, please:\n1. Write EVERYTHING in Korean\n2. Focus on actual code changes\n3. Maintain important checklist items\n4. Include technical details only when necessary\n5. Keep the template structure but adapt it to actual changes"
+        "analyze": "Please analyze the following changes and generate a PR description. Follow these specific guidelines and write the output IN KOREAN:\n\n1. Basic Structure\n- Use only the main section structure from the template (## Title format)\n- Create new checklist items based on actual changes\n\n2. Checklist Creation Rules\n- Create checklist items only from actual code changes\n- Each item must be specific and verifiable\n- Do not copy existing checklist items from the template\n- Create items that reflect the actual code changes\n\n3. Section Guidelines:\n\n## Description\n- Clearly explain the purpose and context of changes\n- Include technical context\n\n## Implementation Details\n- List changes in [filename:line_number] format\n- Explain each change and its rationale\n- Describe actual behavior changes in functions/methods\n\n## Testing\nOnly include actually added/modified tests:\n- New test cases\n- Modified test cases\n- Affected existing tests\n\n## Impact Analysis\nOnly include actual impacts:\n- Direct functionality changes\n- Performance impacts\n- Dependency changes\n\nTemplate:\n{{template}}\n\nChanged Files: {{files}}\n\nDiff Content:\n{{diffContent}}\n\nKey Instructions:\n1. Write the ENTIRE output in Korean\n2. Only reference the template's section structure, create new content based on actual changes\n3. Include only checklist items that can be verified from actual code changes\n4. Each checklist item must be specific and verifiable\n5. Use [V] only for completed work\n6. Use [ ] only for items requiring reviewer verification\n7. Include file names and line numbers for all changes\n8. Be specific about implementation details\n9. Focus on actual changes visible in the diff",
+        "summarize": "Please summarize the following PR descriptions into a single, clear, and concise description. Write the output IN KOREAN following these rules:\n\n1. Structure Maintenance\n- Keep main section formats from template\n- Reorganize content based on actual changes\n\n2. Checklist Integration Rules\n- Remove duplicates\n- Group related items\n- Create new checklist items based on actual changes\n- Include only verifiable items\n\n3. Description Integration Method\n- Extract core content from each description\n- Merge technical details\n- Remove duplicate content\n- Group related changes\n\nOriginal Descriptions:\n{{descriptions}}\n\nIntegration Guidelines:\n1. Write the ENTIRE output in Korean\n2. Keep template section structure but recreate content based on actual changes\n3. Include only verifiable checklist items\n4. Make technical descriptions specific and clear\n5. Remove duplicates and integrate related content\n6. Maintain clear traceability to actual code changes"
       },
       "code_review": {
         "analyze": "Please review the following code files and provide feedback IN KOREAN:\n\n{{files}}\n\nReview requirements:\n1. Code quality and best practices\n2. Potential bugs or edge cases\n3. Performance considerations\n4. Security vulnerabilities\n5. Test coverage\n\nProvide specific, actionable feedback for each issue found. Write EVERYTHING in Korean."
@@ -584,7 +592,10 @@
         "analyze": "Please analyze the following merge conflicts and suggest resolutions:\n\n{{conflicts}}\n\nPR Context:{{context}}\n\nFor each conflict:\n1. Explain the nature of the conflict\n2. Suggest the best resolution approach\n3. Provide specific guidance on which changes to keep\n4. Consider the context and impact of the changes\n\nWrite EVERYTHING in Korean."
       },
       "commit_message": {
-        "analyze": "Please analyze the following changes and generate a commit message IN KOREAN:\nCurrent message: {{message}}\nChanges: {{diff}}\n\nPlease write the commit message in the following format. Do not include any additional explanations or formatting, just the commit message:\n\ntype(scope): Subject in Korean\n\nBody in Korean\n- Change 1\n- Change 2\n\nExample:\nfeat(인증): 로그인 기능 추가\n\n사용자 인증 시스템 구현\n- JWT 기반 인증 추가\n- 로그인 API 구현\n- 인증 미들웨어 추가\n\nImportant notes:\n1. Write EVERYTHING in Korean except for this instruction\n2. Use conventional commit types (feat, fix, docs, etc)\n3. Keep the subject line concise and clear\n4. List actual changes from the diff in the body\n5. Do not make assumptions or guesses"
+        "analyze": "Please analyze the following changes and generate a commit message. Write the output IN KOREAN following this format:\n\ntype(scope): Subject in Korean\n\nBody in Korean\n\nDetailed Changes:\n1. File-specific Changes\n- [filename] Detailed description of changes\n- [filename] Detailed description of changes\n\n2. Functional Changes\n- Description of added/modified functionality\n- Impact on affected areas\n\n3. Performance/Structural Changes\n- Performance improvement details\n- Code structure changes\n\nExample:\nfeat(auth): 로그인 기능 추가\n\n사용자 인증 시스템 구현\n\n상세 변경사항:\n1. 파일별 변경사항\n- [auth/login.ts] JWT 토큰 생성 로직 구현\n- [middleware/auth.ts] 인증 미들웨어 추가\n- [types/auth.ts] 인증 관련 타입 정의 추가\n\n2. 기능적 변경사항\n- JWT 기반 사용자 인증 시스템 구현\n- 로그인/로그아웃 API 엔드포인트 추가\n- 토큰 갱신 기능 구현\n\n3. 성능/구조적 변경사항\n- 토큰 검증 로직 캐싱 처리\n- 인증 실패 시 에러 처리 개선\n\nCurrent message: {{message}}\nChanges: {{diff}}\n\nImportant notes:\n1. Write the ENTIRE output in Korean\n2. Use conventional commit types (feat, fix, docs, etc)\n3. Keep the subject line concise and clear\n4. List ALL changes from the diff, no matter how small\n5. Group related changes together under appropriate categories\n6. Include file names when describing specific changes\n7. Mention any performance impacts or structural changes\n8. Do not make assumptions or guesses - stick to actual changes in the diff\n9. If a change affects multiple files, list all affected files"
+      },
+      "pr_title": {
+        "analyze": "Please analyze the following changes and generate a concise and descriptive PR title. Write the output IN KOREAN following these rules:\n\n1. Title Guidelines:\n- Keep it concise but descriptive\n- Focus on the main change or feature\n- Use present tense\n- Do not include the type prefix (it will be added automatically)\n\n2. Content Guidelines:\n- Describe what the changes accomplish\n- Be specific about the main functionality\n- Avoid generic descriptions\n\nExample good titles:\n- 로그인 기능 구현\n- 사용자 인증 미들웨어 추가\n- 성능 개선을 위한 캐싱 로직 구현\n\nExample bad titles:\n- 버그 수정\n- 기능 추가\n- 코드 업데이트\n\nChanged Files: {{files}}\n\nDiff Content:\n{{diffContent}}\n\nImportant notes:\n1. Write ONLY the title part in Korean (without type prefix)\n2. Keep it under 50 characters if possible\n3. Make it easy to understand at a glance\n4. Focus on the actual changes in the diff"
       }
     },
     "models": {

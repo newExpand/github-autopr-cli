@@ -822,3 +822,21 @@ function _findConflictBlocks(
 
   return blocks;
 }
+
+export async function checkDraftPRAvailability(params: {
+  owner: string;
+  repo: string;
+}): Promise<boolean> {
+  try {
+    const client = await getOctokit();
+    const { data: repository } = await client.rest.repos.get(params);
+
+    // private 레포의 경우 draft PR 기능은 유료 기능입니다
+    // 일단 private 여부로만 판단
+    return !repository.private;
+  } catch (error) {
+    // 에러 발생 시 false를 반환하여 안전하게 처리
+    log.error("Failed to check draft PR availability:", error);
+    return false;
+  }
+}
