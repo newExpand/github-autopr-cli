@@ -5,7 +5,12 @@ GitHub PR 자동화를 위한 강력한 CLI 도구입니다. PR 생성, 리뷰, 
 ## 주요 기능
 
 - 🤖 AI 기반 PR 설명 생성 및 코드 리뷰
+  - PR 제목 자동 생성 및 개선
+  - PR 설명 자동 생성
+  - 코드 리뷰 제안
 - 🔄 자동 PR 생성 및 관리
+  - 저장소 유형에 따른 Draft PR 가용성 자동 감지
+  - 공개/비공개 저장소 지원
 - 👥 리뷰어 자동 할당 및 그룹 관리
 - 🌍 다국어 지원 (한국어/영어)
 - 🔍 충돌 해결 도우미
@@ -182,7 +187,7 @@ autopr lang current
 
 다음 AI 제공자를 지원합니다:
 
-- OpenAI (GPT-4, GPT-3.5-turbo)
+- OpenAI (GPT-4o, GPT-4o-mini, GPT-3.5-turbo)
 
 AI 기능은 다음 작업을 지원합니다:
 
@@ -213,7 +218,7 @@ AI 기능은 다음 작업을 지원합니다:
     "enabled": true,
     "provider": "openai",
     "options": {
-      "model": "gpt-4"
+      "model": "gpt-4o"
     }
   }
 }
@@ -226,7 +231,7 @@ AI 설정을 관리합니다:
 ```env
 AI_PROVIDER=openai
 AI_API_KEY=your-api-key
-AI_MODEL=gpt-4
+AI_MODEL=gpt-4o
 ```
 
 ## 커스터마이징
@@ -252,10 +257,22 @@ AI_MODEL=gpt-4
 
 ## 지원 환경
 
-- Node.js 16 이상
+- Node.js 20 이상
 - Git 2.0 이상
 - GitHub 저장소
 
 ## 라이선스
 
 MIT License
+
+## 변경 이력
+
+### 0.1.5
+
+- Draft PR 가용성 체크 기능 개선
+  - 저장소 visibility 기반 Draft PR 사용 가능 여부 자동 감지
+  - 공개/비공개 저장소 지원 강화
+- AI 제목 생성 기능 개선
+  - 제목 생성 과정 로깅 추가
+  - 생성 실패 시 기본 제목 유지 로직 개선
+  - 디버그 정보 강화
