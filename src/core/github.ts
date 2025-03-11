@@ -831,26 +831,6 @@ export async function checkDraftPRAvailability(params: {
     const client = await getOctokit();
     const { data: repository } = await client.rest.repos.get(params);
 
-    // 디버깅을 위해 repository 객체의 모든 속성 출력
-    console.log("Repository data (raw):", repository);
-
-    // 주요 속성들 개별적으로 로깅
-    log.debug("Repository properties:");
-    log.debug(`- Name: ${repository.name}`);
-    log.debug(`- Private: ${repository.private}`);
-    log.debug(`- Has Issues: ${repository.has_issues}`);
-    log.debug(`- Has Projects: ${repository.has_projects}`);
-    log.debug(`- Has Wiki: ${repository.has_wiki}`);
-    log.debug(`- Has Pages: ${repository.has_pages}`);
-    log.debug(`- Has Downloads: ${repository.has_downloads}`);
-    log.debug(`- Has Discussions: ${repository.has_discussions}`);
-    if (repository.permissions) {
-      log.debug("Permissions:");
-      log.debug(`- Admin: ${repository.permissions.admin}`);
-      log.debug(`- Push: ${repository.permissions.push}`);
-      log.debug(`- Pull: ${repository.permissions.pull}`);
-    }
-
     // private 레포의 경우 draft PR 기능은 유료 기능입니다
     // 일단 private 여부로만 판단
     return !repository.private;

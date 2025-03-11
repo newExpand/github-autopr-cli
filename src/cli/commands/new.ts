@@ -223,18 +223,18 @@ export async function newCommand(): Promise<void> {
       // pattern에서 draft 설정을 가져오되, draft PR 사용 불가능한 경우 false로 설정
       let isDraft = pattern?.draft ?? false;
 
-      // draft PR 사용 가능한 경우에만 draft 여부를 선택할 수 있도록 함
-      if (draftAvailable && !pattern?.draft) {
+      // draft PR 사용 가능한 경우 선택권 제공
+      if (draftAvailable) {
         const { shouldBeDraft } = await inquirer.prompt([
           {
             type: "confirm",
             name: "shouldBeDraft",
             message: t("commands.new.prompts.create_as_draft"),
-            default: false,
+            default: pattern?.draft ?? false,
           },
         ]);
         isDraft = shouldBeDraft;
-      } else if (!draftAvailable) {
+      } else {
         // draft PR 사용 불가능한 경우 강제로 false
         isDraft = false;
         if (pattern?.draft) {
