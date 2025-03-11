@@ -6,6 +6,7 @@ import { exec } from "child_process";
 import { promisify } from "util";
 import { log } from "../../utils/logger.js";
 import { loadConfig } from "../../core/config.js";
+import { checkDraftPRAvailability } from "../../core/github.js";
 
 const execAsync = promisify(exec);
 
@@ -32,7 +33,6 @@ export function createHookCommand(): Command {
     .argument("<branch>", t("commands.hook.post_checkout.argument.branch"))
     .action(async (branch: string) => {
       try {
-        // 설정 로드
         const config = await loadConfig();
         if (!config) {
           log.error(t("common.error.config_load_failed"));
@@ -60,7 +60,12 @@ export function createHookCommand(): Command {
           return;
         }
 
-        // 원격 브랜치 존재 여부 확인
+        // draft PR 사용 가능 여부 확인
+        const draftAvailable = await checkDraftPRAvailability({
+          owner: repoInfo.owner,
+          repo: repoInfo.repo,
+        });
+
         const remoteBranchExists = await checkRemoteBranchExists(branch);
 
         if (!remoteBranchExists) {
@@ -68,7 +73,18 @@ export function createHookCommand(): Command {
           log.info(
             t("commands.hook.post_checkout.info.push_instruction", { branch }),
           );
-          log.info(t("commands.hook.post_checkout.info.auto_pr"));
+          // draft PR 사용 불가능한 경우 일반 PR 생성 안내
+          if (!draftAvailable) {
+            log.info(t("commands.hook.post_checkout.info.regular_pr"));
+          } else {
+            log.info(t("commands.hook.post_checkout.info.auto_pr"));
+          }
+          return;
+        }
+
+        // draft PR 사용 불가능한 경우 PR 자동 생성 건너뛰기
+        if (!draftAvailable) {
+          log.info(t("commands.hook.post_checkout.info.manual_pr_required"));
           return;
         }
 
