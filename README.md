@@ -5,7 +5,12 @@ A powerful CLI tool for GitHub PR automation. Streamlines PR creation, review, a
 ## Key Features
 
 - 🤖 AI-powered PR description generation and code review
+  - Automatic PR title generation and enhancement
+  - PR description generation
+  - Code review suggestions
 - 🔄 Automated PR creation and management
+  - Automatic Draft PR availability detection based on repository type
+  - Support for public/private repositories
 - 👥 Automatic reviewer assignment and group management
 - 🌍 Multi-language support (English/Korean)
 - 🔍 Conflict resolution assistant
@@ -182,7 +187,7 @@ Each pattern can be configured with:
 
 Supports the following AI providers:
 
-- OpenAI (GPT-4, GPT-3.5-turbo)
+- OpenAI (GPT-4o, GPT-4o-mini, GPT-3.5-turbo)
 
 AI capabilities include:
 
@@ -213,7 +218,7 @@ Manages project-specific settings:
     "enabled": true,
     "provider": "openai",
     "options": {
-      "model": "gpt-4"
+      "model": "gpt-4o"
     }
   }
 }
@@ -226,7 +231,7 @@ Manages AI settings:
 ```env
 AI_PROVIDER=openai
 AI_API_KEY=your-api-key
-AI_MODEL=gpt-4
+AI_MODEL=gpt-4o
 ```
 
 ## Customization
@@ -252,10 +257,22 @@ Templates can include:
 
 ## System Requirements
 
-- Node.js 16 or higher
+- Node.js 20 or higher
 - Git 2.0 or higher
 - GitHub repository
 
 ## License
 
 MIT License
+
+## Change Log
+
+### 0.1.5
+
+- Enhanced Draft PR availability check
+  - Automatic detection of Draft PR availability based on repository visibility
+  - Improved support for public/private repositories
+- Enhanced AI title generation
+  - Added title generation process logging
+  - Improved fallback logic for title generation failures
+  - Enhanced debugging information
