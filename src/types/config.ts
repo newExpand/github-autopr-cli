@@ -27,7 +27,7 @@ export const BranchPatternSchema = z.object({
 
 export const AIConfigSchema = z.object({
   enabled: z.boolean().default(false),
-  provider: z.enum(["openai", "github-copilot", "anthropic"]),
+  provider: z.enum(["openai", "openrouter"]),
   apiKey: z.string().optional(),
   options: z
     .object({

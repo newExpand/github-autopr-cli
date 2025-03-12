@@ -124,7 +124,9 @@
         "branch_strategy": "\nBranch Strategy Configuration:",
         "development_branch_set": "Development branch set to: {{branch}}",
         "production_branch_set": "Production branch set to: {{branch}}",
-        "release_template_set": "Release PR template customized"
+        "release_template_set": "Release PR template customized",
+        "openrouter_selected": "OpenRouter selected. Using free Gemini Flash 2.0 model.",
+        "openrouter_config_skipped": "Skipping .env file configuration for OpenRouter as it uses default settings."
       }
     },
     "new": {
@@ -488,9 +490,6 @@
       "success": {
         "committed": "Successfully created commit with the improved message",
         "pushed": "Branch {{branch}} has been pushed to remote repository"
-      },
-      "commit_message": {
-        "analyze": "Please analyze the following changes and write a commit message:\nCurrent message: {{message}}\nChanges: {{diff}}\n\nPlease write ONLY the commit message in the following format. Do not include any additional explanations or formatting:\n\ntype(scope): subject\n\nbody\n- change 1\n- change 2\n\nActual example:\nfeat(auth): add login functionality\n\nImplement user authentication system\n- Add JWT-based authentication\n- Create login API endpoint\n- Implement authentication middleware"
       }
     },
     "reviewer_group": {
@@ -586,7 +585,7 @@
         "analyze": "Please analyze the following merge conflicts and suggest resolutions:\n\n{{conflicts}}\n\nPR Context:{{context}}\n\nFor each conflict:\n1. Explain the nature of the conflict\n2. Suggest the best resolution approach\n3. Provide specific guidance on which changes to keep\n4. Consider the context and impact of the changes\n\nWrite EVERYTHING in English."
       },
       "commit_message": {
-        "analyze": "Please analyze the following changes and generate a commit message. Write the output IN ENGLISH following this format:\n\ntype(scope): Subject in English\n\nBody in English\n\nDetailed Changes:\n1. File-specific Changes\n- [filename] Detailed description of changes\n- [filename] Detailed description of changes\n\n2. Functional Changes\n- Description of added/modified functionality\n- Impact on affected areas\n\n3. Performance/Structural Changes\n- Performance improvement details\n- Code structure changes\n\nExample:\nfeat(auth): Add login functionality\n\nImplement user authentication system\n\nDetailed Changes:\n1. File-specific Changes\n- [auth/login.ts] Implement JWT token generation logic\n- [middleware/auth.ts] Add authentication middleware\n- [types/auth.ts] Add authentication-related type definitions\n\n2. Functional Changes\n- Implement JWT-based user authentication system\n- Add login/logout API endpoints\n- Add token refresh functionality\n\n3. Performance/Structural Changes\n- Add caching for token validation\n- Improve error handling for authentication failures\n\nCurrent message: {{message}}\nChanges: {{diff}}\n\nImportant notes:\n1. Write the ENTIRE output in English\n2. Use conventional commit types (feat, fix, docs, etc)\n3. Keep the subject line concise and clear\n4. List ALL changes from the diff, no matter how small\n5. Group related changes together under appropriate categories\n6. Include file names when describing specific changes\n7. Mention any performance impacts or structural changes\n8. Do not make assumptions or guesses - stick to actual changes in the diff\n9. If a change affects multiple files, list all affected files"
+        "analyze": "Please analyze the following changes and generate a commit message.\n\n[Required]\n- Language: Write in English\n- Format: type(scope): title\n- Do not use markdown code blocks (```)\n\n[Message Structure]\n1. Title\n- Concise description of core changes\n- Keep under 50 characters\n\n2. Body\n- 1-2 sentences explaining main changes\n- Use concise descriptive style\n\n3. Detailed Changes\n1) File Changes\n- [filename] change description\n  Examples:\n  - [init.ts] OpenRouter selection feature\n  - [ai-manager.ts] API key input process\n  - [config.ts] OpenRouter token limits\n- If no changes: \"No file changes\"\n- Include all changed files (including i18n files)\n\n2) Functional Changes\n- User-facing actual changes\n- New or modified features\n- If no changes: \"No functional changes\"\n\n3) Performance/Structural Changes\n- Measurable performance improvements\n- Code structure changes\n- If no changes: \"No performance/structural changes\"\n\n[Writing Rules]\n1. No markdown code blocks\n2. Clear and concise descriptions\n3. Focus on actual changes\n4. Remove redundant explanations\n5. Include all changed files\n6. Keep file changes simple and focused\n\nCurrent message: {{message}}\nChanges: {{diff}}"
       },
       "pr_title": {
         "analyze": "Please analyze the following changes and generate a concise and descriptive PR title. Write the output IN ENGLISH following these rules:\n\n1. Title Guidelines:\n- Keep it concise but descriptive\n- Focus on the main change or feature\n- Use present tense\n- Do not include the type prefix (it will be added automatically)\n\n2. Content Guidelines:\n- Describe what the changes accomplish\n- Be specific about the main functionality\n- Avoid generic descriptions\n\nExample good titles:\n- Implement login functionality\n- Add user authentication middleware\n- Implement caching for performance\n\nExample bad titles:\n- Fix bug\n- Add feature\n- Update code\n\nChanged Files: {{files}}\n\nDiff Content:\n{{diffContent}}\n\nImportant notes:\n1. Write ONLY the title part in English (without type prefix)\n2. Keep it under 50 characters if possible\n3. Make it easy to understand at a glance\n4. Focus on the actual changes in the diff"
@@ -629,6 +628,12 @@
         "copilot_chat": {
           "name": "copilot-chat",
           "description": "GitHub's AI pair programming model"
+        }
+      },
+      "openrouter": {
+        "gemini_flash": {
+          "name": "google/gemini-2.0-flash-exp:free",
+          "description": "Free Gemini Flash 2.0 model with fast response and high quality"
         }
       }
     }

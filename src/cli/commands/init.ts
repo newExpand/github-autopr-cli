@@ -16,7 +16,7 @@ import OpenAI from "openai";
 import { AIManager } from "../../core/ai-manager.js";
 import { Config } from "../../types/config.js";
 
-const AI_PROVIDERS = ["openai", "github-copilot", "anthropic"] as const;
+const AI_PROVIDERS = ["openai", "openrouter"] as const;
 
 async function validateOpenAIKey(apiKey: string): Promise<boolean> {
   try {
@@ -48,29 +48,56 @@ async function setupAIConfig(): Promise<{
   apiKey: string;
   model: string;
 }> {
-  // OpenAI만 선택 가능하도록 자동 설정
-  const provider = "openai" as const;
-
-  const { apiKey } = await inquirer.prompt([
-    {
-      type: "password",
-      name: "apiKey",
-      message: t("commands.init.prompts.enter_api_key", {
-        provider: provider.toUpperCase(),
-      }),
-      validate: (value: string) => value.length > 0,
-    },
-  ]);
-
-  const models = await getAvailableModels(provider, apiKey);
-  const { model } = await inquirer.prompt([
+  const { provider } = await inquirer.prompt([
     {
       type: "list",
-      name: "model",
-      message: t("commands.init.prompts.select_model"),
-      choices: models,
+      name: "provider",
+      message: t("commands.init.prompts.select_ai_provider"),
+      choices: [
+        {
+          name: "OpenRouter (Free Gemini Flash 2.0)",
+          value: "openrouter",
+        },
+        {
+          name: "OpenAI",
+          value: "openai",
+        },
+      ],
     },
   ]);
+
+  let apiKey: string;
+  let model: string;
+
+  if (provider === "openrouter") {
+    // OpenRouter의 기본값은 AIManager에서 자동으로 설정되므로 빈 값 사용
+    apiKey = "";
+    model = "";
+    log.info(t("commands.init.info.openrouter_selected"));
+  } else {
+    const apiKeyResponse = await inquirer.prompt([
+      {
+        type: "password",
+        name: "apiKey",
+        message: t("commands.init.prompts.enter_api_key", {
+          provider: provider.toUpperCase(),
+        }),
+        validate: (value: string) => value.length > 0,
+      },
+    ]);
+    apiKey = apiKeyResponse.apiKey;
+
+    const models = await getAvailableModels(provider, apiKey);
+    const modelResponse = await inquirer.prompt([
+      {
+        type: "list",
+        name: "model",
+        message: t("commands.init.prompts.select_model"),
+        choices: models,
+      },
+    ]);
+    model = modelResponse.model;
+  }
 
   return { provider, apiKey, model };
 }
@@ -81,6 +108,12 @@ async function updateEnvFile(aiConfig: {
   model: string;
 }): Promise<void> {
   try {
+    // OpenRouter의 경우 .env 파일에 저장하지 않음
+    if (aiConfig.provider === "openrouter") {
+      log.info(t("commands.init.info.openrouter_config_skipped"));
+      return;
+    }
+
     let envContent = "";
     try {
       await access(".env", constants.F_OK);
