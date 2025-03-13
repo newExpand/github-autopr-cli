@@ -21,6 +21,7 @@ export class AIManager {
   private aiConfig: AIConfig | null = null;
   private openai: OpenAI | null = null;
   private isInitialized = false;
+  private initializationPromise: Promise<void> | null = null;
 
   private constructor() {}
 
@@ -32,6 +33,23 @@ export class AIManager {
   }
 
   async initialize(config: AIConfig): Promise<void> {
+    if (this.initializationPromise) {
+      return this.initializationPromise;
+    }
+
+    if (this.isInitialized) {
+      if (JSON.stringify(this.aiConfig) === JSON.stringify(config)) {
+        log.debug("AI가 이미 초기화되어 있습니다.");
+        return;
+      }
+      this.reset();
+    }
+
+    this.initializationPromise = this._initialize(config);
+    return this.initializationPromise;
+  }
+
+  private async _initialize(config: AIConfig): Promise<void> {
     try {
       if (config.provider === "openai") {
         this.openai = new OpenAI({
@@ -48,11 +66,20 @@ export class AIManager {
       }
       this.aiConfig = config;
       this.isInitialized = true;
+      this.initializationPromise = null;
       log.info(t("ai.initialization.success"));
     } catch (error) {
+      this.reset();
       log.error(t("ai.initialization.failed"), error);
       throw error;
     }
+  }
+
+  private reset(): void {
+    this.openai = null;
+    this.aiConfig = null;
+    this.isInitialized = false;
+    this.initializationPromise = null;
   }
 
   isEnabled(): boolean {

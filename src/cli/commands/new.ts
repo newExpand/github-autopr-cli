@@ -120,6 +120,7 @@ export async function newCommand(): Promise<void> {
     if (config.aiConfig?.enabled) {
       try {
         const ai = new AIFeatures();
+        await ai.initialize();
         aiEnabled = ai.isEnabled();
 
         if (aiEnabled) {

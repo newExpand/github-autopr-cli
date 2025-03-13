@@ -231,6 +231,7 @@ export async function commitCommand(
         process.exit(1);
       }
       const ai = new AIFeatures();
+      await ai.initialize();
       commitMessage = await ai.improveCommitMessage(
         currentMessage,
         diffContent,
@@ -244,6 +245,7 @@ export async function commitCommand(
       // AI 기능이 활성화된 경우: 새로운 메시지 제안
       log.info(t("commands.commit.info.analyzing_changes"));
       const ai = new AIFeatures();
+      await ai.initialize();
       commitMessage = await ai.improveCommitMessage(
         "",
         diffContent,
