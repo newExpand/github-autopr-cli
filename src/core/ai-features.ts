@@ -389,7 +389,11 @@ export class AIFeatures {
     }
   }
 
-  async improveCommitMessage(message: string, diff: string): Promise<string> {
+  async improveCommitMessage(
+    message: string,
+    diff: string,
+    changedFiles?: string[],
+  ): Promise<string> {
     const systemPrompt = `You are a commit message improvement expert. Your task is to:
 1. Create concise and impactful commit messages
 2. Follow conventional commit format strictly
@@ -412,6 +416,7 @@ Format Guidelines:
     const prompt = t("ai.prompts.commit_message.analyze", {
       message,
       diff,
+      files: changedFiles?.join(", ") || "",
     });
 
     try {

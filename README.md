@@ -267,6 +267,22 @@ MIT License
 
 ## Change Log
 
+### 0.1.6
+
+- Added OpenRouter support as AI provider
+  - Free Gemini Flash 2.0 model integration
+  - Automatic API key and model configuration
+  - Optimized token limits for OpenRouter
+- Enhanced commit message generation
+  - Improved prompt structure for better clarity
+  - Enhanced file change tracking to prevent omissions
+  - Added bilingual support with English prompts and Korean output
+  - Optimized system prompts for more consistent results
+- Improved i18n support
+  - Added comprehensive i18n file tracking
+  - Enhanced language-specific prompt handling
+  - Improved translation consistency
+
 ### 0.1.5
 
 - Enhanced Draft PR availability check
