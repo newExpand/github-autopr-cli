@@ -267,6 +267,20 @@ MIT License
 
 ## Change Log
 
+### 0.1.8
+
+- Fixed AI initialization issues
+  - Improved AI initialization process to ensure proper activation
+  - Added initialization state management to prevent duplicate initialization
+  - Enhanced error handling during AI initialization
+  - Fixed OpenRouter configuration loading and validation
+  - Added debug logging for AI initialization process
+- Enhanced AI feature reliability
+  - Added proper error recovery for AI initialization failures
+  - Improved state management for AI features
+  - Added initialization promise handling to prevent race conditions
+  - Enhanced configuration validation for AI providers
+
 ### 0.1.7
 
 - Enhanced commit message generation
