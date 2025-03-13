@@ -267,6 +267,18 @@ MIT License
 
 ## Change Log
 
+### 0.1.7
+
+- Enhanced commit message generation
+  - Added full file path support in commit messages
+  - Improved file tracking to prevent omissions
+  - Enhanced commit message format consistency
+  - Added comprehensive changed files list in commit analysis
+- Improved i18n support
+  - Synchronized English and Korean translations
+  - Enhanced error message consistency
+  - Added missing translation keys
+
 ### 0.1.6
 
 - Added OpenRouter support as AI provider
