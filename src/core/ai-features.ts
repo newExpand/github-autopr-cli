@@ -3,6 +3,7 @@ import { log } from "../utils/logger.js";
 import { t } from "../i18n/index.js";
 import type { AIProvider } from "./ai-manager.js";
 import dotenv from "dotenv";
+import { OPENROUTER_CONFIG } from "../config/openrouter.js";
 
 interface PRChunk {
   files: string[];
@@ -20,24 +21,31 @@ export class AIFeatures {
 
   constructor() {
     dotenv.config();
-
     this.aiManager = AIManager.getInstance();
+  }
+
+  async initialize(): Promise<void> {
     // .env 파일에서 설정 로드
     const provider = process.env.AI_PROVIDER as AIProvider;
     const apiKey = process.env.AI_API_KEY;
     const model = process.env.AI_MODEL;
 
-    if (provider && apiKey && model) {
-      this.aiManager
-        .initialize({
-          provider,
-          apiKey,
-          options: { model },
-        })
-        .catch((error) => {
-          log.error(t("ai.error.initialization_failed"), error);
-        });
+    // OpenAI인 경우 .env 파일의 값 사용
+    if (provider === "openai" && apiKey && model) {
+      await this.aiManager.initialize({
+        provider: "openai",
+        apiKey,
+        options: { model },
+      });
+      return;
     }
+
+    // OpenRouter인 경우 기본값 사용
+    await this.aiManager.initialize({
+      provider: "openrouter",
+      apiKey: OPENROUTER_CONFIG.API_KEY,
+      options: { model: OPENROUTER_CONFIG.DEFAULT_MODEL },
+    });
   }
 
   isEnabled(): boolean {

@@ -5,6 +5,7 @@
 !src
 !src/**
 src/**/__tests__/**
+src/config/openrouter.ts
 
 !.eslintrc.json
 !.prettierrc
