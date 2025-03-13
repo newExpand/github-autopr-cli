@@ -149,6 +149,16 @@ async function _isDevToMainPR(branch: string, config: any): Promise<boolean> {
   return branch === "dev" && config.defaultBranch === "main";
 }
 
+async function getChangedFiles(): Promise<string[]> {
+  try {
+    const { stdout } = await execAsync("git diff --staged --name-only");
+    return stdout.split("\n").filter(Boolean);
+  } catch (error) {
+    log.error(t("commands.commit.error.files_failed"));
+    return [];
+  }
+}
+
 export async function commitCommand(
   subcommand?: string,
   message?: string,
@@ -199,6 +209,7 @@ export async function commitCommand(
     }
 
     const diffContent = await getStagedDiff();
+    const changedFiles = await getChangedFiles();
 
     if (!diffContent) {
       log.error(t("commands.commit.error.no_staged_changes"));
@@ -218,6 +229,7 @@ export async function commitCommand(
       commitMessage = await ai.improveCommitMessage(
         currentMessage,
         diffContent,
+        changedFiles,
       );
     } else if (subcommand) {
       // 알 수 없는 서브커맨드
@@ -227,7 +239,11 @@ export async function commitCommand(
       // AI 기능이 활성화된 경우: 새로운 메시지 제안
       log.info(t("commands.commit.info.analyzing_changes"));
       const ai = new AIFeatures();
-      commitMessage = await ai.improveCommitMessage("", diffContent);
+      commitMessage = await ai.improveCommitMessage(
+        "",
+        diffContent,
+        changedFiles,
+      );
     }
 
     if (aiEnabled && commitMessage) {
