@@ -183,6 +183,7 @@ export async function commitCommand(
     if (config.aiConfig?.enabled) {
       try {
         const ai = new AIFeatures();
+        await ai.initialize();
         aiEnabled = ai.isEnabled();
       } catch (error) {
         aiEnabled = false;
@@ -199,13 +200,17 @@ export async function commitCommand(
       options.push = true;
     }
 
-    // 변경사항 스테이징
-    if (options.all || options.patch) {
-      const staged = await stageChanges(options);
-      if (!staged && options.patch) {
+    // 기본적으로 모든 변경사항을 스테이징
+    if (options.patch) {
+      // 패치 모드가 지정된 경우 대화형 패치 모드 실행
+      const staged = await stageChanges({ patch: true });
+      if (!staged) {
         log.info(t("commands.commit.info.run_patch_mode"));
         process.exit(0);
       }
+    } else {
+      // 패치 모드가 아닌 경우 모든 변경사항 스테이징
+      await stageChanges({ all: true });
     }
 
     const diffContent = await getStagedDiff();
@@ -226,6 +231,7 @@ export async function commitCommand(
         process.exit(1);
       }
       const ai = new AIFeatures();
+      await ai.initialize();
       commitMessage = await ai.improveCommitMessage(
         currentMessage,
         diffContent,
@@ -239,6 +245,7 @@ export async function commitCommand(
       // AI 기능이 활성화된 경우: 새로운 메시지 제안
       log.info(t("commands.commit.info.analyzing_changes"));
       const ai = new AIFeatures();
+      await ai.initialize();
       commitMessage = await ai.improveCommitMessage(
         "",
         diffContent,

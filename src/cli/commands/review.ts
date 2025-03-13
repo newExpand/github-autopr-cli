@@ -194,6 +194,7 @@ export async function reviewCommand(prNumber: string): Promise<void> {
     if (config.aiConfig?.enabled) {
       try {
         const ai = new AIFeatures();
+        await ai.initialize();
         aiEnabled = ai.isEnabled();
       } catch (error) {
         aiEnabled = false;
@@ -238,6 +239,7 @@ export async function reviewCommand(prNumber: string): Promise<void> {
 
         log.info(t("commands.review.info.ai_review_start"));
         const ai = new AIFeatures();
+        await ai.initialize();
         const files = await getChangedFiles(
           repoInfo.owner,
           repoInfo.repo,

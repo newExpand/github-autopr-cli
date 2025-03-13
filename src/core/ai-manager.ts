@@ -1,6 +1,7 @@
 import OpenAI from "openai";
 import { t } from "../i18n/index.js";
 import { log } from "../utils/logger.js";
+import { OPENROUTER_CONFIG } from "../config/openrouter.js";
 
 const AI_PROVIDERS = ["openai", "openrouter"] as const;
 export type AIProvider = (typeof AI_PROVIDERS)[number];
@@ -20,11 +21,7 @@ export class AIManager {
   private aiConfig: AIConfig | null = null;
   private openai: OpenAI | null = null;
   private isInitialized = false;
-  private static readonly OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1";
-  private static readonly OPENROUTER_API_KEY =
-    "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";
-  private static readonly OPENROUTER_DEFAULT_MODEL =
-    "google/gemini-2.0-flash-exp:free";
+  private initializationPromise: Promise<void> | null = null;
 
   private constructor() {}
 
@@ -36,6 +33,23 @@ export class AIManager {
   }
 
   async initialize(config: AIConfig): Promise<void> {
+    if (this.initializationPromise) {
+      return this.initializationPromise;
+    }
+
+    if (this.isInitialized) {
+      if (JSON.stringify(this.aiConfig) === JSON.stringify(config)) {
+        log.debug("AI가 이미 초기화되어 있습니다.");
+        return;
+      }
+      this.reset();
+    }
+
+    this.initializationPromise = this._initialize(config);
+    return this.initializationPromise;
+  }
+
+  private async _initialize(config: AIConfig): Promise<void> {
     try {
       if (config.provider === "openai") {
         this.openai = new OpenAI({
@@ -43,20 +57,29 @@ export class AIManager {
         });
       } else if (config.provider === "openrouter") {
         this.openai = new OpenAI({
-          baseURL: AIManager.OPENROUTER_BASE_URL,
-          apiKey: config.apiKey || AIManager.OPENROUTER_API_KEY,
+          baseURL: OPENROUTER_CONFIG.BASE_URL,
+          apiKey: config.apiKey || OPENROUTER_CONFIG.API_KEY,
         });
         config.options = config.options || {};
         config.options.model =
-          config.options?.model || AIManager.OPENROUTER_DEFAULT_MODEL;
+          config.options?.model || OPENROUTER_CONFIG.DEFAULT_MODEL;
       }
       this.aiConfig = config;
       this.isInitialized = true;
+      this.initializationPromise = null;
       log.info(t("ai.initialization.success"));
     } catch (error) {
+      this.reset();
       log.error(t("ai.initialization.failed"), error);
       throw error;
     }
+  }
+
+  private reset(): void {
+    this.openai = null;
+    this.aiConfig = null;
+    this.isInitialized = false;
+    this.initializationPromise = null;
   }
 
   isEnabled(): boolean {
@@ -83,7 +106,7 @@ export class AIManager {
       case "openai":
         return ["gpt-4o", "gpt-4o-mini", "gpt-3.5-turbo"];
       case "openrouter":
-        return [AIManager.OPENROUTER_DEFAULT_MODEL];
+        return [OPENROUTER_CONFIG.DEFAULT_MODEL];
       default:
         return [];
     }

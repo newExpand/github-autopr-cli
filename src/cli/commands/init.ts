@@ -4,6 +4,7 @@ import {
   updateConfig,
   loadGlobalConfig,
   loadProjectConfig,
+  updateProjectConfig,
 } from "../../core/config.js";
 import { validateGitHubToken } from "../../core/github.js";
 import { setupOAuthCredentials } from "../../core/oauth.js";
@@ -15,6 +16,7 @@ import { constants } from "fs";
 import OpenAI from "openai";
 import { AIManager } from "../../core/ai-manager.js";
 import { Config } from "../../types/config.js";
+import { OPENROUTER_CONFIG } from "../../config/openrouter.js";
 
 const AI_PROVIDERS = ["openai", "openrouter"] as const;
 
@@ -66,38 +68,39 @@ async function setupAIConfig(): Promise<{
     },
   ]);
 
-  let apiKey: string;
-  let model: string;
-
+  // OpenRouter 선택 시 즉시 반환
   if (provider === "openrouter") {
-    // OpenRouter의 기본값은 AIManager에서 자동으로 설정되므로 빈 값 사용
-    apiKey = "";
-    model = "";
     log.info(t("commands.init.info.openrouter_selected"));
-  } else {
-    const apiKeyResponse = await inquirer.prompt([
-      {
-        type: "password",
-        name: "apiKey",
-        message: t("commands.init.prompts.enter_api_key", {
-          provider: provider.toUpperCase(),
-        }),
-        validate: (value: string) => value.length > 0,
-      },
-    ]);
-    apiKey = apiKeyResponse.apiKey;
-
-    const models = await getAvailableModels(provider, apiKey);
-    const modelResponse = await inquirer.prompt([
-      {
-        type: "list",
-        name: "model",
-        message: t("commands.init.prompts.select_model"),
-        choices: models,
-      },
-    ]);
-    model = modelResponse.model;
+    return {
+      provider: "openrouter",
+      apiKey: OPENROUTER_CONFIG.API_KEY,
+      model: OPENROUTER_CONFIG.DEFAULT_MODEL,
+    };
   }
+
+  // OpenAI 설정
+  const apiKeyResponse = await inquirer.prompt([
+    {
+      type: "password",
+      name: "apiKey",
+      message: t("commands.init.prompts.enter_api_key", {
+        provider: provider.toUpperCase(),
+      }),
+      validate: (value: string) => value.length > 0,
+    },
+  ]);
+  const apiKey = apiKeyResponse.apiKey;
+
+  const models = await getAvailableModels(provider, apiKey);
+  const modelResponse = await inquirer.prompt([
+    {
+      type: "list",
+      name: "model",
+      message: t("commands.init.prompts.select_model"),
+      choices: models,
+    },
+  ]);
+  const model = modelResponse.model;
 
   return { provider, apiKey, model };
 }
@@ -319,13 +322,19 @@ export async function initCommand(): Promise<void> {
       const aiConfig = await setupAIConfig();
       await updateEnvFile(aiConfig);
 
-      answers.aiConfig = {
+      // AI 설정을 프로젝트 설정에 저장
+      const projectAIConfig = {
         enabled: true,
         provider: aiConfig.provider,
         options: {
           model: aiConfig.model,
         },
       };
+
+      // 프로젝트 설정 업데이트
+      await updateProjectConfig({
+        aiConfig: projectAIConfig,
+      });
     }
 
     // 프로젝트 설정
