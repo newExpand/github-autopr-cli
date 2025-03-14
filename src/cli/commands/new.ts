@@ -21,49 +21,25 @@ import {
 
 const execAsync = promisify(exec);
 
-async function getDiffContent(): Promise<string> {
+async function getDiffContent(baseBranch: string): Promise<string> {
   try {
-    const { stdout: defaultBranch } = await execAsync(
-      "git rev-parse --abbrev-ref origin/HEAD",
-    );
-    const baseBranchName = defaultBranch.trim().replace("origin/", "");
-    const { stdout } = await execAsync(
-      `git diff origin/${baseBranchName}...HEAD`,
-    );
+    const { stdout } = await execAsync(`git diff origin/${baseBranch}...HEAD`);
     return stdout;
   } catch (error) {
-    // 기본 브랜치를 가져오는데 실패한 경우 main을 사용
-    try {
-      const { stdout } = await execAsync("git diff origin/main...HEAD");
-      return stdout;
-    } catch (retryError) {
-      log.error(t("commands.new.error.diff_failed"));
-      return "";
-    }
+    log.error(t("commands.new.error.diff_failed"));
+    return "";
   }
 }
 
-async function getChangedFiles(): Promise<string[]> {
+async function getChangedFiles(baseBranch: string): Promise<string[]> {
   try {
-    const { stdout: defaultBranch } = await execAsync(
-      "git rev-parse --abbrev-ref origin/HEAD",
-    );
-    const baseBranchName = defaultBranch.trim().replace("origin/", "");
     const { stdout } = await execAsync(
-      `git diff --name-only origin/${baseBranchName}...HEAD`,
+      `git diff --name-only origin/${baseBranch}...HEAD`,
     );
     return stdout.split("\n").filter(Boolean);
   } catch (error) {
-    // 기본 브랜치를 가져오는데 실패한 경우 main을 사용
-    try {
-      const { stdout } = await execAsync(
-        "git diff --name-only origin/main...HEAD",
-      );
-      return stdout.split("\n").filter(Boolean);
-    } catch (retryError) {
-      log.error(t("commands.new.error.files_failed"));
-      return [];
-    }
+    log.error(t("commands.new.error.files_failed"));
+    return [];
   }
 }
 
@@ -109,9 +85,15 @@ export async function newCommand(): Promise<void> {
       defaultBody = await generatePRBody(pattern);
     }
 
+    // 브랜치 전략에 따라 base 브랜치 결정
+    const baseBranch =
+      pattern?.type === "release"
+        ? config.defaultBranch
+        : config.developmentBranch || config.defaultBranch;
+
     // 변경사항 수집
-    const changedFiles = await getChangedFiles();
-    const diffContent = await getDiffContent();
+    const changedFiles = await getChangedFiles(baseBranch);
+    const diffContent = await getDiffContent(baseBranch);
 
     let generatedDescription = "";
     let aiEnabled = false;
@@ -224,12 +206,6 @@ export async function newCommand(): Promise<void> {
     log.info(t("commands.new.info.creating"));
 
     try {
-      // 브랜치 전략에 따라 base 브랜치 결정
-      const baseBranch =
-        pattern?.type === "release"
-          ? config.defaultBranch
-          : config.developmentBranch || config.defaultBranch;
-
       // head 브랜치 참조 형식 수정
       const headBranch = repoInfo.currentBranch;
 
