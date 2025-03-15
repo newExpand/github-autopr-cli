@@ -255,10 +255,10 @@ export async function commitCommand(
 
     if (aiEnabled && commitMessage) {
       // 제안된 메시지 표시
-      log.info("\n" + t("commands.commit.info.suggested_message"));
-      log.info("-------------------");
-      log.info(commitMessage);
-      log.info("-------------------\n");
+      log.section(t("commands.commit.info.suggested_message"));
+      log.section("-------------------");
+      log.verbose(commitMessage);
+      log.section("-------------------");
 
       // 사용자 확인
       const { useMessage } = await inquirer.prompt([
