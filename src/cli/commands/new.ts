@@ -21,49 +21,36 @@ import {
 
 const execAsync = promisify(exec);
 
-async function getDiffContent(): Promise<string> {
+// 브랜치를 원격 저장소에 push하는 함수 추가
+async function pushToRemote(branch: string): Promise<void> {
   try {
-    const { stdout: defaultBranch } = await execAsync(
-      "git rev-parse --abbrev-ref origin/HEAD",
-    );
-    const baseBranchName = defaultBranch.trim().replace("origin/", "");
-    const { stdout } = await execAsync(
-      `git diff origin/${baseBranchName}...HEAD`,
-    );
-    return stdout;
+    await execAsync(`git push -u origin ${branch}`);
+    log.info(t("commands.new.success.branch_pushed", { branch }));
   } catch (error) {
-    // 기본 브랜치를 가져오는데 실패한 경우 main을 사용
-    try {
-      const { stdout } = await execAsync("git diff origin/main...HEAD");
-      return stdout;
-    } catch (retryError) {
-      log.error(t("commands.new.error.diff_failed"));
-      return "";
-    }
+    log.error(t("commands.new.error.push_failed", { error: String(error) }));
+    throw error;
   }
 }
 
-async function getChangedFiles(): Promise<string[]> {
+async function getDiffContent(baseBranch: string): Promise<string> {
   try {
-    const { stdout: defaultBranch } = await execAsync(
-      "git rev-parse --abbrev-ref origin/HEAD",
-    );
-    const baseBranchName = defaultBranch.trim().replace("origin/", "");
+    const { stdout } = await execAsync(`git diff origin/${baseBranch}...HEAD`);
+    return stdout;
+  } catch (error) {
+    log.error(t("commands.new.error.diff_failed"));
+    return "";
+  }
+}
+
+async function getChangedFiles(baseBranch: string): Promise<string[]> {
+  try {
     const { stdout } = await execAsync(
-      `git diff --name-only origin/${baseBranchName}...HEAD`,
+      `git diff --name-only origin/${baseBranch}...HEAD`,
     );
     return stdout.split("\n").filter(Boolean);
   } catch (error) {
-    // 기본 브랜치를 가져오는데 실패한 경우 main을 사용
-    try {
-      const { stdout } = await execAsync(
-        "git diff --name-only origin/main...HEAD",
-      );
-      return stdout.split("\n").filter(Boolean);
-    } catch (retryError) {
-      log.error(t("commands.new.error.files_failed"));
-      return [];
-    }
+    log.error(t("commands.new.error.files_failed"));
+    return [];
   }
 }
 
@@ -100,6 +87,18 @@ export async function newCommand(): Promise<void> {
     const pattern = await findMatchingPattern(repoInfo.currentBranch);
     if (!pattern) return;
 
+    // release/* 브랜치인 경우 자동으로 원격 저장소에 push
+    if (pattern.type === "release") {
+      try {
+        await pushToRemote(repoInfo.currentBranch);
+      } catch (error) {
+        log.error(
+          t("commands.new.error.push_failed", { error: String(error) }),
+        );
+        process.exit(1);
+      }
+    }
+
     let defaultTitle = repoInfo.currentBranch;
     let defaultBody = "";
     let generatedTitle = "";
@@ -109,9 +108,15 @@ export async function newCommand(): Promise<void> {
       defaultBody = await generatePRBody(pattern);
     }
 
+    // 브랜치 전략에 따라 base 브랜치 결정
+    const baseBranch =
+      pattern?.type === "release"
+        ? config.defaultBranch
+        : config.developmentBranch || config.defaultBranch;
+
     // 변경사항 수집
-    const changedFiles = await getChangedFiles();
-    const diffContent = await getDiffContent();
+    const changedFiles = await getChangedFiles(baseBranch);
+    const diffContent = await getDiffContent(baseBranch);
 
     let generatedDescription = "";
     let aiEnabled = false;
@@ -132,9 +137,8 @@ export async function newCommand(): Promise<void> {
               diffContent,
               pattern,
             );
-            log.info(
-              t("commands.new.info.generated_title", { title: generatedTitle }),
-            );
+            log.section(t("commands.new.info.generated_title", { title: "" }));
+            log.verbose(generatedTitle);
             defaultTitle = generatedTitle || defaultTitle;
           } catch (error) {
             log.warn(t("commands.new.warning.ai_title_failed"), error);
@@ -150,10 +154,10 @@ export async function newCommand(): Promise<void> {
           );
 
           // AI가 생성한 설명 표시
-          log.info("\n" + t("commands.new.info.generated_description"));
-          log.info("-------------------");
-          log.info(generatedDescription);
-          log.info("-------------------\n");
+          log.section(t("commands.new.info.generated_description"));
+          log.section("-------------------");
+          log.verbose(generatedDescription);
+          log.section("-------------------");
         }
       } catch (error) {
         log.warn(t("commands.new.warning.ai_description_failed"));
@@ -224,12 +228,6 @@ export async function newCommand(): Promise<void> {
     log.info(t("commands.new.info.creating"));
 
     try {
-      // 브랜치 전략에 따라 base 브랜치 결정
-      const baseBranch =
-        pattern?.type === "release"
-          ? config.defaultBranch
-          : config.developmentBranch || config.defaultBranch;
-
       // head 브랜치 참조 형식 수정
       const headBranch = repoInfo.currentBranch;
 
