@@ -8,13 +8,17 @@ GitHub PR 자동화를 위한 강력한 CLI 도구입니다. PR 생성, 리뷰, 
   - PR 제목 자동 생성 및 개선
   - PR 설명 자동 생성
   - 코드 리뷰 제안
+  - 시각적으로 구분되는 AI 출력 (색상 구분)
 - 🔄 자동 PR 생성 및 관리
   - 저장소 유형에 따른 Draft PR 가용성 자동 감지
   - 공개/비공개 저장소 지원
+  - release/\* 브랜치 자동 push 기능
 - 👥 리뷰어 자동 할당 및 그룹 관리
 - 🌍 다국어 지원 (한국어/영어)
 - 🔍 충돌 해결 도우미
 - 📝 커밋 메시지 개선
+  - AI 제안 메시지 시각적 구분
+  - 직관적인 메시지 포맷팅
 - 🤝 Collaborator 관리
 - 🪝 Git 훅 자동화
 
@@ -166,13 +170,13 @@ autopr lang current
 
 기본적으로 다음과 같은 브랜치 패턴을 지원합니다:
 
-- `feat/*`: 새로운 기능 개발
-- `fix/*`: 버그 수정
-- `refactor/*`: 코드 리팩토링
-- `docs/*`: 문서 작업
-- `chore/*`: 기타 작업
-- `test/*`: 테스트 관련 작업
-- `release/*`: 릴리스 관련 작업
+- `feat/*`: 새로운 기능 개발 (base: developmentBranch)
+- `fix/*`: 버그 수정 (base: developmentBranch)
+- `refactor/*`: 코드 리팩토링 (base: developmentBranch)
+- `docs/*`: 문서 작업 (base: developmentBranch)
+- `chore/*`: 기타 작업 (base: developmentBranch)
+- `test/*`: 테스트 관련 작업 (base: developmentBranch)
+- `release/*`: 릴리스 관련 작업 (base: defaultBranch/main)
 
 각 패턴별로 다음 설정이 가능합니다:
 
@@ -266,6 +270,27 @@ AI_MODEL=gpt-4o
 MIT License
 
 ## 변경 이력
+
+### 0.1.9
+
+- 사용자 경험 개선
+  - AI 출력 시각화 개선
+    - PR 제목/설명 생성 시 색상 구분 적용
+    - 커밋 메시지 제안 시 시각적 구분 강화
+  - 로그 레벨 구분 개선
+    - 일반 메시지: cyan 색상
+    - AI 생성 내용: white 색상 (📝 심볼)
+    - 섹션 구분: magenta 색상 (=== 심볼)
+    - 메시지 포맷팅 개선
+    - 구분선을 통한 가독성 향상
+    - 중요 정보 강조를 위한 색상 활용
+- release/\* 브랜치 자동 push 기능 추가
+  - PR 생성 시 자동 push 지원
+  - 안전한 에러 처리
+- 브랜치 전략 개선
+  - release/\* 브랜치를 제외한 모든 브랜치가 developmentBranch를 base로 사용하도록 변경
+  - 기존: 모든 브랜치가 main을 base로 사용
+  - 변경: release/\* → main, 그 외 브랜치 → developmentBranch
 
 ### 0.1.8
 

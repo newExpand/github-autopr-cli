@@ -8,13 +8,17 @@ A powerful CLI tool for GitHub PR automation. Streamlines PR creation, review, a
   - Automatic PR title generation and enhancement
   - PR description generation
   - Code review suggestions
+  - Visually distinguished AI outputs (color-coded)
 - 🔄 Automated PR creation and management
   - Automatic Draft PR availability detection based on repository type
   - Support for public/private repositories
+  - Automatic push for release/\* branches
 - 👥 Automatic reviewer assignment and group management
 - 🌍 Multi-language support (English/Korean)
 - 🔍 Conflict resolution assistant
 - 📝 Commit message enhancement
+  - Visual distinction for AI suggestions
+  - Intuitive message formatting
 - 🤝 Collaborator management
 - 🪝 Git hooks automation
 
@@ -166,13 +170,13 @@ autopr lang current
 
 Supports the following branch patterns by default:
 
-- `feat/*`: New feature development
-- `fix/*`: Bug fixes
-- `refactor/*`: Code refactoring
-- `docs/*`: Documentation changes
-- `chore/*`: Maintenance tasks
-- `test/*`: Test-related changes
-- `release/*`: Release-related changes
+- `feat/*`: New feature development (base: developmentBranch)
+- `fix/*`: Bug fixes (base: developmentBranch)
+- `refactor/*`: Code refactoring (base: developmentBranch)
+- `docs/*`: Documentation changes (base: developmentBranch)
+- `chore/*`: Maintenance tasks (base: developmentBranch)
+- `test/*`: Test-related changes (base: developmentBranch)
+- `release/*`: Release-related changes (base: defaultBranch/main)
 
 Each pattern can be configured with:
 
@@ -266,6 +270,27 @@ Templates can include:
 MIT License
 
 ## Change Log
+
+### 0.1.9
+
+- Enhanced User Experience
+  - Improved AI Output Visualization
+    - Color-coded PR title/description generation
+    - Enhanced visual distinction for commit message suggestions
+  - Enhanced Log Level Distinction
+    - Regular messages: cyan color
+    - AI-generated content: white color (📝 symbol)
+    - Section dividers: magenta color (=== symbol)
+  - Improved Message Formatting
+    - Enhanced readability with divider lines
+    - Color emphasis for important information
+- Added Automatic Push for release/\* Branches
+  - Automatic push support during PR creation
+  - Robust error handling
+- Improved Branch Strategy
+  - Changed base branch configuration to use developmentBranch for all branches except release/\*
+  - Before: All branches used main as base
+  - After: release/\* → main, other branches → developmentBranch
 
 ### 0.1.8
 
