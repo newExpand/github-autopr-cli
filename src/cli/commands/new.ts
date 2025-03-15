@@ -21,6 +21,17 @@ import {
 
 const execAsync = promisify(exec);
 
+// 브랜치를 원격 저장소에 push하는 함수 추가
+async function pushToRemote(branch: string): Promise<void> {
+  try {
+    await execAsync(`git push -u origin ${branch}`);
+    log.info(t("commands.new.success.branch_pushed", { branch }));
+  } catch (error) {
+    log.error(t("commands.new.error.push_failed", { error: String(error) }));
+    throw error;
+  }
+}
+
 async function getDiffContent(baseBranch: string): Promise<string> {
   try {
     const { stdout } = await execAsync(`git diff origin/${baseBranch}...HEAD`);
@@ -75,6 +86,18 @@ export async function newCommand(): Promise<void> {
     // 브랜치 패턴 매칭
     const pattern = await findMatchingPattern(repoInfo.currentBranch);
     if (!pattern) return;
+
+    // release/* 브랜치인 경우 자동으로 원격 저장소에 push
+    if (pattern.type === "release") {
+      try {
+        await pushToRemote(repoInfo.currentBranch);
+      } catch (error) {
+        log.error(
+          t("commands.new.error.push_failed", { error: String(error) }),
+        );
+        process.exit(1);
+      }
+    }
 
     let defaultTitle = repoInfo.currentBranch;
     let defaultBody = "";

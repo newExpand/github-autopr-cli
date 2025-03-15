@@ -136,7 +136,8 @@
         "create_failed": "Failed to create PR: {{error}}",
         "diff_failed": "Failed to get diff content",
         "files_failed": "Failed to get changed files",
-        "protected_branch": "Cannot create PR from protected branch '{{branch}}'. Please create a new branch from '{{development}}' or '{{production}}'."
+        "protected_branch": "Cannot create PR from protected branch '{{branch}}'. Please create a new branch from '{{development}}' or '{{production}}'.",
+        "push_failed": "Failed to push to remote repository: {{error}}"
       },
       "info": {
         "pr_exists": "PR #{{number}} already exists.",
@@ -165,7 +166,8 @@
       "success": {
         "pr_updated": "PR #{{number}} has been successfully updated.",
         "cancelled": "Operation cancelled.",
-        "pr_created": "Pull Request has been successfully created."
+        "pr_created": "Pull Request has been successfully created.",
+        "branch_pushed": "Branch {{branch}} has been pushed to remote repository."
       }
     },
     "list": {
