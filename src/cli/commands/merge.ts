@@ -425,7 +425,9 @@ export async function mergeCommand(prNumber: string): Promise<void> {
       {
         type: "confirm",
         name: "changeBase",
-        message: t("commands.merge.prompts.change_base"),
+        message: t("commands.merge.prompts.change_base", {
+          branch: pr.base.ref,
+        }),
         default: false,
       },
     ]);

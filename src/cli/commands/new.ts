@@ -137,9 +137,8 @@ export async function newCommand(): Promise<void> {
               diffContent,
               pattern,
             );
-            log.info(
-              t("commands.new.info.generated_title", { title: generatedTitle }),
-            );
+            log.section(t("commands.new.info.generated_title", { title: "" }));
+            log.verbose(generatedTitle);
             defaultTitle = generatedTitle || defaultTitle;
           } catch (error) {
             log.warn(t("commands.new.warning.ai_title_failed"), error);
@@ -155,10 +154,10 @@ export async function newCommand(): Promise<void> {
           );
 
           // AI가 생성한 설명 표시
-          log.info("\n" + t("commands.new.info.generated_description"));
-          log.info("-------------------");
-          log.info(generatedDescription);
-          log.info("-------------------\n");
+          log.section(t("commands.new.info.generated_description"));
+          log.section("-------------------");
+          log.verbose(generatedDescription);
+          log.section("-------------------");
         }
       } catch (error) {
         log.warn(t("commands.new.warning.ai_description_failed"));

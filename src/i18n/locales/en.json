@@ -142,7 +142,7 @@
       "info": {
         "pr_exists": "PR #{{number}} already exists.",
         "generating_title": "Generating PR title using AI...",
-        "generated_title": "AI generated title: {{title}}",
+        "generated_title": "AI generated title:",
         "generating_description": "Generating PR description using AI...",
         "generated_description": "AI generated description:",
         "creating": "Creating Pull Request...",
@@ -290,7 +290,7 @@
         "commit_message": "Enter commit message",
         "delete_branch": "Delete branch after merge?",
         "confirm": "Are you sure you want to merge this PR?",
-        "change_base": "Do you want to change the target branch?",
+        "change_base": "Current target branch is '{{branch}}'. Do you want to change the target branch?",
         "select_base": "Select target branch",
         "confirm_base_change": "Change target branch from {{from}} to {{to}}?",
         "confirm_many_files": "Do you really want to open all files to resolve conflicts?",
