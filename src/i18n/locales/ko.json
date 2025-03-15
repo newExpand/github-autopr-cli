@@ -134,10 +134,11 @@
       "description": "새로운 Pull Request 생성",
       "error": {
         "main_branch": "{{branch}} 브랜치에서 직접 PR을 생성할 수 없습니다. 새로운 브랜치를 먼저 생성해주세요.",
-        "create_failed": "PR 생성 실패: {{error}}",
-        "diff_failed": "변경사항 내용을 가져오는데 실패했습니다",
+        "create_failed": "PR 생성에 실패했습니다: {{error}}",
+        "diff_failed": "변경사항을 가져오는데 실패했습니다",
         "files_failed": "변경된 파일 목록을 가져오는데 실패했습니다",
-        "protected_branch": "보호된 브랜치 '{{branch}}'에서 직접 PR을 생성할 수 없습니다. '{{development}}' 또는 '{{production}}'에서 새 브랜치를 생성해주세요."
+        "protected_branch": "보호된 브랜치 '{{branch}}'에서 직접 PR을 생성할 수 없습니다. '{{development}}' 또는 '{{production}}'에서 새 브랜치를 생성해주세요.",
+        "push_failed": "원격 저장소에 푸시하는데 실패했습니다: {{error}}"
       },
       "prompts": {
         "update_existing": "기존 PR을 업데이트하시겠습니까?",
@@ -166,7 +167,8 @@
       "success": {
         "pr_updated": "PR #{{number}}이(가) 성공적으로 업데이트되었습니다.",
         "cancelled": "작업이 취소되었습니다.",
-        "pr_created": "Pull Request가 성공적으로 생성되었습니다."
+        "pr_created": "Pull Request가 성공적으로 생성되었습니다.",
+        "branch_pushed": "브랜치 {{branch}}이(가) 원격 저장소에 푸시되었습니다."
       }
     },
     "list": {
@@ -488,7 +490,7 @@
         "invalid_subcommand": "잘못된 서브커맨드입니다. 'improve' 또는 'suggest'를 사용하세요",
         "commit_failed": "커밋 생성에 실패했습니다",
         "get_branch_failed": "현재 브랜치 정보를 가져오는데 실패했습니다",
-        "push_failed": "원격 저장소로 push하는데 실패했습니다: {{error}}"
+        "push_failed": "원격 저장소에 푸시하는데 실패했습니다: {{error}}"
       },
       "prompts": {
         "use_message": "이 커밋 메시지를 사용하시겠습니까?",
