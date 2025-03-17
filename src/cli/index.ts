@@ -88,6 +88,7 @@ async function main() {
           $ autopr commit improve            - ${t("commands.commit.help.improve_last")}
           $ autopr commit improve "message"  - ${t("commands.commit.help.improve_message")}
           $ autopr commit improve -a         - ${t("commands.commit.help.improve_all_with_push")}
+          $ autopr commit improve -sp        - ${t("commands.commit.help.improve_select_with_push")}
       `,
       )
       .action(commitCommand);

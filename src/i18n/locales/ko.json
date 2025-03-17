@@ -482,7 +482,8 @@
         "improve_message": "주어진 메시지를 개선",
         "improve_all": "모든 변경사항을 스테이징하고 최근 커밋 메시지를 개선",
         "all_with_push": "모든 변경사항을 스테이징하고 커밋 후 자동으로 push",
-        "improve_all_with_push": "모든 변경사항을 스테이징하고 최근 커밋 메시지를 개선 후 자동으로 push"
+        "improve_all_with_push": "모든 변경사항을 스테이징하고 최근 커밋 메시지를 개선 후 자동으로 push",
+        "improve_select_with_push": "변경된 파일 중 선택한 파일만 스테이징하고 최근 커밋 메시지를 개선 후 자동으로 push"
       },
       "info": {
         "patch_mode": "'git add -p' 명령어로 변경사항을 선택적으로 스테이징해주세요",

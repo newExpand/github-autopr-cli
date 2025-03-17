@@ -480,7 +480,8 @@
         "improve_message": "Improve the given message",
         "improve_all": "Stage all changes and improve the recent commit message",
         "all_with_push": "Stage all changes, commit and automatically push",
-        "improve_all_with_push": "Stage all changes, improve recent commit message and automatically push"
+        "improve_all_with_push": "Stage all changes, improve recent commit message and automatically push",
+        "improve_select_with_push": "Select specific files to stage, improve recent commit message and automatically push"
       },
       "info": {
         "patch_mode": "Use 'git add -p' to selectively stage changes",
