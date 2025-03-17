@@ -35,3 +35,46 @@ export async function getCurrentRepoInfo(): Promise<RepoInfo | null> {
     return null;
   }
 }
+
+// 로컬 브랜치 목록 가져오기
+export async function getLocalBranches(): Promise<string[]> {
+  try {
+    const { stdout } = await execAsync(
+      "git branch --format='%(refname:short)'",
+    );
+    return stdout.split("\n").filter(Boolean);
+  } catch (error) {
+    return [];
+  }
+}
+
+// 원격 브랜치 목록 가져오기
+export async function getRemoteBranches(): Promise<string[]> {
+  try {
+    const { stdout } = await execAsync(
+      "git branch -r --format='%(refname:short)'",
+    );
+    return stdout
+      .split("\n")
+      .filter(Boolean)
+      .map((branch) => branch.replace(/^origin\//, "")) // 'origin/' 접두사 제거
+      .filter((branch) => branch !== "HEAD"); // HEAD 제외
+  } catch (error) {
+    return [];
+  }
+}
+
+// 모든 브랜치 목록 가져오기 (로컬 + 원격)
+export async function getAllBranches(): Promise<{
+  local: string[];
+  remote: string[];
+  all: string[];
+}> {
+  const local = await getLocalBranches();
+  const remote = await getRemoteBranches();
+
+  // 중복 제거된 모든 브랜치 목록
+  const all = [...new Set([...local, ...remote])];
+
+  return { local, remote, all };
+}

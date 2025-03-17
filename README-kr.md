@@ -91,9 +91,19 @@ autopr commit
 
 # 모든 변경사항 커밋 및 푸시
 autopr commit -a
+# 푸시 시 브랜치 선택 가능:
+# - 현재 브랜치로 푸시
+# - 다른 브랜치로 푸시
+# - 새 브랜치 생성 및 푸시
 
 # 대화형으로 변경사항 선택 후 커밋
 autopr commit -p
+
+# 변경된 파일 중 선택한 파일만 커밋
+autopr commit -s
+
+# 변경된 파일 중 선택한 파일만 스테이징하고 커밋 후 자동으로 푸시
+autopr commit -sp
 
 # 기존 커밋 메시지 개선
 autopr commit improve [message]
@@ -270,6 +280,18 @@ AI_MODEL=gpt-4o
 MIT License
 
 ## 변경 이력
+
+### 0.1.10
+
+- 커밋 기능 개선
+  - 파일 선택 커밋 기능 추가 (`autopr commit -s`)
+    - 변경된 파일 중 커밋할 파일만 선택 가능
+    - 대화형 인터페이스로 파일 선택 지원
+  - 파일 선택 후 자동 푸시 기능 추가 (`autopr commit -sp`)
+  - 브랜치 선택 푸시 기능 추가 (`autopr commit -a`)
+  - 원격 브랜치 상태 관리 개선
+    - 원격에 존재하지 않는 브랜치 자동 감지
+    - 원격/로컬 브랜치 상태 시각적 표시 개선
 
 ### 0.1.9
 

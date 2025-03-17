@@ -457,7 +457,16 @@
       "description": "AI를 사용하여 커밋 메시지 개선 또는 제안",
       "options": {
         "all_with_push": "모든 변경사항을 스테이징하고 커밋 후 자동으로 push",
-        "patch": "대화형으로 변경사항을 선택하여 스테이징"
+        "patch": "대화형으로 변경사항을 선택하여 스테이징",
+        "select": "변경된 파일 중 커밋할 파일만 선택하여 스테이징",
+        "select_with_push": "변경된 파일 중 선택한 파일만 스테이징하고 커밋 후 자동으로 push"
+      },
+      "branch": {
+        "current": "현재 브랜치",
+        "remote": "원격",
+        "local": "로컬",
+        "local_only": "로컬만",
+        "create_new": "새 브랜치 생성..."
       },
       "args": {
         "subcommand": "improve - 기존 커밋 메시지 개선",
@@ -467,11 +476,14 @@
         "examples": "사용 예시",
         "default": "스테이지된 변경사항을 분석하여 새로운 커밋 메시지 생성",
         "all": "모든 변경사항을 스테이징하고 새로운 커밋 메시지 생성",
+        "select": "변경된 파일 중 선택한 파일만 스테이징하고 커밋",
+        "select_with_push": "변경된 파일 중 선택한 파일만 스테이징하고 커밋 후 자동으로 push",
         "improve_last": "가장 최근 커밋의 메시지를 개선",
         "improve_message": "주어진 메시지를 개선",
         "improve_all": "모든 변경사항을 스테이징하고 최근 커밋 메시지를 개선",
         "all_with_push": "모든 변경사항을 스테이징하고 커밋 후 자동으로 push",
-        "improve_all_with_push": "모든 변경사항을 스테이징하고 최근 커밋 메시지를 개선 후 자동으로 push"
+        "improve_all_with_push": "모든 변경사항을 스테이징하고 최근 커밋 메시지를 개선 후 자동으로 push",
+        "improve_select_with_push": "변경된 파일 중 선택한 파일만 스테이징하고 최근 커밋 메시지를 개선 후 자동으로 push"
       },
       "info": {
         "patch_mode": "'git add -p' 명령어로 변경사항을 선택적으로 스테이징해주세요",
@@ -480,7 +492,12 @@
         "analyzing_changes": "커밋 메시지 제안을 위해 변경사항을 분석하는 중...",
         "suggested_message": "제안된 커밋 메시지:",
         "pr_creation_guide": "변경사항이 성공적으로 푸시되었습니다. PR을 생성하시겠습니까?",
-        "run_new_command": "PR을 생성하려면 'autopr new' 명령어를 실행해주세요."
+        "run_new_command": "PR을 생성하려면 'autopr new' 명령어를 실행해주세요.",
+        "no_unstaged_files": "변경된 파일이 없습니다.",
+        "no_files_selected": "선택된 파일이 없습니다. 커밋을 취소합니다.",
+        "push_cancelled": "푸시가 취소되었습니다.",
+        "branch_not_on_remote": "현재 브랜치 '{{branch}}'는 원격에 존재하지 않습니다. 푸시 시 자동으로 원격 브랜치가 생성됩니다.",
+        "creating_remote_branch": "원격에 '{{branch}}' 브랜치를 생성합니다..."
       },
       "error": {
         "staging_failed": "변경사항 스테이징에 실패했습니다",
@@ -490,15 +507,26 @@
         "invalid_subcommand": "잘못된 서브커맨드입니다. 'improve' 또는 'suggest'를 사용하세요",
         "commit_failed": "커밋 생성에 실패했습니다",
         "get_branch_failed": "현재 브랜치 정보를 가져오는데 실패했습니다",
-        "push_failed": "원격 저장소에 푸시하는데 실패했습니다: {{error}}"
+        "push_failed": "원격 저장소에 푸시하는데 실패했습니다: {{error}}",
+        "file_selection_failed": "파일 선택 중 오류가 발생했습니다",
+        "branch_name_empty": "브랜치 이름은 비워둘 수 없습니다",
+        "branch_exists": "이미 존재하는 브랜치 이름입니다"
       },
       "prompts": {
         "use_message": "이 커밋 메시지를 사용하시겠습니까?",
-        "edit_message": "커밋 메시지 수정:"
+        "edit_message": "커밋 메시지 수정:",
+        "select_files": "커밋할 파일을 선택하세요 (스페이스바로 선택/해제):",
+        "select_push_branch": "푸시할 브랜치를 선택하세요:",
+        "enter_new_branch_name": "새 브랜치 이름을 입력하세요:",
+        "checkout_new_branch": "새 브랜치 '{{branch}}'로 체크아웃하시겠습니까?",
+        "confirm_push_different_branch": "브랜치 '{{target}}'로 푸시하시겠습니까? (취소 시 푸시되지 않습니다)"
       },
       "success": {
         "committed": "개선된 메시지로 커밋이 성공적으로 생성되었습니다",
-        "pushed": "{{branch}} 브랜치가 원격 저장소로 push되었습니다"
+        "pushed": "{{branch}} 브랜치가 원격 저장소로 push되었습니다",
+        "files_staged": "{{count}}개의 파일이 스테이징되었습니다",
+        "branch_created": "새 브랜치 '{{branch}}'가 생성되었습니다",
+        "branch_checked_out": "브랜치 '{{branch}}'로 체크아웃되었습니다"
       }
     },
     "reviewer_group": {

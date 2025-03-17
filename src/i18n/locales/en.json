@@ -455,7 +455,16 @@
       "description": "Improve or suggest commit messages using AI",
       "options": {
         "all_with_push": "Stage all changes, commit and automatically push",
-        "patch": "Interactively stage changes before committing"
+        "patch": "Interactively select changes to stage",
+        "select": "Select specific files to stage for commit",
+        "select_with_push": "Select specific files to stage, commit and automatically push"
+      },
+      "branch": {
+        "current": "current branch",
+        "remote": "remote",
+        "local": "local",
+        "local_only": "local only",
+        "create_new": "Create new branch..."
       },
       "args": {
         "subcommand": "improve - Improve existing commit message",
@@ -463,36 +472,59 @@
       },
       "help": {
         "examples": "Examples",
-        "default": "Analyze staged changes and suggest a new commit message",
-        "all": "Stage all changes and suggest a new commit message",
+        "default": "Analyze staged changes and generate a new commit message",
+        "all": "Stage all changes and generate a new commit message",
+        "select": "Select specific files to stage and commit",
+        "select_with_push": "Select specific files to stage, commit and automatically push",
         "improve_last": "Improve the most recent commit message",
-        "improve_message": "Improve the provided commit message",
-        "improve_all": "Stage all changes and improve the most recent commit message",
+        "improve_message": "Improve the given message",
+        "improve_all": "Stage all changes and improve the recent commit message",
         "all_with_push": "Stage all changes, commit and automatically push",
-        "improve_all_with_push": "Stage all changes, improve the most recent commit message and automatically push"
+        "improve_all_with_push": "Stage all changes, improve recent commit message and automatically push",
+        "improve_select_with_push": "Select specific files to stage, improve recent commit message and automatically push"
       },
       "info": {
-        "patch_mode": "Please run 'git add -p' to interactively stage changes",
-        "run_patch_mode": "After staging changes with 'git add -p', run the commit command again",
+        "patch_mode": "Use 'git add -p' to selectively stage changes",
+        "run_patch_mode": "Run 'git add -p' to stage changes, then run the commit command again",
         "improving_message": "Improving commit message using AI...",
         "analyzing_changes": "Analyzing changes to suggest commit message...",
         "suggested_message": "Suggested commit message:",
-        "pr_creation_guide": "Changes have been successfully pushed. Would you like to create a PR?",
-        "run_new_command": "To create a PR, please run 'autopr new' command."
+        "pr_creation_guide": "Changes successfully pushed. Would you like to create a PR?",
+        "run_new_command": "Run 'autopr new' to create a PR.",
+        "no_unstaged_files": "No changed files to stage.",
+        "no_files_selected": "No files selected. Cancelling commit.",
+        "push_cancelled": "Push cancelled.",
+        "branch_not_on_remote": "Current branch '{{branch}}' does not exist on remote. It will be created automatically when pushed.",
+        "creating_remote_branch": "Creating remote branch '{{branch}}'..."
       },
       "error": {
+        "staging_failed": "Failed to stage changes",
         "diff_failed": "Failed to get staged changes",
-        "no_staged_changes": "No staged changes found. Please stage your changes first using 'git add'",
+        "files_failed": "Failed to get list of changed files",
+        "no_staged_changes": "No staged changes. Use 'git add' to stage changes",
         "invalid_subcommand": "Invalid subcommand. Use 'improve' or 'suggest'",
         "commit_failed": "Failed to create commit",
-        "staging_failed": "Failed to stage changes",
-        "files_failed": "Failed to get changed files list",
         "get_branch_failed": "Failed to get current branch information",
-        "push_failed": "Failed to push to remote repository: {{error}}"
+        "push_failed": "Failed to push to remote: {{error}}",
+        "file_selection_failed": "Error occurred while selecting files",
+        "branch_name_empty": "Branch name cannot be empty",
+        "branch_exists": "Branch already exists"
+      },
+      "prompts": {
+        "use_message": "Would you like to use this commit message?",
+        "edit_message": "Edit commit message:",
+        "select_files": "Select files to commit (use spacebar to select/deselect):",
+        "select_push_branch": "Select branch to push to:",
+        "enter_new_branch_name": "Enter new branch name:",
+        "checkout_new_branch": "Checkout to new branch '{{branch}}'?",
+        "confirm_push_different_branch": "Push to branch '{{target}}'? (No will cancel the push)"
       },
       "success": {
-        "committed": "Successfully created commit with the improved message",
-        "pushed": "Branch {{branch}} has been pushed to remote repository"
+        "committed": "Successfully created commit with improved message",
+        "pushed": "Branch {{branch}} pushed to remote",
+        "files_staged": "{{count}} files staged for commit",
+        "branch_created": "New branch '{{branch}}' created",
+        "branch_checked_out": "Checked out to branch '{{branch}}'"
       }
     },
     "reviewer_group": {
