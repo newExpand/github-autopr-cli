@@ -462,6 +462,7 @@
         "current": "current branch",
         "remote": "remote",
         "local": "local",
+        "local_only": "local only",
         "create_new": "Create new branch..."
       },
       "args": {
@@ -489,7 +490,9 @@
         "run_new_command": "Run 'autopr new' to create a PR.",
         "no_unstaged_files": "No changed files to stage.",
         "no_files_selected": "No files selected. Cancelling commit.",
-        "push_cancelled": "Push cancelled."
+        "push_cancelled": "Push cancelled.",
+        "branch_not_on_remote": "Current branch '{{branch}}' does not exist on remote. It will be created automatically when pushed.",
+        "creating_remote_branch": "Creating remote branch '{{branch}}'..."
       },
       "error": {
         "staging_failed": "Failed to stage changes",

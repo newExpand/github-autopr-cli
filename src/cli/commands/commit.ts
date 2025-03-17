@@ -182,10 +182,19 @@ async function getCurrentBranch(): Promise<string> {
 async function pushToRemote(currentBranch: string): Promise<void> {
   try {
     // 브랜치 목록 가져오기
-    const { local, remote, all } = await getAllBranches();
+    const { remote, all } = await getAllBranches();
 
     // 현재 브랜치가 이미 원격에 있는지 확인
     const branchExists = remote.includes(currentBranch);
+
+    // 현재 브랜치가 원격에 존재하지 않는 경우 알림
+    if (!branchExists) {
+      log.info(
+        t("commands.commit.info.branch_not_on_remote", {
+          branch: currentBranch,
+        }),
+      );
+    }
 
     // 사용자에게 푸시할 브랜치 선택 요청
     const { targetBranch } = await inquirer.prompt([
@@ -194,16 +203,16 @@ async function pushToRemote(currentBranch: string): Promise<void> {
         name: "targetBranch",
         message: t("commands.commit.prompts.select_push_branch"),
         choices: [
-          // 현재 브랜치를 첫 번째 옵션으로 표시
+          // 현재 브랜치를 첫 번째 옵션으로 표시 (원격 상태 포함)
           {
-            name: `${currentBranch} (${t("commands.commit.branch.current")})`,
+            name: `${currentBranch} (${t("commands.commit.branch.current")})${branchExists ? ` (${t("commands.commit.branch.remote")})` : ` (${t("commands.commit.branch.local_only")})`}`,
             value: currentBranch,
           },
           // 다른 브랜치들 표시
           ...all
             .filter((branch) => branch !== currentBranch)
             .map((branch) => ({
-              name: `${branch} ${remote.includes(branch) ? `(${t("commands.commit.branch.remote")})` : `(${t("commands.commit.branch.local")})`}`,
+              name: `${branch} ${remote.includes(branch) ? `(${t("commands.commit.branch.remote")})` : `(${t("commands.commit.branch.local_only")})`}`,
               value: branch,
             })),
           // 새 브랜치 생성 옵션
@@ -284,12 +293,21 @@ async function pushToRemote(currentBranch: string): Promise<void> {
       }
     }
 
-    // 원격 브랜치가 존재하지 않는 경우 -u 옵션 추가
-    const pushCommand = !remote.includes(pushBranch)
-      ? `git push -u origin ${pushBranch}`
-      : `git push origin ${pushBranch}`;
+    // 선택한 브랜치가 원격에 존재하는지 확인
+    const targetBranchExists = remote.includes(pushBranch);
 
-    await execAsync(pushCommand);
+    // 원격 브랜치가 존재하지 않는 경우 -u 옵션 추가 및 알림
+    if (!targetBranchExists) {
+      log.info(
+        t("commands.commit.info.creating_remote_branch", {
+          branch: pushBranch,
+        }),
+      );
+      await execAsync(`git push -u origin ${pushBranch}`);
+    } else {
+      await execAsync(`git push origin ${pushBranch}`);
+    }
+
     log.info(t("commands.commit.success.pushed", { branch: pushBranch }));
   } catch (error) {
     log.error(t("commands.commit.error.push_failed", { error: String(error) }));

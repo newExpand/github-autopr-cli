@@ -464,6 +464,7 @@
         "current": "현재 브랜치",
         "remote": "원격",
         "local": "로컬",
+        "local_only": "로컬만",
         "create_new": "새 브랜치 생성..."
       },
       "args": {
@@ -491,7 +492,9 @@
         "run_new_command": "PR을 생성하려면 'autopr new' 명령어를 실행해주세요.",
         "no_unstaged_files": "변경된 파일이 없습니다.",
         "no_files_selected": "선택된 파일이 없습니다. 커밋을 취소합니다.",
-        "push_cancelled": "푸시가 취소되었습니다."
+        "push_cancelled": "푸시가 취소되었습니다.",
+        "branch_not_on_remote": "현재 브랜치 '{{branch}}'는 원격에 존재하지 않습니다. 푸시 시 자동으로 원격 브랜치가 생성됩니다.",
+        "creating_remote_branch": "원격에 '{{branch}}' 브랜치를 생성합니다..."
       },
       "error": {
         "staging_failed": "변경사항 스테이징에 실패했습니다",
