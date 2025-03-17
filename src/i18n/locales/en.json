@@ -484,31 +484,34 @@
         "improve_select_with_push": "Select specific files to stage, improve recent commit message and automatically push"
       },
       "info": {
-        "patch_mode": "Use 'git add -p' to selectively stage changes",
-        "run_patch_mode": "Run 'git add -p' to stage changes, then run the commit command again",
-        "improving_message": "Improving commit message using AI...",
-        "analyzing_changes": "Analyzing changes to suggest commit message...",
+        "patch_mode": "Use 'git add -p' to interactively stage changes",
+        "run_patch_mode": "Run interactive patch mode: git add -p",
+        "no_unstaged_files": "No unstaged files",
+        "no_files_selected": "No files selected",
+        "improving_message": "Improving commit message...",
+        "analyzing_changes": "Analyzing changes for commit message suggestion...",
         "suggested_message": "Suggested commit message:",
-        "pr_creation_guide": "Changes successfully pushed. Would you like to create a PR?",
-        "run_new_command": "Run 'autopr new' to create a PR.",
-        "no_unstaged_files": "No changed files to stage.",
-        "no_files_selected": "No files selected. Cancelling commit.",
-        "push_cancelled": "Push cancelled.",
-        "branch_not_on_remote": "Current branch '{{branch}}' does not exist on remote. It will be created automatically when pushed.",
-        "creating_remote_branch": "Creating remote branch '{{branch}}'..."
+        "pr_creation_guide": "To create a PR, run:",
+        "run_new_command": "autopr new",
+        "branch_not_on_remote": "Current branch '{{branch}}' does not exist on remote. It will be created automatically when pushing.",
+        "push_cancelled": "Push cancelled",
+        "creating_remote_branch": "Creating '{{branch}}' branch on remote...",
+        "using_default_message": "Using default commit message."
       },
       "error": {
         "staging_failed": "Failed to stage changes",
-        "diff_failed": "Failed to get staged changes",
-        "files_failed": "Failed to get list of changed files",
-        "no_staged_changes": "No staged changes. Use 'git add' to stage changes",
-        "invalid_subcommand": "Invalid subcommand. Use 'improve' or 'suggest'",
-        "commit_failed": "Failed to create commit",
-        "get_branch_failed": "Failed to get current branch information",
-        "push_failed": "Failed to push to remote: {{error}}",
-        "file_selection_failed": "Error occurred while selecting files",
+        "files_failed": "Failed to get changed files",
+        "diff_failed": "Failed to get diff content",
+        "no_staged_changes": "No staged changes",
+        "no_commit_message": "No commit message",
+        "commit_failed": "Failed to commit",
+        "push_failed": "Failed to push: {{error}}",
+        "get_branch_failed": "Failed to get current branch",
+        "invalid_subcommand": "Invalid subcommand",
+        "file_selection_failed": "Error selecting files",
         "branch_name_empty": "Branch name cannot be empty",
-        "branch_exists": "Branch already exists"
+        "branch_exists": "Branch already exists",
+        "message_input_failed": "Error inputting commit message. Please try again."
       },
       "prompts": {
         "use_message": "Would you like to use this commit message?",
@@ -579,6 +582,57 @@
       },
       "success": {
         "reopened": "PR #{{number}} has been reopened"
+      }
+    },
+    "openrouter": {
+      "description": "Manage OpenRouter API keys",
+      "get": {
+        "description": "Get API key information"
+      },
+      "list": {
+        "description": "List API keys",
+        "options": {
+          "offset": "Pagination offset (default: 0)"
+        }
+      },
+      "status": {
+        "description": "Check and update API key status",
+        "options": {
+          "enable": "Enable API key",
+          "disable": "Disable API key"
+        }
+      },
+      "ensure": {
+        "description": "Check API key activation status and auto-activate if needed"
+      },
+      "schedule": {
+        "description": "Run API key auto-activation scheduler",
+        "options": {
+          "interval": "Check interval in minutes (default: 60)"
+        }
+      },
+      "info": {
+        "key_info": "API key information:",
+        "key_list": "API key list:",
+        "key_status": "API key status: {{status}}",
+        "checking_key_status": "Checking API key status...",
+        "key_already_active": "API key is already active.",
+        "scheduler_started": "API key auto-activation scheduler started (interval: {{interval}} minutes)",
+        "scheduler_running": "Scheduler is running (interval: {{interval}} minutes)",
+        "scheduler_stopped": "Scheduler stopped.",
+        "scheduler_stop_instruction": "Press Ctrl+C to stop."
+      },
+      "error": {
+        "get_key_failed": "Failed to get API key information",
+        "list_keys_failed": "Failed to list API keys",
+        "update_key_status_failed": "Failed to update API key status",
+        "conflicting_options": "Cannot use both enable and disable options",
+        "key_activation_failed": "Failed to check API key activation",
+        "scheduler_failed": "Error occurred while running scheduler"
+      },
+      "success": {
+        "key_status_updated": "API key status has been {{status}}d",
+        "key_activated": "API key has been successfully activated"
       }
     }
   },
