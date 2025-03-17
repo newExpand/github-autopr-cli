@@ -77,10 +77,12 @@ async function main() {
       .option("-a, --all", t("commands.commit.options.all_with_push"))
       .option("-p, --patch", t("commands.commit.options.patch"))
       .option("-s, --select", t("commands.commit.options.select"))
+      /* 일시적으로 selectPush 옵션 비활성화
       .option(
         "-sp, --select-push",
         t("commands.commit.options.select_with_push"),
       )
+      */
       .addHelpText(
         "after",
         `
