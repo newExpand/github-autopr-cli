@@ -15,6 +15,10 @@ import { commitCommand } from "./commands/commit.js";
 import { loadConfig } from "../core/config.js";
 import { log } from "../utils/logger.js";
 import { createReviewerGroupCommand } from "./commands/reviewer-group.js";
+import { createOpenRouterCommand } from "./commands/openrouter.js";
+
+// 개발 모드 확인 (NODE_ENV가 development인 경우에만 true)
+const isDevelopment = process.env.NODE_ENV === "development";
 
 const program = new Command();
 
@@ -72,15 +76,23 @@ async function main() {
       .argument("[message]", t("commands.commit.args.message"))
       .option("-a, --all", t("commands.commit.options.all_with_push"))
       .option("-p, --patch", t("commands.commit.options.patch"))
+      .option("-s, --select", t("commands.commit.options.select"))
+      .option(
+        "-sp, --select-push",
+        t("commands.commit.options.select_with_push"),
+      )
       .addHelpText(
         "after",
         `
         ${t("commands.commit.help.examples")}:
           $ autopr commit                    - ${t("commands.commit.help.default")}
           $ autopr commit -a                 - ${t("commands.commit.help.all_with_push")}
+          $ autopr commit -s                 - ${t("commands.commit.help.select")}
+          $ autopr commit -sp                - ${t("commands.commit.help.select_with_push")}
           $ autopr commit improve            - ${t("commands.commit.help.improve_last")}
           $ autopr commit improve "message"  - ${t("commands.commit.help.improve_message")}
           $ autopr commit improve -a         - ${t("commands.commit.help.improve_all_with_push")}
+          $ autopr commit improve -sp        - ${t("commands.commit.help.improve_select_with_push")}
       `,
       )
       .action(commitCommand);
@@ -96,6 +108,11 @@ async function main() {
 
     // 새로운 reviewer-group 명령어 추가
     program.addCommand(createReviewerGroupCommand());
+
+    // OpenRouter 명령어는 개발 모드에서만 추가
+    if (isDevelopment) {
+      program.addCommand(createOpenRouterCommand());
+    }
 
     await program.parseAsync();
   } catch (error) {

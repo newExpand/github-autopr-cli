@@ -455,7 +455,16 @@
       "description": "Improve or suggest commit messages using AI",
       "options": {
         "all_with_push": "Stage all changes, commit and automatically push",
-        "patch": "Interactively stage changes before committing"
+        "patch": "Interactively select changes to stage",
+        "select": "Select specific files to stage for commit",
+        "select_with_push": "Select specific files to stage, commit and automatically push"
+      },
+      "branch": {
+        "current": "current branch",
+        "remote": "remote",
+        "local": "local",
+        "local_only": "local only",
+        "create_new": "Create new branch..."
       },
       "args": {
         "subcommand": "improve - Improve existing commit message",
@@ -463,36 +472,62 @@
       },
       "help": {
         "examples": "Examples",
-        "default": "Analyze staged changes and suggest a new commit message",
-        "all": "Stage all changes and suggest a new commit message",
+        "default": "Analyze staged changes and generate a new commit message",
+        "all": "Stage all changes and generate a new commit message",
+        "select": "Select specific files to stage and commit",
+        "select_with_push": "Select specific files to stage, commit and automatically push",
         "improve_last": "Improve the most recent commit message",
-        "improve_message": "Improve the provided commit message",
-        "improve_all": "Stage all changes and improve the most recent commit message",
+        "improve_message": "Improve the given message",
+        "improve_all": "Stage all changes and improve the recent commit message",
         "all_with_push": "Stage all changes, commit and automatically push",
-        "improve_all_with_push": "Stage all changes, improve the most recent commit message and automatically push"
+        "improve_all_with_push": "Stage all changes, improve recent commit message and automatically push",
+        "improve_select_with_push": "Select specific files to stage, improve recent commit message and automatically push"
       },
       "info": {
-        "patch_mode": "Please run 'git add -p' to interactively stage changes",
-        "run_patch_mode": "After staging changes with 'git add -p', run the commit command again",
-        "improving_message": "Improving commit message using AI...",
-        "analyzing_changes": "Analyzing changes to suggest commit message...",
+        "patch_mode": "Use 'git add -p' to interactively stage changes",
+        "run_patch_mode": "Run interactive patch mode: git add -p",
+        "no_unstaged_files": "No unstaged files",
+        "no_files_selected": "No files selected",
+        "improving_message": "Improving commit message...",
+        "analyzing_changes": "Analyzing changes for commit message suggestion...",
         "suggested_message": "Suggested commit message:",
-        "pr_creation_guide": "Changes have been successfully pushed. Would you like to create a PR?",
-        "run_new_command": "To create a PR, please run 'autopr new' command."
+        "pr_creation_guide": "To create a PR, run:",
+        "run_new_command": "autopr new",
+        "branch_not_on_remote": "Current branch '{{branch}}' does not exist on remote. It will be created automatically when pushing.",
+        "push_cancelled": "Push cancelled",
+        "creating_remote_branch": "Creating '{{branch}}' branch on remote...",
+        "using_default_message": "Using default commit message."
       },
       "error": {
-        "diff_failed": "Failed to get staged changes",
-        "no_staged_changes": "No staged changes found. Please stage your changes first using 'git add'",
-        "invalid_subcommand": "Invalid subcommand. Use 'improve' or 'suggest'",
-        "commit_failed": "Failed to create commit",
         "staging_failed": "Failed to stage changes",
-        "files_failed": "Failed to get changed files list",
-        "get_branch_failed": "Failed to get current branch information",
-        "push_failed": "Failed to push to remote repository: {{error}}"
+        "files_failed": "Failed to get changed files",
+        "diff_failed": "Failed to get diff content",
+        "no_staged_changes": "No staged changes",
+        "no_commit_message": "No commit message",
+        "commit_failed": "Failed to commit",
+        "push_failed": "Failed to push: {{error}}",
+        "get_branch_failed": "Failed to get current branch",
+        "invalid_subcommand": "Invalid subcommand",
+        "file_selection_failed": "Error selecting files",
+        "branch_name_empty": "Branch name cannot be empty",
+        "branch_exists": "Branch already exists",
+        "message_input_failed": "Error inputting commit message. Please try again."
+      },
+      "prompts": {
+        "use_message": "Would you like to use this commit message?",
+        "edit_message": "Edit commit message:",
+        "select_files": "Select files to commit (use spacebar to select/deselect):",
+        "select_push_branch": "Select branch to push to:",
+        "enter_new_branch_name": "Enter new branch name:",
+        "checkout_new_branch": "Checkout to new branch '{{branch}}'?",
+        "confirm_push_different_branch": "Push to branch '{{target}}'? (No will cancel the push)"
       },
       "success": {
-        "committed": "Successfully created commit with the improved message",
-        "pushed": "Branch {{branch}} has been pushed to remote repository"
+        "committed": "Successfully created commit with improved message",
+        "pushed": "Branch {{branch}} pushed to remote",
+        "files_staged": "{{count}} files staged for commit",
+        "branch_created": "New branch '{{branch}}' created",
+        "branch_checked_out": "Checked out to branch '{{branch}}'"
       }
     },
     "reviewer_group": {
@@ -547,6 +582,57 @@
       },
       "success": {
         "reopened": "PR #{{number}} has been reopened"
+      }
+    },
+    "openrouter": {
+      "description": "Manage OpenRouter API keys",
+      "get": {
+        "description": "Get API key information"
+      },
+      "list": {
+        "description": "List API keys",
+        "options": {
+          "offset": "Pagination offset (default: 0)"
+        }
+      },
+      "status": {
+        "description": "Check and update API key status",
+        "options": {
+          "enable": "Enable API key",
+          "disable": "Disable API key"
+        }
+      },
+      "ensure": {
+        "description": "Check API key activation status and auto-activate if needed"
+      },
+      "schedule": {
+        "description": "Run API key auto-activation scheduler",
+        "options": {
+          "interval": "Check interval in minutes (default: 60)"
+        }
+      },
+      "info": {
+        "key_info": "API key information:",
+        "key_list": "API key list:",
+        "key_status": "API key status: {{status}}",
+        "checking_key_status": "Checking API key status...",
+        "key_already_active": "API key is already active.",
+        "scheduler_started": "API key auto-activation scheduler started (interval: {{interval}} minutes)",
+        "scheduler_running": "Scheduler is running (interval: {{interval}} minutes)",
+        "scheduler_stopped": "Scheduler stopped.",
+        "scheduler_stop_instruction": "Press Ctrl+C to stop."
+      },
+      "error": {
+        "get_key_failed": "Failed to get API key information",
+        "list_keys_failed": "Failed to list API keys",
+        "update_key_status_failed": "Failed to update API key status",
+        "conflicting_options": "Cannot use both enable and disable options",
+        "key_activation_failed": "Failed to check API key activation",
+        "scheduler_failed": "Error occurred while running scheduler"
+      },
+      "success": {
+        "key_status_updated": "API key status has been {{status}}d",
+        "key_activated": "API key has been successfully activated"
       }
     }
   },

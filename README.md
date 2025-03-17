@@ -91,9 +91,16 @@ autopr commit
 
 # Commit all changes and push
 autopr commit -a
+# Push options:
+# - Push to current branch
+# - Push to another branch
+# - Create and push to new branch
 
 # Interactively stage changes before commit
 autopr commit -p
+
+# Select specific files to commit
+autopr commit -s
 
 # Improve existing commit message
 autopr commit improve [message]
@@ -271,6 +278,46 @@ MIT License
 
 ## Change Log
 
+### 0.1.10
+
+- Enhanced Commit Functionality
+  - Added File Selection Commit Feature (`autopr commit -s`)
+    - Select specific files to commit from changed files
+    - Interactive interface for file selection
+  - Added File Selection with Auto-Push Feature (`autopr commit -sp`)
+  - Added Branch Selection Push Feature (`autopr commit -a`)
+    - Push to branches other than the current branch
+    - Display remote branch status (remote/local only)
+    - Support for creating and pushing new branches
+    - Branch checkout options
+  - Improved Remote Branch Status Management
+    - Automatic detection of branches not existing on remote
+    - Automatic `-u` option for new remote branches
+    - Enhanced visual indication of branch status
+- Improved OpenRouter API Key Management
+  - Added Automatic API Key Activation
+    - Automatic status check when using AI features
+    - Silent activation of disabled API keys
+    - Background processing for improved user experience
+  - On-demand API Key Status Checking
+    - Status check every 60 minutes when using AI features
+    - Efficient activation to prevent 401 errors
+  - Development-mode API Key Management Commands
+    - API key information retrieval and status management
+    - Enhanced security for sensitive API key information
+- Enhanced AI Initialization and Performance
+  - Optimized AI Instance Creation and Initialization
+    - Strengthened duplicate initialization prevention
+    - AI instance reuse within commands
+    - Optimized memory usage
+  - Improved API Key Status Check Logic
+    - Prevented duplicate API calls through caching
+    - Optimized status check frequency (5-minute cache)
+  - Enhanced Logging
+    - Prevented duplicate log outputs
+    - Clarified debug/info level distinction
+    - Optimized log messages for better user experience
+
 ### 0.1.9
 
 - Enhanced User Experience
@@ -343,3 +390,40 @@ MIT License
   - Added title generation process logging
   - Improved fallback logic for title generation failures
   - Enhanced debugging information
+
+## Commit Management
+
+- `autopr commit`: Analyzes staged changes and suggests a commit message using AI.
+- `autopr commit -a`: Stages all changes, commits, and automatically pushes.
+- `autopr commit -s`: Selects specific files to stage and commit.
+- `autopr commit -sp`: Selects specific files to stage, commits, and automatically pushes.
+- `autopr commit -p`: Interactively selects changes to stage.
+- `autopr commit improve`: Improves the most recent commit message.
+- `autopr commit improve "message"`: Improves the given message.
+
+### OpenRouter API Key Management
+
+```bash
+# Get API key information
+autopr openrouter get
+
+# List API keys
+autopr openrouter list
+
+# Check and update API key status
+autopr openrouter status --enable  # Enable
+autopr openrouter status --disable  # Disable
+```
+
+> Note: OpenRouter API key status is automatically checked and activated when using AI features. This process runs silently in the background, so users don't need to manage it manually.
+
+### PR Creation
+
+- `autopr new`: Creates a new PR based on staged changes.
+- `autopr new -d`: Creates a new draft PR.
+- `autopr new -t "title"`: Creates a new PR with the specified title.
+- `autopr new -b "body"`: Creates a new PR with the specified body.
+- `autopr new -r "reviewer1,reviewer2"`: Creates a new PR with the specified reviewers.
+- `autopr new -l "label1,label2"`: Creates a new PR with the specified labels.
+- `autopr new -a`: Creates a new PR and automatically pushes changes.
+- `autopr new -m`: Creates a new PR and automatically merges if possible.

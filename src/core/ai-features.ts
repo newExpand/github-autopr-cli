@@ -18,13 +18,18 @@ export class AIFeatures {
   // OpenRouter 토큰 제한 (Gemini Flash 2.0 기준)
   private readonly OPENROUTER_MAX_CHUNK_TOKENS = 4000;
   private readonly OPENROUTER_MAX_SUMMARY_TOKENS = 2000;
+  private initialized = false;
 
   constructor() {
     dotenv.config();
     this.aiManager = AIManager.getInstance();
   }
 
-  async initialize(): Promise<void> {
+  /**
+   * AI 설정을 로드합니다.
+   * @returns AI 설정 객체
+   */
+  private async loadConfig() {
     // .env 파일에서 설정 로드
     const provider = process.env.AI_PROVIDER as AIProvider;
     const apiKey = process.env.AI_API_KEY;
@@ -32,20 +37,62 @@ export class AIFeatures {
 
     // OpenAI인 경우 .env 파일의 값 사용
     if (provider === "openai" && apiKey && model) {
-      await this.aiManager.initialize({
-        provider: "openai",
+      return {
+        provider: "openai" as AIProvider,
         apiKey,
-        options: { model },
-      });
-      return;
+        model,
+      };
     }
 
     // OpenRouter인 경우 기본값 사용
-    await this.aiManager.initialize({
-      provider: "openrouter",
+    return {
+      provider: "openrouter" as AIProvider,
       apiKey: OPENROUTER_CONFIG.API_KEY,
-      options: { model: OPENROUTER_CONFIG.DEFAULT_MODEL },
-    });
+      model: OPENROUTER_CONFIG.DEFAULT_MODEL,
+    };
+  }
+
+  /**
+   * AI 기능을 초기화합니다.
+   * @returns 초기화 성공 여부
+   */
+  public async initialize(): Promise<boolean> {
+    try {
+      // 이미 초기화된 경우 중복 초기화 방지
+      if (this.initialized) {
+        log.debug("AI 기능이 이미 초기화되어 있습니다.");
+        return true;
+      }
+
+      // 설정 로드
+      const config = await this.loadConfig();
+      if (!config) {
+        log.debug("AI 설정을 찾을 수 없습니다.");
+        return false;
+      }
+
+      // AI 제공자 설정
+      const { provider, apiKey, model } = config;
+      if (!provider || !apiKey) {
+        log.debug("AI 제공자 또는 API 키가 설정되지 않았습니다.");
+        return false;
+      }
+
+      // AI 매니저 초기화 (AI 매니저 내부에서 OpenRouter API 키 상태를 확인하므로 여기서는 확인하지 않음)
+      await this.aiManager.initialize({
+        provider,
+        apiKey,
+        options: { model },
+      });
+
+      // 초기화 완료
+      this.initialized = true;
+      log.debug("AI 기능이 초기화되었습니다");
+      return true;
+    } catch (error) {
+      log.error("AI 기능 초기화 실패:", error);
+      return false;
+    }
   }
 
   isEnabled(): boolean {
