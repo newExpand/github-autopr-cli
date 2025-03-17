@@ -516,7 +516,7 @@
         "select_push_branch": "푸시할 브랜치를 선택하세요:",
         "enter_new_branch_name": "새 브랜치 이름을 입력하세요:",
         "checkout_new_branch": "새 브랜치 '{{branch}}'로 체크아웃하시겠습니까?",
-        "confirm_push_different_branch": "현재 브랜치({{current}})가 아닌 다른 브랜치({{target}})로 푸시하시겠습니까?"
+        "confirm_push_different_branch": "브랜치 '{{target}}'로 푸시하시겠습니까? (취소 시 푸시되지 않습니다)"
       },
       "success": {
         "committed": "개선된 메시지로 커밋이 성공적으로 생성되었습니다",

@@ -280,7 +280,6 @@ async function pushToRemote(currentBranch: string): Promise<void> {
           type: "confirm",
           name: "confirmPush",
           message: t("commands.commit.prompts.confirm_push_different_branch", {
-            current: currentBranch,
             target: pushBranch,
           }),
           default: false,

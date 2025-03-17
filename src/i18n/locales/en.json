@@ -514,7 +514,7 @@
         "select_push_branch": "Select branch to push to:",
         "enter_new_branch_name": "Enter new branch name:",
         "checkout_new_branch": "Checkout to new branch '{{branch}}'?",
-        "confirm_push_different_branch": "Push to branch '{{target}}' instead of current branch '{{current}}'?"
+        "confirm_push_different_branch": "Push to branch '{{target}}'? (No will cancel the push)"
       },
       "success": {
         "committed": "Successfully created commit with improved message",
