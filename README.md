@@ -278,6 +278,17 @@ MIT License
 
 ## Change Log
 
+### 0.1.11
+
+- Temporary Disabled Branch Selection Push Feature
+  - Implemented to resolve branch conflict issues
+  - Changed to push only to current branch
+  - Automatically added `-u` option for non-existing remote branches
+  - Temporarily removed related options:
+    - Disabled `-sp`, `--select-push` option
+    - Disabled branch selection prompt
+  - Planned future update with improved branch management logic
+
 ### 0.1.10
 
 - Enhanced Commit Functionality

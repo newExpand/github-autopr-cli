@@ -197,6 +197,7 @@ async function pushToRemote(currentBranch: string): Promise<void> {
       );
     }
 
+    /* 브랜치 선택 기능 일시 비활성화
     // 사용자에게 푸시할 브랜치 선택 요청
     const { targetBranch } = await inquirer.prompt([
       {
@@ -292,6 +293,10 @@ async function pushToRemote(currentBranch: string): Promise<void> {
         return;
       }
     }
+    */
+
+    // 현재 브랜치만 사용
+    const pushBranch = currentBranch;
 
     // 선택한 브랜치가 원격에 존재하는지 확인
     const targetBranchExists = remote.includes(pushBranch);
@@ -408,11 +413,13 @@ export async function commitCommand(
       options.push = true;
     }
 
+    /* selectPush 옵션 일시 비활성화
     // -sp 옵션이 있으면 select와 push 옵션 모두 활성화
     if (options.selectPush) {
       options.select = true;
       options.push = true;
     }
+    */
 
     // 파일 선택 모드가 활성화된 경우
     if (options.select) {
