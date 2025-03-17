@@ -456,7 +456,8 @@
       "options": {
         "all_with_push": "Stage all changes, commit and automatically push",
         "patch": "Interactively select changes to stage",
-        "select": "Select specific files to stage for commit"
+        "select": "Select specific files to stage for commit",
+        "select_with_push": "Select specific files to stage, commit and automatically push"
       },
       "branch": {
         "current": "current branch",
@@ -474,6 +475,7 @@
         "default": "Analyze staged changes and generate a new commit message",
         "all": "Stage all changes and generate a new commit message",
         "select": "Select specific files to stage and commit",
+        "select_with_push": "Select specific files to stage, commit and automatically push",
         "improve_last": "Improve the most recent commit message",
         "improve_message": "Improve the given message",
         "improve_all": "Stage all changes and improve the recent commit message",

@@ -16,6 +16,7 @@ interface CommitOptions {
   patch?: boolean;
   push?: boolean;
   select?: boolean;
+  selectPush?: boolean;
 }
 
 // 브랜치 전략 관련 인터페이스 추가
@@ -398,6 +399,12 @@ export async function commitCommand(
 
     // -a 옵션이 있으면 자동으로 push 옵션도 활성화
     if (options.all) {
+      options.push = true;
+    }
+
+    // -sp 옵션이 있으면 select와 push 옵션 모두 활성화
+    if (options.selectPush) {
+      options.select = true;
       options.push = true;
     }
 
