@@ -31,11 +31,12 @@ async function handleConflicts(
   baseBranch: string,
 ): Promise<void> {
   let aiEnabled = false;
+  let ai: AIFeatures | null = null;
 
   // AI 기능이 설정되어 있는 경우에만 AI 관련 기능 활성화
   if (config.aiConfig?.enabled) {
     try {
-      const ai = new AIFeatures();
+      ai = new AIFeatures();
       await ai.initialize();
       aiEnabled = ai.isEnabled();
 
@@ -94,6 +95,7 @@ async function handleConflicts(
     } catch (error) {
       log.warn(t("commands.merge.conflict.ai_suggestion_failed"));
       aiEnabled = false;
+      ai = null;
     }
   }
 

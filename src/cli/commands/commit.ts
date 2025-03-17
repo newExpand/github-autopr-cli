@@ -380,15 +380,21 @@ export async function commitCommand(
     }
 
     let aiEnabled = false;
+    // AI 인스턴스를 한 번만 생성하고 재사용
+    let ai: AIFeatures | null = null;
 
     // AI 기능이 설정되어 있는 경우에만 AI 관련 기능 활성화
     if (config.aiConfig?.enabled) {
       try {
-        const ai = new AIFeatures();
+        ai = new AIFeatures();
         await ai.initialize();
         aiEnabled = ai.isEnabled();
+        if (aiEnabled) {
+          log.info(t("ai.initialization.success"));
+        }
       } catch (error) {
         aiEnabled = false;
+        ai = null;
       }
     }
 
@@ -443,8 +449,13 @@ export async function commitCommand(
         log.error(t("commands.commit.error.no_commit_message"));
         process.exit(1);
       }
-      const ai = new AIFeatures();
-      await ai.initialize();
+
+      // AI 인스턴스가 없으면 새로 생성
+      if (!ai) {
+        ai = new AIFeatures();
+        await ai.initialize();
+      }
+
       commitMessage = await ai.improveCommitMessage(
         currentMessage,
         diffContent,
@@ -454,11 +465,10 @@ export async function commitCommand(
       // 알 수 없는 서브커맨드
       log.error(t("commands.commit.error.invalid_subcommand"));
       process.exit(1);
-    } else if (aiEnabled) {
+    } else if (aiEnabled && ai) {
       // AI 기능이 활성화된 경우: 새로운 메시지 제안
       log.info(t("commands.commit.info.analyzing_changes"));
-      const ai = new AIFeatures();
-      await ai.initialize();
+
       commitMessage = await ai.improveCommitMessage(
         "",
         diffContent,
@@ -474,37 +484,49 @@ export async function commitCommand(
       log.section("-------------------");
 
       // 사용자 확인
-      const { useMessage } = await inquirer.prompt([
-        {
-          type: "confirm",
-          name: "useMessage",
-          message: t("commands.commit.prompts.use_message"),
-          default: true,
-        },
-      ]);
+      try {
+        const { useMessage } = await inquirer.prompt([
+          {
+            type: "confirm",
+            name: "useMessage",
+            message: t("commands.commit.prompts.use_message"),
+            default: true,
+          },
+        ]);
 
-      if (!useMessage) {
-        // 사용자가 메시지를 수정하고 싶은 경우
+        if (!useMessage) {
+          // 사용자가 메시지를 수정하고 싶은 경우
+          const { editedMessage } = await inquirer.prompt([
+            {
+              type: "editor",
+              name: "editedMessage",
+              message: t("commands.commit.prompts.edit_message"),
+              default: commitMessage,
+            },
+          ]);
+          commitMessage = editedMessage;
+        }
+      } catch (error) {
+        log.debug("프롬프트 처리 중 오류 발생:", error);
+        // 오류 발생 시 기본 메시지 사용
+        log.info(t("commands.commit.info.using_default_message"));
+      }
+    } else {
+      // AI가 비활성화되어 있거나 메시지 생성에 실패한 경우: 직접 입력
+      try {
         const { editedMessage } = await inquirer.prompt([
           {
             type: "editor",
             name: "editedMessage",
             message: t("commands.commit.prompts.edit_message"),
-            default: commitMessage,
           },
         ]);
         commitMessage = editedMessage;
+      } catch (error) {
+        log.debug("프롬프트 처리 중 오류 발생:", error);
+        log.error(t("commands.commit.error.message_input_failed"));
+        process.exit(1);
       }
-    } else {
-      // AI가 비활성화되어 있거나 메시지 생성에 실패한 경우: 직접 입력
-      const { editedMessage } = await inquirer.prompt([
-        {
-          type: "editor",
-          name: "editedMessage",
-          message: t("commands.commit.prompts.edit_message"),
-        },
-      ]);
-      commitMessage = editedMessage;
     }
 
     // 커밋 실행

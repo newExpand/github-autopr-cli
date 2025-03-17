@@ -486,31 +486,34 @@
         "improve_select_with_push": "변경된 파일 중 선택한 파일만 스테이징하고 최근 커밋 메시지를 개선 후 자동으로 push"
       },
       "info": {
-        "patch_mode": "'git add -p' 명령어로 변경사항을 선택적으로 스테이징해주세요",
-        "run_patch_mode": "'git add -p'로 변경사항을 스테이징한 후 다시 커밋 명령어를 실행해주세요",
-        "improving_message": "AI를 사용하여 커밋 메시지를 개선하는 중...",
+        "patch_mode": "대화형 패치 모드를 사용하려면 'git add -p'를 직접 실행하세요",
+        "run_patch_mode": "대화형 패치 모드를 실행하세요: git add -p",
+        "no_unstaged_files": "스테이징되지 않은 파일이 없습니다",
+        "no_files_selected": "선택된 파일이 없습니다",
+        "improving_message": "커밋 메시지를 개선하는 중...",
         "analyzing_changes": "커밋 메시지 제안을 위해 변경사항을 분석하는 중...",
         "suggested_message": "제안된 커밋 메시지:",
-        "pr_creation_guide": "변경사항이 성공적으로 푸시되었습니다. PR을 생성하시겠습니까?",
-        "run_new_command": "PR을 생성하려면 'autopr new' 명령어를 실행해주세요.",
-        "no_unstaged_files": "변경된 파일이 없습니다.",
-        "no_files_selected": "선택된 파일이 없습니다. 커밋을 취소합니다.",
-        "push_cancelled": "푸시가 취소되었습니다.",
+        "pr_creation_guide": "PR을 생성하려면 다음 명령어를 실행하세요:",
+        "run_new_command": "autopr new",
         "branch_not_on_remote": "현재 브랜치 '{{branch}}'는 원격에 존재하지 않습니다. 푸시 시 자동으로 원격 브랜치가 생성됩니다.",
-        "creating_remote_branch": "원격에 '{{branch}}' 브랜치를 생성합니다..."
+        "push_cancelled": "푸시가 취소되었습니다",
+        "creating_remote_branch": "원격에 '{{branch}}' 브랜치를 생성합니다...",
+        "using_default_message": "기본 커밋 메시지를 사용합니다."
       },
       "error": {
-        "staging_failed": "변경사항 스테이징에 실패했습니다",
-        "diff_failed": "스테이지된 변경사항을 가져오는데 실패했습니다",
+        "staging_failed": "변경사항을 스테이징하는데 실패했습니다",
         "files_failed": "변경된 파일 목록을 가져오는데 실패했습니다",
-        "no_staged_changes": "스테이지된 변경사항이 없습니다. 'git add'를 사용하여 변경사항을 스테이지해주세요",
-        "invalid_subcommand": "잘못된 서브커맨드입니다. 'improve' 또는 'suggest'를 사용하세요",
-        "commit_failed": "커밋 생성에 실패했습니다",
-        "get_branch_failed": "현재 브랜치 정보를 가져오는데 실패했습니다",
-        "push_failed": "원격 저장소에 푸시하는데 실패했습니다: {{error}}",
+        "diff_failed": "변경사항 내용을 가져오는데 실패했습니다",
+        "no_staged_changes": "스테이징된 변경사항이 없습니다",
+        "no_commit_message": "커밋 메시지가 없습니다",
+        "commit_failed": "커밋에 실패했습니다",
+        "push_failed": "푸시에 실패했습니다: {{error}}",
+        "get_branch_failed": "현재 브랜치를 가져오는데 실패했습니다",
+        "invalid_subcommand": "알 수 없는 서브커맨드입니다",
         "file_selection_failed": "파일 선택 중 오류가 발생했습니다",
         "branch_name_empty": "브랜치 이름은 비워둘 수 없습니다",
-        "branch_exists": "이미 존재하는 브랜치 이름입니다"
+        "branch_exists": "이미 존재하는 브랜치 이름입니다",
+        "message_input_failed": "커밋 메시지 입력 중 오류가 발생했습니다. 다시 시도해주세요."
       },
       "prompts": {
         "use_message": "이 커밋 메시지를 사용하시겠습니까?",
@@ -581,6 +584,57 @@
       },
       "success": {
         "reopened": "PR #{{number}}이(가) 다시 열렸습니다"
+      }
+    },
+    "openrouter": {
+      "description": "OpenRouter API 키 관리",
+      "get": {
+        "description": "API 키 정보 조회"
+      },
+      "list": {
+        "description": "API 키 목록 조회",
+        "options": {
+          "offset": "페이지네이션 오프셋 (기본값: 0)"
+        }
+      },
+      "status": {
+        "description": "API 키 상태 확인 및 변경",
+        "options": {
+          "enable": "API 키 활성화",
+          "disable": "API 키 비활성화"
+        }
+      },
+      "ensure": {
+        "description": "API 키 활성화 상태 확인 및 자동 활성화"
+      },
+      "schedule": {
+        "description": "API 키 자동 활성화 스케줄러 실행",
+        "options": {
+          "interval": "확인 간격 (분 단위, 기본값: 60)"
+        }
+      },
+      "info": {
+        "key_info": "API 키 정보:",
+        "key_list": "API 키 목록:",
+        "key_status": "API 키 상태: {{status}}",
+        "checking_key_status": "API 키 상태 확인 중...",
+        "key_already_active": "API 키가 이미 활성화되어 있습니다.",
+        "scheduler_started": "API 키 자동 활성화 스케줄러가 시작되었습니다 (간격: {{interval}}분)",
+        "scheduler_running": "스케줄러가 실행 중입니다 (간격: {{interval}}분)",
+        "scheduler_stopped": "스케줄러가 중지되었습니다.",
+        "scheduler_stop_instruction": "중지하려면 Ctrl+C를 누르세요."
+      },
+      "error": {
+        "get_key_failed": "API 키 정보 조회 실패",
+        "list_keys_failed": "API 키 목록 조회 실패",
+        "update_key_status_failed": "API 키 상태 업데이트 실패",
+        "conflicting_options": "활성화와 비활성화 옵션을 동시에 사용할 수 없습니다",
+        "key_activation_failed": "API 키 활성화 확인 실패",
+        "scheduler_failed": "스케줄러 실행 중 오류가 발생했습니다"
+      },
+      "success": {
+        "key_status_updated": "API 키 상태가 {{status}}되었습니다",
+        "key_activated": "API 키가 성공적으로 활성화되었습니다"
       }
     }
   },

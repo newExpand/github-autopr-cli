@@ -120,11 +120,12 @@ export async function newCommand(): Promise<void> {
 
     let generatedDescription = "";
     let aiEnabled = false;
+    let ai: AIFeatures | null = null;
 
     // AI 기능이 설정되어 있는 경우에만 AI 관련 기능 실행
     if (config.aiConfig?.enabled) {
       try {
-        const ai = new AIFeatures();
+        ai = new AIFeatures();
         await ai.initialize();
         aiEnabled = ai.isEnabled();
 
@@ -162,6 +163,7 @@ export async function newCommand(): Promise<void> {
       } catch (error) {
         log.warn(t("commands.new.warning.ai_description_failed"));
         aiEnabled = false;
+        ai = null;
       }
     }
 

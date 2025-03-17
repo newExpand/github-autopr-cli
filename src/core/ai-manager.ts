@@ -2,6 +2,7 @@ import OpenAI from "openai";
 import { t } from "../i18n/index.js";
 import { log } from "../utils/logger.js";
 import { OPENROUTER_CONFIG } from "../config/openrouter.js";
+import { ensureKeyActive } from "../utils/openrouter-provisioning.js";
 
 const AI_PROVIDERS = ["openai", "openrouter"] as const;
 export type AIProvider = (typeof AI_PROVIDERS)[number];
@@ -22,14 +23,46 @@ export class AIManager {
   private openai: OpenAI | null = null;
   private isInitialized = false;
   private initializationPromise: Promise<void> | null = null;
+  private lastKeyActivationCheck: number = 0;
+  private readonly KEY_ACTIVATION_CHECK_THRESHOLD = 60 * 60 * 1000; // 1시간 임계값 (60분)
 
-  private constructor() {}
+  private constructor() {
+    // 인스턴스 생성 시 아무 작업도 하지 않음
+  }
 
   static getInstance(): AIManager {
     if (!AIManager.instance) {
       AIManager.instance = new AIManager();
     }
     return AIManager.instance;
+  }
+
+  /**
+   * 필요한 경우에만 API 키 상태를 확인합니다.
+   * 마지막 확인 시간으로부터 일정 시간이 지났을 때만 실행됩니다.
+   */
+  private async checkKeyStatusIfNeeded(): Promise<void> {
+    // OpenRouter가 아니면 확인하지 않음
+    if (this.aiConfig?.provider !== "openrouter") {
+      return;
+    }
+
+    const now = Date.now();
+    // 마지막 확인 시간으로부터 1시간 이상 지났을 때만 확인
+    if (
+      now - this.lastKeyActivationCheck >
+      this.KEY_ACTIVATION_CHECK_THRESHOLD
+    ) {
+      try {
+        log.debug("API 키 상태 주기적 확인 중...");
+        await ensureKeyActive().catch(() => {
+          // 에러 발생 시 무시하고 계속 진행
+        });
+      } catch (error) {
+        // 에러 로깅 없이 조용히 진행
+      }
+      this.lastKeyActivationCheck = now;
+    }
   }
 
   async initialize(config: AIConfig): Promise<void> {
@@ -51,6 +84,21 @@ export class AIManager {
 
   private async _initialize(config: AIConfig): Promise<void> {
     try {
+      // OpenRouter인 경우 API 키 상태 확인
+      if (config.provider === "openrouter") {
+        try {
+          // 조용히 API 키 상태 확인 및 활성화
+          log.debug("OpenRouter API 키 상태 확인 중...");
+          await ensureKeyActive().catch(() => {
+            // 에러가 발생해도 무시하고 계속 진행
+          });
+          // 마지막 확인 시간 업데이트
+          this.lastKeyActivationCheck = Date.now();
+        } catch (error) {
+          // 에러 로깅 없이 조용히 진행
+        }
+      }
+
       if (config.provider === "openai") {
         this.openai = new OpenAI({
           apiKey: config.apiKey,
@@ -67,7 +115,6 @@ export class AIManager {
       this.aiConfig = config;
       this.isInitialized = true;
       this.initializationPromise = null;
-      log.info(t("ai.initialization.success"));
     } catch (error) {
       this.reset();
       log.error(t("ai.initialization.failed"), error);
@@ -90,6 +137,10 @@ export class AIManager {
     if (!this.openai) {
       throw new Error(t("ai.error.not_initialized"));
     }
+
+    // OpenAI 인스턴스를 가져올 때 필요하면 API 키 상태 확인
+    this.checkKeyStatusIfNeeded();
+
     return this.openai;
   }
 

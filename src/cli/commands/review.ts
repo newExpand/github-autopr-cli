@@ -189,15 +189,17 @@ export async function reviewCommand(prNumber: string): Promise<void> {
     log.info("\n");
 
     let aiEnabled = false;
+    let ai: AIFeatures | null = null;
 
     // AI 기능이 설정되어 있는 경우에만 AI 관련 기능 활성화
     if (config.aiConfig?.enabled) {
       try {
-        const ai = new AIFeatures();
+        ai = new AIFeatures();
         await ai.initialize();
         aiEnabled = ai.isEnabled();
       } catch (error) {
         aiEnabled = false;
+        ai = null;
       }
     }
 
@@ -238,21 +240,25 @@ export async function reviewCommand(prNumber: string): Promise<void> {
         }
 
         log.info(t("commands.review.info.ai_review_start"));
-        const ai = new AIFeatures();
-        await ai.initialize();
-        const files = await getChangedFiles(
+        // 이미 생성된 AI 인스턴스 사용
+        if (!ai) {
+          ai = new AIFeatures();
+          await ai.initialize();
+        }
+
+        const reviewFiles = await getChangedFiles(
           repoInfo.owner,
           repoInfo.repo,
           pr.number,
         );
 
-        if (files.length === 0) {
+        if (reviewFiles.length === 0) {
           log.warn(t("commands.review.warning.no_changes"));
           break;
         }
 
         try {
-          const review = await ai.reviewCode(files);
+          const review = await ai.reviewCode(reviewFiles);
           log.info("\n" + t("commands.review.content.ai_review_title"));
           log.info("-------------------");
           log.info(review);
