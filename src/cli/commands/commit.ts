@@ -1,6 +1,6 @@
 import { t } from "../../i18n/index.js";
 import { loadConfig } from "../../core/config.js";
-import { getCurrentRepoInfo } from "../../utils/git.js";
+import { getCurrentRepoInfo, getAllBranches } from "../../utils/git.js";
 import { AIFeatures } from "../../core/ai-features.js";
 import { log } from "../../utils/logger.js";
 import { exec } from "child_process";
@@ -15,6 +15,7 @@ interface CommitOptions {
   all?: boolean;
   patch?: boolean;
   push?: boolean;
+  select?: boolean;
 }
 
 // 브랜치 전략 관련 인터페이스 추가
@@ -67,10 +68,85 @@ async function stageChanges(options: CommitOptions): Promise<boolean> {
       // 대화형 패치 모드는 직접 git add -p를 실행하도록 안내
       log.info(t("commands.commit.info.patch_mode"));
       return false;
+    } else if (options.select) {
+      // 파일 선택 모드는 selectFilesToStage 함수에서 처리
+      return true;
     }
     return true;
   } catch (error) {
     log.error(t("commands.commit.error.staging_failed"));
+    return false;
+  }
+}
+
+// 변경된 파일 목록 가져오기 (스테이징되지 않은 파일 포함)
+async function getUnstagedFiles(): Promise<string[]> {
+  try {
+    const { stdout } = await execAsync("git status --porcelain");
+    return stdout
+      .split("\n")
+      .filter(Boolean)
+      .map((line) => {
+        const status = line.substring(0, 2);
+        const file = line.substring(3);
+        // 스테이징되지 않은 파일만 반환 (첫 번째 열이 M, A, D, R, C 등이고 두 번째 열이 공백이 아닌 경우)
+        if (status[1] !== " " && status[1] !== "?") {
+          return file;
+        }
+        // 새로 추가된 파일 (Untracked)
+        if (status[0] === "?" && status[1] === "?") {
+          return file;
+        }
+        return null;
+      })
+      .filter(Boolean) as string[];
+  } catch (error) {
+    log.error(t("commands.commit.error.files_failed"));
+    return [];
+  }
+}
+
+// 사용자가 선택한 파일을 스테이징
+async function selectFilesToStage(): Promise<boolean> {
+  try {
+    const unstagedFiles = await getUnstagedFiles();
+
+    if (unstagedFiles.length === 0) {
+      log.info(t("commands.commit.info.no_unstaged_files"));
+      return false;
+    }
+
+    const { selectedFiles } = await inquirer.prompt([
+      {
+        type: "checkbox",
+        name: "selectedFiles",
+        message: t("commands.commit.prompts.select_files"),
+        choices: unstagedFiles.map((file) => ({
+          name: file,
+          value: file,
+        })),
+        pageSize: 15,
+      },
+    ]);
+
+    if (selectedFiles.length === 0) {
+      log.info(t("commands.commit.info.no_files_selected"));
+      return false;
+    }
+
+    // 선택된 파일들을 스테이징
+    for (const file of selectedFiles) {
+      await execAsync(`git add "${file}"`);
+    }
+
+    log.info(
+      t("commands.commit.success.files_staged", {
+        count: selectedFiles.length,
+      }),
+    );
+    return true;
+  } catch (error) {
+    log.error(t("commands.commit.error.file_selection_failed"), error);
     return false;
   }
 }
@@ -103,10 +179,118 @@ async function getCurrentBranch(): Promise<string> {
   }
 }
 
-async function pushToRemote(branch: string): Promise<void> {
+async function pushToRemote(currentBranch: string): Promise<void> {
   try {
-    await execAsync(`git push origin ${branch}`);
-    log.info(t("commands.commit.success.pushed", { branch }));
+    // 브랜치 목록 가져오기
+    const { local, remote, all } = await getAllBranches();
+
+    // 현재 브랜치가 이미 원격에 있는지 확인
+    const branchExists = remote.includes(currentBranch);
+
+    // 사용자에게 푸시할 브랜치 선택 요청
+    const { targetBranch } = await inquirer.prompt([
+      {
+        type: "list",
+        name: "targetBranch",
+        message: t("commands.commit.prompts.select_push_branch"),
+        choices: [
+          // 현재 브랜치를 첫 번째 옵션으로 표시
+          {
+            name: `${currentBranch} (${t("commands.commit.branch.current")})`,
+            value: currentBranch,
+          },
+          // 다른 브랜치들 표시
+          ...all
+            .filter((branch) => branch !== currentBranch)
+            .map((branch) => ({
+              name: `${branch} ${remote.includes(branch) ? `(${t("commands.commit.branch.remote")})` : `(${t("commands.commit.branch.local")})`}`,
+              value: branch,
+            })),
+          // 새 브랜치 생성 옵션
+          { name: t("commands.commit.branch.create_new"), value: "new" },
+        ],
+        default: currentBranch,
+      },
+    ]);
+
+    let pushBranch = targetBranch;
+
+    // 새 브랜치 생성 옵션 선택 시
+    if (targetBranch === "new") {
+      const { newBranchName } = await inquirer.prompt([
+        {
+          type: "input",
+          name: "newBranchName",
+          message: t("commands.commit.prompts.enter_new_branch_name"),
+          validate: (input: string) => {
+            if (!input.trim()) {
+              return t("commands.commit.error.branch_name_empty");
+            }
+            if (all.includes(input.trim())) {
+              return t("commands.commit.error.branch_exists");
+            }
+            return true;
+          },
+        },
+      ]);
+
+      // 새 브랜치 생성
+      await execAsync(`git branch ${newBranchName}`);
+      log.info(
+        t("commands.commit.success.branch_created", { branch: newBranchName }),
+      );
+
+      // 새 브랜치로 체크아웃할지 확인
+      const { checkout } = await inquirer.prompt([
+        {
+          type: "confirm",
+          name: "checkout",
+          message: t("commands.commit.prompts.checkout_new_branch", {
+            branch: newBranchName,
+          }),
+          default: true,
+        },
+      ]);
+
+      if (checkout) {
+        await execAsync(`git checkout ${newBranchName}`);
+        log.info(
+          t("commands.commit.success.branch_checked_out", {
+            branch: newBranchName,
+          }),
+        );
+      }
+
+      pushBranch = newBranchName;
+    }
+
+    // 선택한 브랜치가 현재 브랜치와 다른 경우 확인
+    if (pushBranch !== currentBranch) {
+      const { confirmPush } = await inquirer.prompt([
+        {
+          type: "confirm",
+          name: "confirmPush",
+          message: t("commands.commit.prompts.confirm_push_different_branch", {
+            current: currentBranch,
+            target: pushBranch,
+          }),
+          default: false,
+        },
+      ]);
+
+      if (!confirmPush) {
+        log.info(t("commands.commit.info.push_cancelled"));
+        return;
+      }
+    }
+
+    // 원격 브랜치가 존재하지 않는 경우 -u 옵션 추가
+    const pushCommand = !remote.includes(pushBranch)
+      ? `git push -u origin ${pushBranch}`
+      : `git push origin ${pushBranch}`;
+
+    await execAsync(pushCommand);
+    log.info(t("commands.commit.success.pushed", { branch: pushBranch }));
   } catch (error) {
     log.error(t("commands.commit.error.push_failed", { error: String(error) }));
     throw error;
@@ -200,8 +384,13 @@ export async function commitCommand(
       options.push = true;
     }
 
-    // 기본적으로 모든 변경사항을 스테이징
-    if (options.patch) {
+    // 파일 선택 모드가 활성화된 경우
+    if (options.select) {
+      const filesSelected = await selectFilesToStage();
+      if (!filesSelected) {
+        process.exit(0);
+      }
+    } else if (options.patch) {
       // 패치 모드가 지정된 경우 대화형 패치 모드 실행
       const staged = await stageChanges({ patch: true });
       if (!staged) {
@@ -209,7 +398,7 @@ export async function commitCommand(
         process.exit(0);
       }
     } else {
-      // 패치 모드가 아닌 경우 모든 변경사항 스테이징
+      // 패치 모드나 선택 모드가 아닌 경우 모든 변경사항 스테이징
       await stageChanges({ all: true });
     }
 
