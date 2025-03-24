@@ -30,7 +30,7 @@ async function main() {
     program
       .name("autopr")
       .description(t("common.cli.description"))
-      .version("0.1.11");
+      .version("0.1.12");
 
     // 기본 명령어들
     program
@@ -77,12 +77,10 @@ async function main() {
       .option("-a, --all", t("commands.commit.options.all_with_push"))
       .option("-p, --patch", t("commands.commit.options.patch"))
       .option("-s, --select", t("commands.commit.options.select"))
-      /* 일시적으로 selectPush 옵션 비활성화
       .option(
-        "-sp, --select-push",
+        "-sp, --selectpush",
         t("commands.commit.options.select_with_push"),
       )
-      */
       .addHelpText(
         "after",
         `
@@ -90,15 +88,11 @@ async function main() {
           $ autopr commit                    - ${t("commands.commit.help.default")}
           $ autopr commit -a                 - ${t("commands.commit.help.all_with_push")}
           $ autopr commit -s                 - ${t("commands.commit.help.select")}
-          /* 일시적으로 비활성화
           $ autopr commit -sp                - ${t("commands.commit.help.select_with_push")}
-          */
           $ autopr commit improve            - ${t("commands.commit.help.improve_last")}
           $ autopr commit improve "message"  - ${t("commands.commit.help.improve_message")}
           $ autopr commit improve -a         - ${t("commands.commit.help.improve_all_with_push")}
-          /* 일시적으로 비활성화
           $ autopr commit improve -sp        - ${t("commands.commit.help.improve_select_with_push")}
-          */
       `,
       )
       .action(commitCommand);

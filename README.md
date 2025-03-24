@@ -278,6 +278,15 @@ MIT License
 
 ## Change Log
 
+### 0.1.12
+
+- Re-enabled File Selection with Auto-Push Feature
+  - Added functionality to select specific files to stage, commit, and automatically push to origin
+  - Updated option: `-sp`, `--selectpush` option provided
+  - Improved Commander.js option handling for greater stability
+  - Excluded branch selection feature (push only to current branch)
+  - Maintained automatic `-u` option for non-existing remote branches
+
 ### 0.1.11
 
 - Temporary Disabled Branch Selection Push Feature

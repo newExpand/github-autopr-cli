@@ -17,6 +17,8 @@ interface CommitOptions {
   push?: boolean;
   select?: boolean;
   selectPush?: boolean;
+  selectpush?: boolean;
+  "select-push"?: boolean;
 }
 
 // 브랜치 전략 관련 인터페이스 추가
@@ -413,13 +415,11 @@ export async function commitCommand(
       options.push = true;
     }
 
-    /* selectPush 옵션 일시 비활성화
     // -sp 옵션이 있으면 select와 push 옵션 모두 활성화
-    if (options.selectPush) {
+    if (options.selectPush || options.selectpush || options["select-push"]) {
       options.select = true;
       options.push = true;
     }
-    */
 
     // 파일 선택 모드가 활성화된 경우
     if (options.select) {
