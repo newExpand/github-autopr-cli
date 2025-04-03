@@ -3,7 +3,6 @@
     "error": {
       "unknown": "알 수 없는 오류가 발생했습니다",
       "github_token": "GitHub 토큰이 설정되지 않았습니다. 'autopr init' 명령어를 실행해주세요",
-      "invalid_branch": "유효하지 않은 브랜치 이름입니다",
       "network": "네트워크 오류가 발생했습니다",
       "not_git_repo": "현재 디렉토리가 git 저장소가 아닙니다",
       "no_commits": "브랜치에 커밋이 없어 PR을 생성할 수 없습니다. 변경사항을 커밋하고 푸시해주세요.",
@@ -23,7 +22,6 @@
     "success": {
       "init": "autopr 초기화가 완료되었습니다",
       "pr_created": "Pull Request가 성공적으로 생성되었습니다",
-      "config_updated": "설정이 성공적으로 업데이트되었습니다",
       "review_submitted": "리뷰가 성공적으로 등록되었습니다"
     },
     "cli": {
@@ -133,7 +131,6 @@
     "new": {
       "description": "새로운 Pull Request 생성",
       "error": {
-        "main_branch": "{{branch}} 브랜치에서 직접 PR을 생성할 수 없습니다. 새로운 브랜치를 먼저 생성해주세요.",
         "create_failed": "PR 생성에 실패했습니다: {{error}}",
         "diff_failed": "변경사항을 가져오는데 실패했습니다",
         "files_failed": "변경된 파일 목록을 가져오는데 실패했습니다",
@@ -339,6 +336,19 @@
         "switching_branch": "충돌 해결을 위해 해당 브랜치로 전환합니다...",
         "branch_switched": "브랜치를 {{branch}}로 전환했습니다",
         "help_message": "\n충돌 해결을 위한 도움을 드리겠습니다.",
+        "files_with_conflicts": "충돌이 있는 파일 목록 ({{count}}개):",
+        "git_commands": "충돌 해결을 위한 Git 명령어:",
+        "resolution_steps": "다음 단계에 따라 충돌을 해결하세요:",
+        "marker_explanation": "충돌 마커 설명:",
+        "your_changes": "현재 브랜치의 코드 (유지할 내용)",
+        "divider": "충돌 구분선",
+        "incoming_changes": "병합하려는 브랜치의 코드",
+        "after_resolving": "충돌 해결 후 실행할 명령어:",
+        "stage_changes": "수정한 파일을 스테이징",
+        "commit_resolution": "충돌 해결 내용을 커밋",
+        "push_changes": "변경사항을 원격 저장소에 푸시",
+        "retry_merge": "PR 병합 다시 시도",
+        "help_resources": "추가 도움말 링크:",
         "detected_editor": "📝 감지된 편집기: {{editor}}",
         "files_to_open": "📂 열릴 파일 수: {{count}}개",
         "steps": {

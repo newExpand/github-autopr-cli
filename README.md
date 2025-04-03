@@ -278,6 +278,25 @@ MIT License
 
 ## Change Log
 
+### 0.1.13
+
+- Improved Merge Conflict Resolution Experience
+  - Simplified conflict resolution workflow
+  - Removed unnecessary automatic file opening logic
+  - Enhanced step-by-step guidance with clear Git commands
+  - Added better conflict marker explanations
+  - Maintained valuable AI-powered conflict resolution suggestions
+  - Improved multilingual support for conflict resolution
+  - Added helpful documentation links for resolving conflicts
+- Enhanced Localization
+  - Updated translations for conflict resolution
+  - Improved language consistency
+  - Added missing translation keys
+- General Performance Improvements
+  - Reduced unnecessary code complexity
+  - Enhanced error handling
+  - Improved cross-platform compatibility
+
 ### 0.1.12
 
 - Re-enabled File Selection with Auto-Push Feature

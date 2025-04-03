@@ -3,8 +3,6 @@
     "error": {
       "unknown": "An unknown error occurred",
       "github_token": "GitHub token is not set. Please run 'autopr init' first",
-      "invalid_branch": "Invalid branch name",
-      "network": "Network error occurred",
       "not_git_repo": "Current directory is not a git repository",
       "no_commits": "Cannot create PR as there are no commits in the branch. Please commit and push your changes first.",
       "pr_exists": "A pull request already exists for this branch.",
@@ -22,7 +20,6 @@
     "success": {
       "init": "Successfully initialized autopr",
       "pr_created": "Pull request created successfully",
-      "config_updated": "Configuration updated successfully",
       "review_submitted": "Review submitted successfully"
     },
     "cli": {
@@ -132,7 +129,6 @@
     "new": {
       "description": "Create a new pull request",
       "error": {
-        "main_branch": "Cannot create PR from {{branch}} branch. Please create a new branch first.",
         "create_failed": "Failed to create PR: {{error}}",
         "diff_failed": "Failed to get diff content",
         "files_failed": "Failed to get changed files",
@@ -327,7 +323,7 @@
         "file_info": "- {{file}} (changes: {{changes}} lines)",
         "blocks": "Number of conflict blocks: {{count}}",
         "block_info": "Conflict location: lines {{start}}~{{end}}",
-        "base_content": "Base code:",
+        "base_content": "Existing code:",
         "head_content": "Changed code:",
         "resolve_guide": "\nHow to resolve conflicts:\n1. Open the file with conflicts and locate the conflict sections.\n2. Look for conflict markers: <<<<<<< HEAD, =======, >>>>>>>\n3. Choose the desired code and remove the conflict markers.\n4. Commit the changes and update the PR.\n",
         "continue_prompt": "There are conflicts. Do you want to continue?",
@@ -338,20 +334,33 @@
         "switching_branch": "Switching to the conflicting branch...",
         "branch_switched": "Switched to branch {{branch}}",
         "help_message": "\nI'll help you resolve the conflicts.",
-        "detected_editor": "📝 Detected Editor: {{editor}}",
+        "files_with_conflicts": "Files with conflicts ({{count}}):",
+        "git_commands": "Git commands to resolve conflicts:",
+        "resolution_steps": "Follow these steps to resolve conflicts:",
+        "marker_explanation": "Conflict markers explanation:",
+        "your_changes": "Your changes (current branch)",
+        "divider": "Conflict divider",
+        "incoming_changes": "Incoming changes (branch being merged)",
+        "after_resolving": "After resolving conflicts, run these commands:",
+        "stage_changes": "Stage the modified files",
+        "commit_resolution": "Commit the conflict resolution",
+        "push_changes": "Push changes to remote",
+        "retry_merge": "Retry PR merge",
+        "help_resources": "Additional resources:",
+        "detected_editor": "📝 Detected editor: {{editor}}",
         "files_to_open": "📂 Files to open: {{count}}",
         "steps": {
           "checkout": "1. Checking out files with conflicts",
-          "open": "2. Opening files in editor",
+          "open": "2. Opening files with conflicts",
           "resolve": "3. Resolve conflicts and commit changes",
-          "update": "4. Update PR"
+          "update": "4. Update the PR"
         },
         "checking_out_files": "\nChecking out files with conflicts...",
         "opening_files": "\nOpening files with conflicts...",
-        "trying_to_open": "Attempting to open file: {{file}}",
+        "trying_to_open": "Trying to open file: {{file}}",
         "file_opened": "File opened: {{file}}",
         "next_steps": "\nAfter resolving conflicts, run these commands:",
-        "run_again": "\nThen run '{{command}}' again.",
+        "run_again": "Then run '{{command}}' again.",
         "ai_suggestion_start": "Starting AI conflict resolution suggestion...",
         "ai_suggestions": "AI Suggestions for Conflict Resolution:",
         "use_ai_suggestions": "Would you like to use AI suggestions for resolving conflicts?",

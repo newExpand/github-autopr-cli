@@ -99,165 +99,53 @@ async function handleConflicts(
     }
   }
 
-  // 기존의 충돌 해결 가이드 표시
+  // 간소화된 충돌 해결 가이드 표시
   log.section(t("commands.merge.conflict.resolve_guide"));
-  log.section(t("commands.merge.conflict.help_message"));
-  log.section("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-  log.step(
-    t("commands.merge.conflict.detected_editor", {
-      editor: t("commands.merge.editor.default"),
-    }),
-  );
-  log.step(
-    t("commands.merge.conflict.files_to_open", {
+
+  // 충돌 파일 목록 표시
+  log.section(
+    t("commands.merge.conflict.files_with_conflicts", {
       count: conflicts.length,
     }),
   );
-  log.section("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-  log.section(t("commands.merge.conflict.steps.checkout"));
-  log.step(t("commands.merge.conflict.steps.open"));
-  log.step(t("commands.merge.conflict.steps.resolve"));
-  log.step(t("commands.merge.conflict.steps.update"));
+  conflicts.forEach((conflict, index) => {
+    log.step(`${index + 1}. ${conflict.file}`);
+  });
 
-  // 파일이 3개 이상일 경우 추가 확인
-  if (conflicts.length >= 3) {
-    log.warn(
-      t("commands.merge.conflict.many_files", {
-        count: conflicts.length,
-      }),
-    );
-    const { confirmManyFiles } = await inquirer.prompt([
-      {
-        type: "confirm",
-        name: "confirmManyFiles",
-        message: t("commands.merge.prompts.confirm_many_files"),
-        default: false,
-      },
-    ]);
+  // 충돌 해결을 위한 Git 명령어 안내
+  log.section(t("commands.merge.conflict.git_commands"));
 
-    if (!confirmManyFiles) {
-      log.info(t("commands.merge.success.cancelled"));
-      return;
-    }
-  }
+  // 이미 충돌 상태인 경우를 가정한 명령어 안내
+  log.info(t("commands.merge.conflict.resolution_steps"));
 
-  const { shouldContinue } = await inquirer.prompt([
-    {
-      type: "confirm",
-      name: "shouldContinue",
-      message: t("commands.merge.prompts.start_resolution"),
-      default: true,
-    },
-  ]);
+  // 충돌 마커 설명
+  log.info("\n" + t("commands.merge.conflict.marker_explanation"));
+  log.step("<<<<<<<      - " + t("commands.merge.conflict.your_changes"));
+  log.step("=======      - " + t("commands.merge.conflict.divider"));
+  log.step(">>>>>>>      - " + t("commands.merge.conflict.incoming_changes"));
 
-  if (!shouldContinue) {
-    log.info(t("commands.merge.success.cancelled"));
-    return;
-  }
-
-  // 충돌이 있는 파일들을 체크아웃
-  log.section(t("commands.merge.conflict.checking_out_files"));
-  try {
-    execSync(`git merge ${baseBranch}`, { stdio: "inherit" });
-  } catch (error) {
-    // merge 명령이 충돌로 인해 실패하는 것은 예상된 동작입니다
-  }
-
-  // 충돌이 있는 파일들을 편집기로 열기
-  log.section(t("commands.merge.conflict.opening_files"));
-  for (const conflict of conflicts) {
-    try {
-      const fullPath = resolve(process.cwd(), conflict.file);
-      if (!existsSync(fullPath)) {
-        log.warn(
-          t("commands.merge.error.file_not_found", {
-            file: conflict.file,
-          }),
-        );
-        continue;
-      }
-      log.step(
-        t("commands.merge.conflict.trying_to_open", {
-          file: conflict.file,
-        }),
-      );
-
-      // 설정된 편집기가 있으면 해당 편집기로 열기
-      if (process.env.EDITOR || process.env.VISUAL) {
-        execSync(`${process.env.EDITOR || process.env.VISUAL} "${fullPath}"`, {
-          stdio: "inherit",
-        });
-      } else if (os.platform() === "darwin") {
-        try {
-          // 현재 실행 중인 프로세스 목록 가져오기
-          const psOutput = execSync(
-            "ps aux | grep -i 'cursor\\|code\\|subl\\|webstorm\\|idea\\|pycharm\\|goland\\|phpstorm\\|atom\\|nvim\\|vim\\|emacs' | grep -v grep",
-          )
-            .toString()
-            .trim();
-
-          if (psOutput.includes("cursor")) {
-            execSync(`cursor "${fullPath}"`, { stdio: "inherit" });
-          } else if (psOutput.includes("code")) {
-            execSync(`code "${fullPath}"`, { stdio: "inherit" });
-          } else if (psOutput.includes("subl")) {
-            execSync(`subl "${fullPath}"`, { stdio: "inherit" });
-          } else if (
-            psOutput.includes("webstorm") ||
-            psOutput.includes("idea")
-          ) {
-            execSync(`webstorm "${fullPath}"`, { stdio: "inherit" });
-          } else if (psOutput.includes("pycharm")) {
-            execSync(`pycharm "${fullPath}"`, { stdio: "inherit" });
-          } else if (psOutput.includes("goland")) {
-            execSync(`goland "${fullPath}"`, { stdio: "inherit" });
-          } else if (psOutput.includes("phpstorm")) {
-            execSync(`phpstorm "${fullPath}"`, { stdio: "inherit" });
-          } else if (psOutput.includes("atom")) {
-            execSync(`atom "${fullPath}"`, { stdio: "inherit" });
-          } else if (psOutput.includes("nvim")) {
-            execSync(`nvim "${fullPath}"`, { stdio: "inherit" });
-          } else if (psOutput.includes("vim")) {
-            execSync(`vim "${fullPath}"`, { stdio: "inherit" });
-          } else if (psOutput.includes("emacs")) {
-            execSync(`emacs "${fullPath}"`, { stdio: "inherit" });
-          } else {
-            execSync(`open "${fullPath}"`, { stdio: "inherit" });
-          }
-        } catch (error) {
-          // 프로세스 감지 실패 시 기본 동작
-          execSync(`open "${fullPath}"`, { stdio: "inherit" });
-        }
-      } else if (os.platform() === "linux") {
-        execSync(`xdg-open "${fullPath}"`, { stdio: "inherit" });
-      } else if (os.platform() === "win32") {
-        execSync(`start "" "${fullPath}"`, { stdio: "inherit" });
-      }
-
-      log.step(
-        t("commands.merge.conflict.file_opened", {
-          file: conflict.file,
-        }),
-      );
-    } catch (error) {
-      log.warn(
-        t("commands.merge.error.cannot_open_file", {
-          file: conflict.file,
-          error: String(error),
-        }),
-      );
-    }
-  }
-
-  // 충돌 해결 후 PR 업데이트 안내
-  log.section(t("commands.merge.conflict.next_steps"));
-  log.step("1. git add .");
-  log.step("2. git commit -m '충돌 해결'");
-  log.step("3. git push");
+  // 충돌 해결 후 실행할 명령어 안내
+  log.section(t("commands.merge.conflict.after_resolving"));
   log.step(
-    t("commands.merge.conflict.run_again", {
-      command: `autopr merge ${prNumber}`,
-    }),
+    `git add .                         # ${t("commands.merge.conflict.stage_changes")}`,
+  );
+  log.step(
+    `git commit -m "Resolve conflicts" # ${t("commands.merge.conflict.commit_resolution")}`,
+  );
+  log.step(
+    `git push                          # ${t("commands.merge.conflict.push_changes")}`,
+  );
+  log.step(
+    `autopr merge ${prNumber}          # ${t("commands.merge.conflict.retry_merge")}`,
+  );
+
+  // 충돌 해결 관련 도움말 링크
+  log.section(t("commands.merge.conflict.help_resources"));
+  log.info(
+    "- https://docs.github.com/articles/resolving-a-merge-conflict-using-the-command-line",
+  );
+  log.info(
+    "- https://git-scm.com/book/ko/v2/Git-%EB%8F%84%EA%B5%AC-%EA%B3%A0%EA%B8%89-%EB%A8%B8%EC%A7%80",
   );
 }
 
