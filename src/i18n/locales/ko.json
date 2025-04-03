@@ -508,7 +508,8 @@
         "branch_not_on_remote": "현재 브랜치 '{{branch}}'는 원격에 존재하지 않습니다. 푸시 시 자동으로 원격 브랜치가 생성됩니다.",
         "push_cancelled": "푸시가 취소되었습니다",
         "creating_remote_branch": "원격에 '{{branch}}' 브랜치를 생성합니다...",
-        "using_default_message": "기본 커밋 메시지를 사용합니다."
+        "using_default_message": "기본 커밋 메시지를 사용합니다.",
+        "operation_cancelled": "작업이 취소되었습니다. 커밋 작업을 중단합니다."
       },
       "error": {
         "staging_failed": "변경사항을 스테이징하는데 실패했습니다",

@@ -515,7 +515,15 @@ export async function commitCommand(
         }
       } catch (error) {
         log.debug("프롬프트 처리 중 오류 발생:", error);
-        // 오류 발생 시 기본 메시지 사용
+        // 중단 신호로 인한 오류인 경우 프로세스 종료
+        if (
+          (error instanceof Error && error.message.includes("canceled")) ||
+          (error as any)?.name === "CancelError"
+        ) {
+          log.info(t("commands.commit.info.operation_cancelled"));
+          process.exit(0);
+        }
+        // 다른 종류의 오류 발생 시 기본 메시지 사용
         log.info(t("commands.commit.info.using_default_message"));
       }
     } else {
@@ -531,6 +539,14 @@ export async function commitCommand(
         commitMessage = editedMessage;
       } catch (error) {
         log.debug("프롬프트 처리 중 오류 발생:", error);
+        // 중단 신호로 인한 오류인 경우 프로세스 종료
+        if (
+          (error instanceof Error && error.message.includes("canceled")) ||
+          (error as any)?.name === "CancelError"
+        ) {
+          log.info(t("commands.commit.info.operation_cancelled"));
+          process.exit(0);
+        }
         log.error(t("commands.commit.error.message_input_failed"));
         process.exit(1);
       }
