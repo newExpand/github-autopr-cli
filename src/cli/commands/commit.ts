@@ -518,13 +518,15 @@ export async function commitCommand(
         // 중단 신호로 인한 오류인 경우 프로세스 종료
         if (
           (error instanceof Error && error.message.includes("canceled")) ||
-          (error as any)?.name === "CancelError"
+          (error as any)?.name === "CancelError" ||
+          String(error).includes("User force closed")
         ) {
           log.info(t("commands.commit.info.operation_cancelled"));
           process.exit(0);
         }
-        // 다른 종류의 오류 발생 시 기본 메시지 사용
-        log.info(t("commands.commit.info.using_default_message"));
+        // 다른 종류의 오류도 작업 취소로 처리
+        log.info(t("commands.commit.info.operation_cancelled"));
+        process.exit(0);
       }
     } else {
       // AI가 비활성화되어 있거나 메시지 생성에 실패한 경우: 직접 입력
@@ -542,13 +544,15 @@ export async function commitCommand(
         // 중단 신호로 인한 오류인 경우 프로세스 종료
         if (
           (error instanceof Error && error.message.includes("canceled")) ||
-          (error as any)?.name === "CancelError"
+          (error as any)?.name === "CancelError" ||
+          String(error).includes("User force closed")
         ) {
           log.info(t("commands.commit.info.operation_cancelled"));
           process.exit(0);
         }
-        log.error(t("commands.commit.error.message_input_failed"));
-        process.exit(1);
+        // 다른 종류의 오류도 작업 취소로 처리
+        log.info(t("commands.commit.info.operation_cancelled"));
+        process.exit(0);
       }
     }
 

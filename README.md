@@ -288,6 +288,11 @@ MIT License
   - Maintained valuable AI-powered conflict resolution suggestions
   - Improved multilingual support for conflict resolution
   - Added helpful documentation links for resolving conflicts
+- Enhanced Commit Process
+  - Fixed interruption handling with Ctrl+C/Command+C to safely cancel commit operations
+  - Resolved issue where the commit process would continue after cancellation
+  - Added clear cancellation messages for better user feedback
+  - Implemented consistent cancellation handling across all prompts
 - Enhanced Localization
   - Updated translations for conflict resolution
   - Improved language consistency
