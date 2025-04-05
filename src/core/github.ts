@@ -183,14 +183,40 @@ export async function listPullRequests(params: {
   owner: string;
   repo: string;
   state?: "open" | "closed" | "all";
+  page?: number;
+  per_page?: number;
 }): Promise<PullRequest[]> {
   const client = await getOctokit();
-  const response = await client.rest.pulls.list({
-    ...params,
-    per_page: 100,
-  });
+  const { page = 1, per_page = 30 } = params;
 
-  return response.data.map((pr) => PullRequestSchema.parse(pr));
+  try {
+    const response = await client.rest.pulls.list({
+      owner: params.owner,
+      repo: params.repo,
+      state: params.state,
+      page,
+      per_page,
+    });
+
+    // PR 데이터 변환
+    const prs = response.data.map((pr) => {
+      // REST API는 기본적으로 merged 필드를 포함합니다
+      // merged_at이 null이 아니면 병합된 것으로 취급
+      const isMerged = pr.state === "closed" && pr.merged_at !== null;
+
+      return PullRequestSchema.parse({
+        ...pr,
+        merged: isMerged,
+      });
+    });
+
+    return prs;
+  } catch (error) {
+    log.error(
+      `PR 목록 가져오기 실패: ${error instanceof Error ? error.message : String(error)}`,
+    );
+    throw error;
+  }
 }
 
 export async function getPullRequest(params: {

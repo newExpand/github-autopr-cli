@@ -52,7 +52,7 @@ autopr init
 # Create a new PR
 autopr new
 
-# List PRs
+# List PRs (with interactive selection option)
 autopr list
 
 # Review PR
@@ -288,6 +288,18 @@ MIT License
   - Maintained valuable AI-powered conflict resolution suggestions
   - Improved multilingual support for conflict resolution
   - Added helpful documentation links for resolving conflicts
+- Added interactive PR selection to list command
+  - Select PRs directly from the terminal
+  - Quick access to review, merge, update actions
+  - Improved workflow efficiency
+- Enhanced display of PR information
+  - Better formatting of PR list
+  - Numbered list for easier reference
+- Enhanced PR Pagination
+  - Improved page-by-page loading for managing large numbers of PRs
+  - Added option to continuously load more PRs as needed
+  - Support for loading up to 10 pages of PRs
+  - Clear page loading status indicators
 - Enhanced Commit Process
   - Fixed interruption handling with Ctrl+C/Command+C to safely cancel commit operations
   - Resolved issue where the commit process would continue after cancellation
@@ -297,6 +309,7 @@ MIT License
   - Updated translations for conflict resolution
   - Improved language consistency
   - Added missing translation keys
+  - Added comprehensive translations for interactive features
 - General Performance Improvements
   - Reduced unnecessary code complexity
   - Enhanced error handling
@@ -471,3 +484,13 @@ autopr openrouter status --disable  # Disable
 - `autopr new -l "label1,label2"`: Creates a new PR with the specified labels.
 - `autopr new -a`: Creates a new PR and automatically pushes changes.
 - `autopr new -m`: Creates a new PR and automatically merges if possible.
+
+## PR Management
+
+- `autopr list`: Lists all open PRs with basic information.
+  - Now includes an interactive mode to select and perform actions on PRs
+  - Actions include review, merge, update, and opening in browser
+- `autopr review <PR_NUMBER>`: Shows detailed info about a PR and prompts for review actions.
+- `autopr update <PR_NUMBER>`: Updates PR title, body, or status (draft/ready).
+- `autopr merge <PR_NUMBER>`: Merges a PR with options for merge method and branch deletion.
+- `autopr reopen <PR_NUMBER>`: Reopens a closed PR.

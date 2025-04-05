@@ -8,6 +8,9 @@ import { promisify } from "util";
 import inquirer from "inquirer";
 import { createAutoPR } from "../../core/branch-pattern.js";
 import { getOctokit } from "../../core/github.js";
+import { join } from "path";
+import { tmpdir } from "os";
+import { writeFile, unlink } from "fs/promises";
 
 const execAsync = promisify(exec);
 
@@ -558,7 +561,20 @@ export async function commitCommand(
 
     // 커밋 실행
     try {
-      await execAsync(`git commit -m "${commitMessage.replace(/"/g, '\\"')}"`);
+      // 특수 문자가 포함된 커밋 메시지 처리를 위해 파일로 저장하는 방식으로 변경
+      const tempFile = join(tmpdir(), `commit-message-${Date.now()}.txt`);
+      await writeFile(tempFile, commitMessage, "utf-8");
+
+      // 파일에서 커밋 메시지를 읽어오는 방식으로 변경
+      await execAsync(`git commit -F "${tempFile}"`);
+
+      // 임시 파일 삭제
+      try {
+        await unlink(tempFile);
+      } catch (unlinkError) {
+        log.debug("임시 파일 삭제 실패:", unlinkError);
+      }
+
       log.info(t("commands.commit.success.committed"));
 
       // push 옵션이 활성화된 경우 자동으로 push 실행
