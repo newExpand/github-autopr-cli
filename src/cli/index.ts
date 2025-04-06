@@ -16,6 +16,7 @@ import { loadConfig } from "../core/config.js";
 import { log } from "../utils/logger.js";
 import { createReviewerGroupCommand } from "./commands/reviewer-group.js";
 import { createOpenRouterCommand } from "./commands/openrouter.js";
+import { createDailyReportCommand } from "./commands/daily-report.js";
 
 // 개발 모드 확인 (NODE_ENV가 development인 경우에만 true)
 const isDevelopment = process.env.NODE_ENV === "development";
@@ -96,6 +97,9 @@ async function main() {
       `,
       )
       .action(commitCommand);
+
+    // 일일 커밋 보고서 명령어 추가
+    program.addCommand(createDailyReportCommand());
 
     // 언어 설정 명령어
     program.addCommand(createLangCommand());

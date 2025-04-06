@@ -682,6 +682,48 @@
         "key_status_updated": "API key status has been {{status}}d",
         "key_activated": "API key has been successfully activated"
       }
+    },
+    "daily_report": {
+      "description": "Generate daily commit report",
+      "options": {
+        "username": "GitHub username to generate report for",
+        "format": "Output format (console, json, markdown)",
+        "since": "Start date (YYYY-MM-DD format)",
+        "until": "End date (YYYY-MM-DD format)",
+        "output": "Report output file path",
+        "ai": "Generate commit summary using AI"
+      },
+      "title": "Daily Commit Report",
+      "date_single": "Date: {{date}}",
+      "date_range": "Period: {{from}} to {{to}}",
+      "user": "User: {{username}}",
+      "summary": "Summary",
+      "ai_summary": "AI Report Summary",
+      "generating_ai_summary": "Generating daily report summary using AI...",
+      "total_commits": "Total commits: {{count}}",
+      "files_changed": "Files changed: {{count}}",
+      "lines_added": "Lines added: {{count}}",
+      "lines_deleted": "Lines deleted: {{count}}",
+      "hourly_distribution": "Hourly Commit Distribution",
+      "branch_distribution": "Branch Distribution",
+      "file_types": "File Type Distribution",
+      "fetching": "Fetching commit data for {{username}} for {{date}}...",
+      "fetching_commits": "Fetching commit data...",
+      "no_commits": "No commits found for the specified period.",
+      "analyzing_commits": "Analyzing {{count}} commits...",
+      "report_saved": "Report saved to: {{path}}",
+      "error": {
+        "user_not_found": "Git user information not found.",
+        "ai_init_failed": "Failed to initialize AI features. Please check your API key and model.",
+        "ai_generation_failed": "Error occurred while generating AI summary.",
+        "ai_fallback": "Unable to generate AI summary. Please check required settings.",
+        "daily_report_failed": "Failed to generate daily report summary"
+      },
+      "debug": {
+        "using_github_user": "Using GitHub username: {{username}}",
+        "github_user_failed": "Failed to get GitHub user info. Using Git config username instead.",
+        "using_git_user": "Using Git username: {{username}}"
+      }
     }
   },
   "ai": {
@@ -690,15 +732,16 @@
       "failed": "Failed to initialize AI features"
     },
     "error": {
-      "not_initialized": "AI features are not initialized. Please provide AI configuration",
-      "invalid_key": "Invalid API key",
-      "invalid_provider": "Unsupported AI provider",
+      "not_initialized": "AI features not initialized",
+      "processing_failed": "Error processing with AI",
       "pr_description_failed": "Failed to generate PR description",
-      "code_review_failed": "Failed to perform code review",
-      "conflict_resolution_failed": "Failed to suggest conflict resolution",
-      "test_generation_failed": "Failed to generate test cases",
+      "pr_title_failed": "Failed to generate PR title",
+      "code_review_failed": "Failed to generate code review",
+      "conflict_resolution_failed": "Failed to generate conflict resolution suggestions",
       "commit_message_failed": "Failed to improve commit message",
-      "pr_title_failed": "Failed to generate PR title: {{error}}"
+      "daily_report_failed": "Failed to generate daily report summary",
+      "invalid_key": "Invalid API key",
+      "invalid_provider": "Unsupported AI provider"
     },
     "format": {
       "file": {
@@ -720,6 +763,10 @@
       },
       "conflict_resolution": {
         "analyze": "Please analyze the following merge conflicts and suggest resolutions:\n\n{{conflicts}}\n\nPR Context:{{context}}\n\nFor each conflict:\n1. Explain the nature of the conflict\n2. Suggest the best resolution approach\n3. Provide specific guidance on which changes to keep\n4. Consider the context and impact of the changes\n\nWrite EVERYTHING in English."
+      },
+      "daily_report_summary": {
+        "system": "You are a software development report writing expert. Your task is to analyze a developer's daily commits and create a professional and informative daily work report in list format.\n\nWork guidelines:\n1. Analyze the content and patterns of each commit to understand the work the developer has done.\n2. Structure the content as clear, organized lists of items for easy scanning and reading.\n3. Balance technical details and business implications.\n4. Focus on work progress, key achievements, and problems solved.\n5. Interpret statistical data meaningfully and explain it in the context of work.\n6. Write in concise and clear language, while maintaining a professional tone.\n7. If there are no commits, mention this fact while providing a constructive message.\n\nOutput format (use bullet points and numbered lists throughout):\n- Title: \"Daily Development Report: [date]\"\n- Introduction: Brief 1-2 sentence overview of the day's work\n- Key achievements: List of 3-5 bullet points of main completed work items\n- Work details: Numbered list of specific development activities\n  * Each item should be clear and concise\n  * Use sub-bullets for additional details when needed\n- Technical content: Bulleted list showing modified file types, code change stats\n- Next steps: 2-3 bullet points of expected future work\n\nLimit your response to 1000 characters, maintaining a clear list-based format for improved readability.",
+        "prompt": "Please create a daily commit report for developer {{username}} on {{date}}. Write the output IN ENGLISH.\n\n{{commitsInfo}}\n\n{{statsInfo}}\n\nBased on the commit content, please write a professional daily work report explaining what work was done, what features were developed, what problems were solved, etc. Use a list-based format with bullet points and numbered lists for better readability.\n\nIMPORTANT: \n- Write the ENTIRE report in English\n- Use professional business language appropriate for a development work report\n- Format the report as clear lists rather than paragraphs\n- Use bullet points (•) and numbered lists (1., 2., etc.) consistently\n- Make the report easy to scan quickly"
       },
       "commit_message": {
         "analyze": "Please analyze the following changes and generate a commit message.\n\n[Required]\n- Format: type(scope): title\n- Include all changed files\n- Do not use markdown code blocks (```)\n\n[Message Structure]\n1. Title\n- Concise description of core changes\n- Keep under 50 characters\n\n2. Body\n- 1-2 sentences explaining main changes\n- Use concise descriptive style\n\n3. Detailed Changes\n1) File Changes\n- [filename] change description\n  Examples:\n  - [src/cli/commands/init.ts] OpenRouter selection feature\n  - [src/core/ai-manager.ts] API key input process\n  - [src/types/config.ts] OpenRouter token limits\n- If no changes: \"No file changes\"\n- Include all changed files\n\n2) Functional Changes\n- User-facing actual changes\n- New or modified features\n- IMPORTANT: If changes are only in documentation files (.md) without actual code changes, write \"No functional changes\"\n- If no changes: \"No functional changes\"\n\n3) Performance/Structural Changes\n- Measurable performance improvements\n- Code structure changes\n- IMPORTANT: If changes are only in documentation files (.md) without actual code changes, write \"No performance/structural changes\"\n- If no changes: \"No performance/structural changes\"\n\n[Writing Rules]\n1. No markdown code blocks\n2. Clear and concise descriptions\n3. Focus on actual changes\n4. Remove redundant explanations\n5. Include all changed files\n6. Keep file changes simple and focused\n7. Distinguish between actual code changes and documentation-only changes\n8. For documentation-only changes (.md files), do not include functional or performance changes unless explicitly mentioned in the documentation\n\nExample format:\nfeat(init): Add new initialization feature\n\nImplemented automatic initialization for better user experience.\n\n1) File Changes\n- [src/cli/commands/file.ts] Specific change description\n\nChanged Files: {{files}}\n\nDiff Content:\n{{diff}}\n\nCurrent message: {{message}}"

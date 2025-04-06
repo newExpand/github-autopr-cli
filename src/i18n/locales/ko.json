@@ -681,7 +681,49 @@
       }
     },
     "loading_more": "페이지 {{page}} 로딩 중...",
-    "max_pages_reached": "최대 페이지 수(10)에 도달했습니다. 필요한 경우 검색 조건을 좁혀주세요."
+    "max_pages_reached": "최대 페이지 수(10)에 도달했습니다. 필요한 경우 검색 조건을 좁혀주세요.",
+    "daily_report": {
+      "description": "일일 커밋 보고서 생성",
+      "options": {
+        "username": "보고서를 생성할 GitHub 사용자명",
+        "format": "출력 형식 (console, json, markdown)",
+        "since": "시작 날짜 (YYYY-MM-DD 형식)",
+        "until": "종료 날짜 (YYYY-MM-DD 형식)",
+        "output": "보고서 저장 파일 경로",
+        "ai": "AI를 사용하여 커밋 요약 생성"
+      },
+      "title": "일일 커밋 보고서",
+      "date_single": "날짜: {{date}}",
+      "date_range": "기간: {{from}} ~ {{to}}",
+      "user": "사용자: {{username}}",
+      "summary": "요약",
+      "ai_summary": "AI 보고서 요약",
+      "generating_ai_summary": "AI를 사용하여 일일 보고서 요약을 생성하는 중...",
+      "total_commits": "총 커밋 수: {{count}}",
+      "files_changed": "변경된 파일 수: {{count}}",
+      "lines_added": "추가된 라인 수: {{count}}",
+      "lines_deleted": "삭제된 라인 수: {{count}}",
+      "hourly_distribution": "시간대별 커밋 분포",
+      "branch_distribution": "브랜치별 커밋 분포",
+      "file_types": "파일 유형별 변경 분포",
+      "fetching": "{{username}} 사용자의 {{date}} 커밋 데이터를 가져오는 중...",
+      "fetching_commits": "커밋 데이터를 가져오는 중...",
+      "no_commits": "해당 기간에 커밋이 없습니다.",
+      "analyzing_commits": "총 {{count}}개의 커밋을 분석하는 중...",
+      "report_saved": "보고서가 다음 위치에 저장되었습니다: {{path}}",
+      "error": {
+        "user_not_found": "Git 사용자 정보를 찾을 수 없습니다.",
+        "ai_init_failed": "AI 기능을 초기화하지 못했습니다. API 키와 모델을 확인해주세요.",
+        "ai_generation_failed": "AI 요약 생성 중 오류가 발생했습니다.",
+        "ai_fallback": "AI 요약을 생성할 수 없습니다. 필요한 설정을 확인해주세요."
+      },
+      "debug": {
+        "using_github_user": "GitHub 사용자 이름을 사용합니다: {{username}}",
+        "github_user_failed": "GitHub 사용자 정보를 가져오지 못했습니다. Git 설정에서 사용자 이름을 대신 사용합니다.",
+        "using_git_user": "Git 사용자 이름을 사용합니다: {{username}}",
+        "daily_report_failed": "일일 보고서 요약 생성 중 오류가 발생했습니다"
+      }
+    }
   },
   "ai": {
     "initialization": {
@@ -692,12 +734,13 @@
       "not_initialized": "AI가 초기화되지 않았습니다",
       "initialization_failed": "AI 초기화 실패: {{error}}",
       "invalid_provider": "지원하지 않는 AI 제공자입니다",
-      "processing_failed": "AI 처리 중 오류 발생: {{error}}",
-      "pr_description_failed": "PR 설명 생성 실패: {{error}}",
-      "code_review_failed": "코드 리뷰 실패: {{error}}",
-      "conflict_resolution_failed": "충돌 해결 제안 실패: {{error}}",
-      "commit_message_failed": "커밋 메시지 개선 실패: {{error}}",
-      "pr_title_failed": "PR 제목 생성 실패: {{error}}"
+      "processing_failed": "AI 처리 중 오류가 발생했습니다",
+      "pr_description_failed": "PR 설명 생성 중 오류가 발생했습니다",
+      "code_review_failed": "코드 리뷰 생성 중 오류가 발생했습니다",
+      "conflict_resolution_failed": "충돌 해결 제안 생성 중 오류가 발생했습니다",
+      "commit_message_failed": "커밋 메시지 개선 중 오류가 발생했습니다",
+      "pr_title_failed": "PR 제목 생성 중 오류가 발생했습니다",
+      "daily_report_failed": "일일 보고서 요약 생성 중 오류가 발생했습니다"
     },
     "format": {
       "file": {
@@ -713,6 +756,10 @@
       "pr_description": {
         "analyze": "Please analyze the following changes and generate a PR description.\n\n[Required]\n- File: Include all changed files\n Follow these specific guidelines and write the output IN KOREAN:\n\n1. Basic Structure\n- Use only the main section structure from the template (## Title format)\n- Create new checklist items based on actual changes\n\n2. Checklist Creation Rules\n- Create checklist items only from actual code changes\n- Each item must be specific and verifiable\n- Do not copy existing checklist items from the template\n- Create items that reflect the actual code changes\n\n3. Section Guidelines:\n\n## Description\n- Clearly explain the purpose and context of changes\n- Include technical context\n\n## Implementation Details\n- List changes in [filename] format\n- Explain each change and its rationale\n- Describe actual behavior changes in functions/methods\n\n## Testing\nOnly include actually added/modified tests:\n- New test cases\n- Modified test cases\n- Affected existing tests\n\n## Impact Analysis\nOnly include actual impacts:\n- Direct functionality changes\n- Performance impacts\n- Dependency changes\n\nTemplate:\n{{template}}\n\nChanged Files: {{files}}\n\nDiff Content:\n{{diffContent}}\n\nKey Instructions:\n1. Write the ENTIRE output in Korean\n2. Only reference the template's section structure, create new content based on actual changes\n3. Include only checklist items that can be verified from actual code changes\n4. Each checklist item must be specific and verifiable\n5. Use [V] only for completed work\n6. Use [ ] only for items requiring reviewer verification\n7. Be specific about implementation details\n8. Focus on actual changes visible in the diff\n9. Include ALL changed files\n10. Ensure no modified files are omitted from the description",
         "summarize": "Please summarize the following PR descriptions into a single, clear, and concise description. Write the output IN KOREAN following these rules:\n\n1. Structure Maintenance\n- Keep main section formats from template\n- Reorganize content based on actual changes\n\n2. Checklist Integration Rules\n- Remove duplicates\n- Group related items\n- Create new checklist items based on actual changes\n- Include only verifiable items\n\n3. Description Integration Method\n- Extract core content from each description\n- Merge technical details\n- Remove duplicate content\n- Group related changes\n\nOriginal Descriptions:\n{{descriptions}}\n\nIntegration Guidelines:\n1. Write the ENTIRE output in Korean\n2. Keep template section structure but recreate content based on actual changes\n3. Include only verifiable checklist items\n4. Make technical descriptions specific and clear\n5. Remove duplicates and integrate related content\n6. Maintain clear traceability to actual code changes"
+      },
+      "daily_report_summary": {
+        "system": "You are a software development report writing expert. Your task is to analyze a developer's daily commits and create a professional and informative daily work report in list format.\n\nWork guidelines:\n1. Analyze the content and patterns of each commit to understand the work the developer has done.\n2. Structure the content as clear, organized lists of items for easy scanning and reading.\n3. Balance technical details and business implications.\n4. Focus on work progress, key achievements, and problems solved.\n5. Interpret statistical data meaningfully and explain it in the context of work.\n6. Write in concise and clear language, while maintaining a professional tone.\n7. If there are no commits, mention this fact while providing a constructive message.\n\nOutput format (use bullet points and numbered lists throughout):\n- Title: \"Daily Development Report: [date]\"\n- Introduction: Brief 1-2 sentence overview of the day's work\n- Key achievements: List of 3-5 bullet points of main completed work items\n- Work details: Numbered list of specific development activities\n  * Each item should be clear and concise\n  * Use sub-bullets for additional details when needed\n- Technical content: Bulleted list showing modified file types, code change stats\n- Next steps: 2-3 bullet points of expected future work\n\nLimit your response to 1000 characters, maintaining a clear list-based format for improved readability.",
+        "prompt": "Please create a daily commit report for developer {{username}} on {{date}}. Write the output IN KOREAN.\n\n{{commitsInfo}}\n\n{{statsInfo}}\n\nBased on the commit content, please write a professional daily work report explaining what work was done, what features were developed, what problems were solved, etc. Use a list-based format with bullet points and numbered lists for better readability.\n\nIMPORTANT: \n- Write the ENTIRE report in Korean\n- Use professional business language appropriate for a development work report\n- Format the report as clear lists rather than paragraphs\n- Use bullet points (•) and numbered lists (1., 2., etc.) consistently\n- Make the report easy to scan quickly"
       },
       "code_review": {
         "analyze": "Please review the following code files and provide feedback IN KOREAN:\n\n{{files}}\n\nReview requirements:\n1. Code quality and best practices\n2. Potential bugs or edge cases\n3. Performance considerations\n4. Security vulnerabilities\n5. Test coverage\n\nProvide specific, actionable feedback for each issue found. Write EVERYTHING in Korean."
