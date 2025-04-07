@@ -3,7 +3,6 @@
     "error": {
       "unknown": "알 수 없는 오류가 발생했습니다",
       "github_token": "GitHub 토큰이 설정되지 않았습니다. 'autopr init' 명령어를 실행해주세요",
-      "invalid_branch": "유효하지 않은 브랜치 이름입니다",
       "network": "네트워크 오류가 발생했습니다",
       "not_git_repo": "현재 디렉토리가 git 저장소가 아닙니다",
       "no_commits": "브랜치에 커밋이 없어 PR을 생성할 수 없습니다. 변경사항을 커밋하고 푸시해주세요.",
@@ -23,7 +22,6 @@
     "success": {
       "init": "autopr 초기화가 완료되었습니다",
       "pr_created": "Pull Request가 성공적으로 생성되었습니다",
-      "config_updated": "설정이 성공적으로 업데이트되었습니다",
       "review_submitted": "리뷰가 성공적으로 등록되었습니다"
     },
     "cli": {
@@ -133,7 +131,6 @@
     "new": {
       "description": "새로운 Pull Request 생성",
       "error": {
-        "main_branch": "{{branch}} 브랜치에서 직접 PR을 생성할 수 없습니다. 새로운 브랜치를 먼저 생성해주세요.",
         "create_failed": "PR 생성에 실패했습니다: {{error}}",
         "diff_failed": "변경사항을 가져오는데 실패했습니다",
         "files_failed": "변경된 파일 목록을 가져오는데 실패했습니다",
@@ -174,12 +171,44 @@
     "list": {
       "description": "Pull Request 목록 조회",
       "no_prs": "Pull Request를 찾을 수 없습니다",
+      "no_more_prs": "더 이상 Pull Request가 없습니다",
       "open_prs": "\n현재 열려있는 Pull Requests:\n",
+      "closed_prs": "\n닫힌 Pull Requests:\n",
+      "all_prs": "\n모든 Pull Requests:\n",
       "pr_number_title": "#{{number}} {{title}}",
       "author": "작성자: {{login}}",
       "status": "상태: {{status}}",
       "merge_status": "병합 상태: {{status}}",
-      "url": "URL: {{url}}"
+      "state": "상태: {{state}}",
+      "url": "URL: {{url}}",
+      "merged_info": "※ 이 PR은 병합된 상태로, 다시 열 수 없습니다",
+      "prompts": {
+        "want_to_select": "Pull Request를 선택하여 작업하시겠습니까?",
+        "select_pr": "작업할 Pull Request를 선택하세요:",
+        "action": "어떤 작업을 하시겠습니까?",
+        "select_state": "표시할 PR 상태를 선택하세요:",
+        "try_another_state": "이 상태의 PR이 없습니다. 다른 상태로 시도해보시겠습니까?",
+        "select_count": "조회할 PR 개수를 선택하세요:",
+        "load_more": "더 많은 PR이 있을 수 있습니다. 더 불러오시겠습니까?",
+        "load_more_again": "더 많은 PR을 불러오시겠습니까?"
+      },
+      "actions": {
+        "review": "리뷰하기",
+        "merge": "병합하기",
+        "update": "업데이트하기",
+        "reopen": "다시 열기",
+        "open": "브라우저에서 열기",
+        "cancel": "취소"
+      },
+      "states": {
+        "open": "열림",
+        "closed": "닫힘",
+        "merged": "병합됨",
+        "all": "모두"
+      },
+      "success": {
+        "cancelled": "작업이 취소되었습니다"
+      }
     },
     "review": {
       "description": "Pull Request 리뷰",
@@ -339,6 +368,19 @@
         "switching_branch": "충돌 해결을 위해 해당 브랜치로 전환합니다...",
         "branch_switched": "브랜치를 {{branch}}로 전환했습니다",
         "help_message": "\n충돌 해결을 위한 도움을 드리겠습니다.",
+        "files_with_conflicts": "충돌이 있는 파일 목록 ({{count}}개):",
+        "git_commands": "충돌 해결을 위한 Git 명령어:",
+        "resolution_steps": "다음 단계에 따라 충돌을 해결하세요:",
+        "marker_explanation": "충돌 마커 설명:",
+        "your_changes": "현재 브랜치의 코드 (유지할 내용)",
+        "divider": "충돌 구분선",
+        "incoming_changes": "병합하려는 브랜치의 코드",
+        "after_resolving": "충돌 해결 후 실행할 명령어:",
+        "stage_changes": "수정한 파일을 스테이징",
+        "commit_resolution": "충돌 해결 내용을 커밋",
+        "push_changes": "변경사항을 원격 저장소에 푸시",
+        "retry_merge": "PR 병합 다시 시도",
+        "help_resources": "추가 도움말 링크:",
         "detected_editor": "📝 감지된 편집기: {{editor}}",
         "files_to_open": "📂 열릴 파일 수: {{count}}개",
         "steps": {
@@ -498,7 +540,8 @@
         "branch_not_on_remote": "현재 브랜치 '{{branch}}'는 원격에 존재하지 않습니다. 푸시 시 자동으로 원격 브랜치가 생성됩니다.",
         "push_cancelled": "푸시가 취소되었습니다",
         "creating_remote_branch": "원격에 '{{branch}}' 브랜치를 생성합니다...",
-        "using_default_message": "기본 커밋 메시지를 사용합니다."
+        "using_default_message": "기본 커밋 메시지를 사용합니다.",
+        "operation_cancelled": "작업이 취소되었습니다. 커밋 작업을 중단합니다."
       },
       "error": {
         "staging_failed": "변경사항을 스테이징하는데 실패했습니다",
@@ -636,6 +679,51 @@
         "key_status_updated": "API 키 상태가 {{status}}되었습니다",
         "key_activated": "API 키가 성공적으로 활성화되었습니다"
       }
+    },
+    "loading_more": "페이지 {{page}} 로딩 중...",
+    "max_pages_reached": "최대 페이지 수(10)에 도달했습니다. 필요한 경우 검색 조건을 좁혀주세요.",
+    "daily_report": {
+      "description": "AI를 사용한 일일 커밋 보고서 생성",
+      "options": {
+        "username": "GitHub 또는 Git 사용자 이름",
+        "format": "출력 형식 (console, json, markdown)",
+        "date": "특정 날짜 지정 (YYYY-MM-DD 형식)",
+        "output": "출력 파일 경로"
+      },
+      "title": "일일 커밋 보고서",
+      "date_single": "날짜: {{date}}",
+      "date_range": "기간: {{from}} ~ {{to}}",
+      "user": "사용자: {{username}}",
+      "summary": "요약",
+      "total_commits": "총 커밋: {{count}}",
+      "files_changed": "변경된 파일: {{count}}",
+      "lines_added": "추가된 줄: {{count}}",
+      "lines_deleted": "삭제된 줄: {{count}}",
+      "hourly_distribution": "시간대별 커밋 분포",
+      "branch_distribution": "브랜치별 커밋 분포",
+      "file_types": "파일 유형별 변경 분포",
+      "ai_summary": "AI 커밋 요약",
+      "fetching": "사용자 '{{username}}'의 '{{date}}' 커밋 가져오는 중...",
+      "fetching_commit_dates": "최근 3개월 내 커밋 날짜 가져오는 중...",
+      "no_commit_dates": "최근 3개월 내 커밋 기록이 없습니다.",
+      "select_date": "다음 날짜 중 하나를 선택하세요:",
+      "date_prompt": "번호를 입력하세요 (기본값: 1): ",
+      "report_saved": "보고서가 저장되었습니다: {{path}}",
+      "error": {
+        "user_not_found": "Git 사용자를 찾을 수 없습니다. 'git config user.name'을 설정하거나 --username 옵션을 사용하세요.",
+        "daily_report_failed": "일일 보고서 생성 중 오류가 발생했습니다",
+        "ai_init_failed": "AI 기능 초기화에 실패했습니다.",
+        "ai_required": "일일 보고서 기능을 사용하려면 'autopr init' 명령어를 실행하여 AI 기능을 설정하세요.",
+        "commit_dates_failed": "커밋 날짜 목록을 가져오는 중 오류가 발생했습니다.",
+        "local_commits_failed": "로컬 커밋 데이터를 가져오는데 실패했습니다.",
+        "ai_generation_failed": "AI 요약 생성 중 오류가 발생했습니다.",
+        "ai_fallback": "AI 요약을 생성할 수 없습니다. 설정을 확인하고 다시 시도하세요."
+      },
+      "debug": {
+        "using_github_user": "GitHub 사용자 '{{username}}'를 사용하여 커밋 조회 중",
+        "github_user_failed": "GitHub API에서 사용자 정보를 가져오지 못했습니다. Git 사용자 정보를 사용합니다.",
+        "using_git_user": "Git 사용자 '{{username}}'를 사용하여 커밋 조회 중"
+      }
     }
   },
   "ai": {
@@ -647,12 +735,13 @@
       "not_initialized": "AI가 초기화되지 않았습니다",
       "initialization_failed": "AI 초기화 실패: {{error}}",
       "invalid_provider": "지원하지 않는 AI 제공자입니다",
-      "processing_failed": "AI 처리 중 오류 발생: {{error}}",
-      "pr_description_failed": "PR 설명 생성 실패: {{error}}",
-      "code_review_failed": "코드 리뷰 실패: {{error}}",
-      "conflict_resolution_failed": "충돌 해결 제안 실패: {{error}}",
-      "commit_message_failed": "커밋 메시지 개선 실패: {{error}}",
-      "pr_title_failed": "PR 제목 생성 실패: {{error}}"
+      "processing_failed": "AI 처리 중 오류가 발생했습니다",
+      "pr_description_failed": "PR 설명 생성 중 오류가 발생했습니다",
+      "code_review_failed": "코드 리뷰 생성 중 오류가 발생했습니다",
+      "conflict_resolution_failed": "충돌 해결 제안 생성 중 오류가 발생했습니다",
+      "commit_message_failed": "커밋 메시지 개선 중 오류가 발생했습니다",
+      "pr_title_failed": "PR 제목 생성 중 오류가 발생했습니다",
+      "daily_report_failed": "일일 보고서 요약 생성 중 오류가 발생했습니다"
     },
     "format": {
       "file": {
@@ -669,6 +758,10 @@
         "analyze": "Please analyze the following changes and generate a PR description.\n\n[Required]\n- File: Include all changed files\n Follow these specific guidelines and write the output IN KOREAN:\n\n1. Basic Structure\n- Use only the main section structure from the template (## Title format)\n- Create new checklist items based on actual changes\n\n2. Checklist Creation Rules\n- Create checklist items only from actual code changes\n- Each item must be specific and verifiable\n- Do not copy existing checklist items from the template\n- Create items that reflect the actual code changes\n\n3. Section Guidelines:\n\n## Description\n- Clearly explain the purpose and context of changes\n- Include technical context\n\n## Implementation Details\n- List changes in [filename] format\n- Explain each change and its rationale\n- Describe actual behavior changes in functions/methods\n\n## Testing\nOnly include actually added/modified tests:\n- New test cases\n- Modified test cases\n- Affected existing tests\n\n## Impact Analysis\nOnly include actual impacts:\n- Direct functionality changes\n- Performance impacts\n- Dependency changes\n\nTemplate:\n{{template}}\n\nChanged Files: {{files}}\n\nDiff Content:\n{{diffContent}}\n\nKey Instructions:\n1. Write the ENTIRE output in Korean\n2. Only reference the template's section structure, create new content based on actual changes\n3. Include only checklist items that can be verified from actual code changes\n4. Each checklist item must be specific and verifiable\n5. Use [V] only for completed work\n6. Use [ ] only for items requiring reviewer verification\n7. Be specific about implementation details\n8. Focus on actual changes visible in the diff\n9. Include ALL changed files\n10. Ensure no modified files are omitted from the description",
         "summarize": "Please summarize the following PR descriptions into a single, clear, and concise description. Write the output IN KOREAN following these rules:\n\n1. Structure Maintenance\n- Keep main section formats from template\n- Reorganize content based on actual changes\n\n2. Checklist Integration Rules\n- Remove duplicates\n- Group related items\n- Create new checklist items based on actual changes\n- Include only verifiable items\n\n3. Description Integration Method\n- Extract core content from each description\n- Merge technical details\n- Remove duplicate content\n- Group related changes\n\nOriginal Descriptions:\n{{descriptions}}\n\nIntegration Guidelines:\n1. Write the ENTIRE output in Korean\n2. Keep template section structure but recreate content based on actual changes\n3. Include only verifiable checklist items\n4. Make technical descriptions specific and clear\n5. Remove duplicates and integrate related content\n6. Maintain clear traceability to actual code changes"
       },
+      "daily_report_summary": {
+        "system": "You are a software development report writing expert. Your task is to analyze a developer's daily commits and create a professional and informative daily work report in list format.\n\nWork guidelines:\n1. Analyze the content and patterns of each commit to understand the work the developer has done.\n2. Structure the content as clear, organized lists of items for easy scanning and reading.\n3. Balance technical details and business implications.\n4. Focus on work progress, key achievements, and problems solved.\n5. Interpret statistical data meaningfully and explain it in the context of work.\n6. Write in concise and clear language, while maintaining a professional tone.\n7. If there are no commits, mention this fact while providing a constructive message.\n\nOutput format (use bullet points and numbered lists throughout):\n- Title: \"Daily Development Report: [date]\"\n- Introduction: Brief 1-2 sentence overview of the day's work\n- Key achievements: List of 3-5 bullet points of main completed work items\n- Work details: Numbered list of specific development activities\n  * Each item should be clear and concise\n  * Use sub-bullets for additional details when needed\n- Technical content: Bulleted list showing modified file types, code change stats\n- Next steps: 2-3 bullet points of expected future work\n\nLimit your response to 1000 characters, maintaining a clear list-based format for improved readability.",
+        "prompt": "Please create a daily commit report for developer {{username}} on {{date}}. Write the output IN KOREAN.\n\n{{commitsInfo}}\n\n{{statsInfo}}\n\nBased on the commit content, please write a professional daily work report explaining what work was done, what features were developed, what problems were solved, etc. Use a list-based format with bullet points and numbered lists for better readability.\n\nIMPORTANT: \n- Write the ENTIRE report in Korean\n- Use professional business language appropriate for a development work report\n- Format the report as clear lists rather than paragraphs\n- Use bullet points (•) and numbered lists (1., 2., etc.) consistently\n- Make the report easy to scan quickly"
+      },
       "code_review": {
         "analyze": "Please review the following code files and provide feedback IN KOREAN:\n\n{{files}}\n\nReview requirements:\n1. Code quality and best practices\n2. Potential bugs or edge cases\n3. Performance considerations\n4. Security vulnerabilities\n5. Test coverage\n\nProvide specific, actionable feedback for each issue found. Write EVERYTHING in Korean."
       },
@@ -676,7 +769,7 @@
         "analyze": "Please analyze the following merge conflicts and suggest resolutions:\n\n{{conflicts}}\n\nPR Context:{{context}}\n\nFor each conflict:\n1. Explain the nature of the conflict\n2. Suggest the best resolution approach\n3. Provide specific guidance on which changes to keep\n4. Consider the context and impact of the changes\n\nWrite EVERYTHING in Korean."
       },
       "commit_message": {
-        "analyze": "Please analyze the following changes and generate a commit message IN KOREAN.\n\n[Required]\n- Language: Write everything in Korean (except type and scope)\n- File: Include all changed files\n- Format: type(scope): title\n- Do not use markdown code blocks (```)\n\n[Message Structure]\n1. Title\n- Concise description of core changes\n- Keep under 50 characters\n\n2. Body\n- 1-2 sentences explaining main changes\n- Use concise descriptive style\n\n3. Detailed Changes\n1) File Changes\n- [filename] change description\n  Examples:\n  - [src/cli/commands/init.ts] OpenRouter selection feature\n  - [src/core/ai-manager.ts] API key input process\n  - [src/types/config.ts] OpenRouter token limits\n- If no changes: \"No file changes\"\n- Include all changed files\n\n2) Functional Changes\n- User-facing actual changes\n- New or modified features\n- If no changes: \"No functional changes\"\n\n3) Performance/Structural Changes\n- Measurable performance improvements\n- Code structure changes\n- If no changes: \"No performance/structural changes\"\n\n[Writing Rules]\n1. No markdown code blocks\n2. Clear and concise descriptions\n3. Focus on actual changes\n4. Remove redundant explanations\n5. Include all changed files\n6. Keep file changes simple and focused\n\nIMPORTANT: Write the ENTIRE commit message in Korean, except for the type(scope) part.\nExample format:\nfeat(init): 새로운 기능 추가\n\n기능 설명을 여기에 작성\n\n1) 파일 변경사항\n- [src/cli/commands/file.ts] 구체적인 변경 내용\n\nChanged Files: {{files}}\n\nDiff Content:\n{{diff}}\n\nCurrent message: {{message}}"
+        "analyze": "Please analyze the following changes and generate a commit message IN KOREAN.\n\n[Required]\n- Language: Write everything in Korean (except type and scope)\n- File: Include all changed files\n- Format: type(scope): title\n- Do not use markdown code blocks (```)\n\n[Message Structure]\n1. Title\n- Concise description of core changes\n- Keep under 50 characters\n\n2. Body\n- 1-2 sentences explaining main changes\n- Use concise descriptive style\n\n3. Detailed Changes\n1) File Changes\n- [filename] change description\n  Examples:\n  - [src/cli/commands/init.ts] OpenRouter selection feature\n  - [src/core/ai-manager.ts] API key input process\n  - [src/types/config.ts] OpenRouter token limits\n- If no changes: \"No file changes\"\n- Include all changed files\n\n2) Functional Changes\n- User-facing actual changes\n- New or modified features\n- IMPORTANT: If changes are only in documentation files (.md) without actual code changes, write \"No functional changes\"\n- If no changes: \"No functional changes\"\n\n3) Performance/Structural Changes\n- Measurable performance improvements\n- Code structure changes\n- IMPORTANT: If changes are only in documentation files (.md) without actual code changes, write \"No performance/structural changes\"\n- If no changes: \"No performance/structural changes\"\n\n[Writing Rules]\n1. No markdown code blocks\n2. Clear and concise descriptions\n3. Focus on actual changes\n4. Remove redundant explanations\n5. Include all changed files\n6. Keep file changes simple and focused\n7. Distinguish between actual code changes and documentation-only changes\n8. For documentation-only changes (.md files), do not include functional or performance changes unless explicitly mentioned in the documentation\n\nIMPORTANT: Write the ENTIRE commit message in Korean, except for the type(scope) part.\nExample format:\nfeat(init): 새로운 기능 추가\n\n기능 설명을 여기에 작성\n\n1) 파일 변경사항\n- [src/cli/commands/file.ts] 구체적인 변경 내용\n\nChanged Files: {{files}}\n\nDiff Content:\n{{diff}}\n\nCurrent message: {{message}}"
       },
       "pr_title": {
         "analyze": "Please analyze the following changes and generate a concise and descriptive PR title. Write the output IN KOREAN following these rules:\n\n1. Title Guidelines:\n- Keep it concise but descriptive\n- Focus on the main change or feature\n- Use present tense\n- Do not include the type prefix (it will be added automatically)\n\n2. Content Guidelines:\n- Describe what the changes accomplish\n- Be specific about the main functionality\n- Avoid generic descriptions\n\nExample good titles:\n- 로그인 기능 구현\n- 사용자 인증 미들웨어 추가\n- 성능 개선을 위한 캐싱 로직 구현\n\nExample bad titles:\n- 버그 수정\n- 기능 추가\n- 코드 업데이트\n\nChanged Files: {{files}}\n\nDiff Content:\n{{diffContent}}\n\nImportant notes:\n1. Write ONLY the title part in Korean (without type prefix)\n2. Keep it under 50 characters if possible\n3. Make it easy to understand at a glance\n4. Focus on the actual changes in the diff"
@@ -754,5 +847,7 @@
         "test": "테스트"
       }
     }
-  }
+  },
+  "created": "PR이 생성되었습니다.",
+  "deleted": "PR이 삭제되었습니다."
 }

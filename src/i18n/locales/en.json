@@ -3,8 +3,6 @@
     "error": {
       "unknown": "An unknown error occurred",
       "github_token": "GitHub token is not set. Please run 'autopr init' first",
-      "invalid_branch": "Invalid branch name",
-      "network": "Network error occurred",
       "not_git_repo": "Current directory is not a git repository",
       "no_commits": "Cannot create PR as there are no commits in the branch. Please commit and push your changes first.",
       "pr_exists": "A pull request already exists for this branch.",
@@ -22,7 +20,6 @@
     "success": {
       "init": "Successfully initialized autopr",
       "pr_created": "Pull request created successfully",
-      "config_updated": "Configuration updated successfully",
       "review_submitted": "Review submitted successfully"
     },
     "cli": {
@@ -132,7 +129,6 @@
     "new": {
       "description": "Create a new pull request",
       "error": {
-        "main_branch": "Cannot create PR from {{branch}} branch. Please create a new branch first.",
         "create_failed": "Failed to create PR: {{error}}",
         "diff_failed": "Failed to get diff content",
         "files_failed": "Failed to get changed files",
@@ -173,12 +169,47 @@
     "list": {
       "description": "List pull requests",
       "no_prs": "No pull requests found",
-      "open_prs": "\nCurrently open Pull Requests:\n",
+      "no_more_prs": "No more PRs found.",
+      "open_prs": "\nOpen Pull Requests:\n",
+      "closed_prs": "\nClosed Pull Requests:\n",
+      "all_prs": "\nAll Pull Requests:\n",
       "pr_number_title": "#{{number}} {{title}}",
       "author": "Author: {{login}}",
       "status": "Status: {{status}}",
       "merge_status": "Merge status: {{status}}",
-      "url": "URL: {{url}}"
+      "state": "Status: {{state}}",
+      "url": "URL: {{url}}",
+      "merged_info": "※ This PR is merged and cannot be reopened",
+      "loading_more": "Loading page {{page}}...",
+      "max_pages_reached": "Maximum number of pages reached (10). Please refine your search if needed.",
+      "prompts": {
+        "want_to_select": "Would you like to select a PR for an action?",
+        "select_pr": "Select a PR:",
+        "action": "What would you like to do with this PR?",
+        "select_state": "Select PR state to display:",
+        "try_another_state": "No PRs found with this state. Would you like to try another state?",
+        "select_count": "Select the number of PRs to view:",
+        "load_more": "There might be more PRs. Load more?",
+        "load_more_again": "Load more PRs?",
+        "try_another_state": "There are no PRs with this state. Try another state?"
+      },
+      "actions": {
+        "review": "Review",
+        "merge": "Merge",
+        "update": "Update",
+        "reopen": "Reopen",
+        "open": "Open in Browser",
+        "cancel": "Cancel"
+      },
+      "states": {
+        "open": "Open",
+        "closed": "Closed",
+        "merged": "Merged",
+        "all": "All"
+      },
+      "success": {
+        "cancelled": "Operation cancelled"
+      }
     },
     "review": {
       "description": "Review a pull request",
@@ -327,7 +358,7 @@
         "file_info": "- {{file}} (changes: {{changes}} lines)",
         "blocks": "Number of conflict blocks: {{count}}",
         "block_info": "Conflict location: lines {{start}}~{{end}}",
-        "base_content": "Base code:",
+        "base_content": "Existing code:",
         "head_content": "Changed code:",
         "resolve_guide": "\nHow to resolve conflicts:\n1. Open the file with conflicts and locate the conflict sections.\n2. Look for conflict markers: <<<<<<< HEAD, =======, >>>>>>>\n3. Choose the desired code and remove the conflict markers.\n4. Commit the changes and update the PR.\n",
         "continue_prompt": "There are conflicts. Do you want to continue?",
@@ -338,20 +369,33 @@
         "switching_branch": "Switching to the conflicting branch...",
         "branch_switched": "Switched to branch {{branch}}",
         "help_message": "\nI'll help you resolve the conflicts.",
-        "detected_editor": "📝 Detected Editor: {{editor}}",
+        "files_with_conflicts": "Files with conflicts ({{count}}):",
+        "git_commands": "Git commands to resolve conflicts:",
+        "resolution_steps": "Follow these steps to resolve conflicts:",
+        "marker_explanation": "Conflict markers explanation:",
+        "your_changes": "Your changes (current branch)",
+        "divider": "Conflict divider",
+        "incoming_changes": "Incoming changes (branch being merged)",
+        "after_resolving": "After resolving conflicts, run these commands:",
+        "stage_changes": "Stage the modified files",
+        "commit_resolution": "Commit the conflict resolution",
+        "push_changes": "Push changes to remote",
+        "retry_merge": "Retry PR merge",
+        "help_resources": "Additional resources:",
+        "detected_editor": "📝 Detected editor: {{editor}}",
         "files_to_open": "📂 Files to open: {{count}}",
         "steps": {
           "checkout": "1. Checking out files with conflicts",
-          "open": "2. Opening files in editor",
+          "open": "2. Opening files with conflicts",
           "resolve": "3. Resolve conflicts and commit changes",
-          "update": "4. Update PR"
+          "update": "4. Update the PR"
         },
         "checking_out_files": "\nChecking out files with conflicts...",
         "opening_files": "\nOpening files with conflicts...",
-        "trying_to_open": "Attempting to open file: {{file}}",
+        "trying_to_open": "Trying to open file: {{file}}",
         "file_opened": "File opened: {{file}}",
         "next_steps": "\nAfter resolving conflicts, run these commands:",
-        "run_again": "\nThen run '{{command}}' again.",
+        "run_again": "Then run '{{command}}' again.",
         "ai_suggestion_start": "Starting AI conflict resolution suggestion...",
         "ai_suggestions": "AI Suggestions for Conflict Resolution:",
         "use_ai_suggestions": "Would you like to use AI suggestions for resolving conflicts?",
@@ -484,19 +528,20 @@
         "improve_select_with_push": "Select specific files to stage, improve recent commit message and automatically push"
       },
       "info": {
-        "patch_mode": "Use 'git add -p' to interactively stage changes",
+        "patch_mode": "To use interactive patch mode, run 'git add -p' directly",
         "run_patch_mode": "Run interactive patch mode: git add -p",
         "no_unstaged_files": "No unstaged files",
         "no_files_selected": "No files selected",
         "improving_message": "Improving commit message...",
-        "analyzing_changes": "Analyzing changes for commit message suggestion...",
+        "analyzing_changes": "Analyzing changes to suggest commit message...",
         "suggested_message": "Suggested commit message:",
         "pr_creation_guide": "To create a PR, run:",
         "run_new_command": "autopr new",
-        "branch_not_on_remote": "Current branch '{{branch}}' does not exist on remote. It will be created automatically when pushing.",
+        "branch_not_on_remote": "Current branch '{{branch}}' doesn't exist on remote. Push will create it automatically.",
         "push_cancelled": "Push cancelled",
-        "creating_remote_branch": "Creating '{{branch}}' branch on remote...",
-        "using_default_message": "Using default commit message."
+        "creating_remote_branch": "Creating remote branch '{{branch}}'...",
+        "using_default_message": "Using default commit message.",
+        "operation_cancelled": "Operation cancelled. Aborting commit process."
       },
       "error": {
         "staging_failed": "Failed to stage changes",
@@ -528,6 +573,9 @@
         "files_staged": "{{count}} files staged for commit",
         "branch_created": "New branch '{{branch}}' created",
         "branch_checked_out": "Checked out to branch '{{branch}}'"
+      },
+      "commit_message": {
+        "analyze": "Please analyze the following changes and generate a commit message.\n\n[Required]\n- Format: type(scope): title\n- Include all changed files\n- Do not use markdown code blocks (```)\n\n[Message Structure]\n1. Title\n- Concise description of core changes\n- Keep under 50 characters\n\n2. Body\n- 1-2 sentences explaining main changes\n- Use concise descriptive style\n\n3. Detailed Changes\n1) File Changes\n- [filename] change description\n  Examples:\n  - [src/cli/commands/init.ts] OpenRouter selection feature\n  - [src/core/ai-manager.ts] API key input process\n  - [src/types/config.ts] OpenRouter token limits\n- If no changes: \"No file changes\"\n- Include all changed files\n\n2) Functional Changes\n- User-facing actual changes\n- New or modified features\n- IMPORTANT: If changes are only in documentation files (.md) without actual code changes, write \"No functional changes\"\n- If no changes: \"No functional changes\"\n\n3) Performance/Structural Changes\n- Measurable performance improvements\n- Code structure changes\n- IMPORTANT: If changes are only in documentation files (.md) without actual code changes, write \"No performance/structural changes\"\n- If no changes: \"No performance/structural changes\"\n\n[Writing Rules]\n1. No markdown code blocks\n2. Clear and concise descriptions\n3. Focus on actual changes\n4. Remove redundant explanations\n5. Include all changed files\n6. Keep file changes simple and focused\n7. Distinguish between actual code changes and documentation-only changes\n8. For documentation-only changes (.md files), do not include functional or performance changes unless explicitly mentioned in the documentation\n\nExample format:\nfeat(init): Add new initialization feature\n\nImplemented automatic initialization for better user experience.\n\n1) File Changes\n- [src/cli/commands/file.ts] Specific change description\n\nChanged Files: {{files}}\n\nDiff Content:\n{{diff}}\n\nCurrent message: {{message}}"
       }
     },
     "reviewer_group": {
@@ -634,6 +682,49 @@
         "key_status_updated": "API key status has been {{status}}d",
         "key_activated": "API key has been successfully activated"
       }
+    },
+    "daily_report": {
+      "description": "Generate daily commit report using AI",
+      "options": {
+        "username": "GitHub or Git username",
+        "format": "Output format (console, json, markdown)",
+        "date": "Specific date (YYYY-MM-DD format)",
+        "output": "Output file path"
+      },
+      "title": "Daily Commit Report",
+      "date_single": "Date: {{date}}",
+      "date_range": "Period: {{from}} to {{to}}",
+      "user": "User: {{username}}",
+      "summary": "Summary",
+      "total_commits": "Total Commits: {{count}}",
+      "files_changed": "Files Changed: {{count}}",
+      "lines_added": "Lines Added: {{count}}",
+      "lines_deleted": "Lines Deleted: {{count}}",
+      "hourly_distribution": "Hourly Commit Distribution",
+      "branch_distribution": "Branch Distribution",
+      "file_types": "File Type Distribution",
+      "ai_summary": "AI Commit Summary",
+      "fetching": "Fetching commits for user '{{username}}' on '{{date}}'...",
+      "fetching_commit_dates": "Fetching commit dates from the last 3 months...",
+      "no_commit_dates": "No commits found in the last 3 months.",
+      "select_date": "Select one of the following dates:",
+      "date_prompt": "Enter a number (default: 1): ",
+      "report_saved": "Report saved to: {{path}}",
+      "debug": {
+        "using_github_user": "Using GitHub user '{{username}}' for commits",
+        "github_user_failed": "Failed to get GitHub user. Using Git user instead.",
+        "using_git_user": "Using Git user '{{username}}' for commits"
+      },
+      "error": {
+        "user_not_found": "Git user not found. Please set 'git config user.name' or use --username option.",
+        "daily_report_failed": "An error occurred while generating daily report",
+        "ai_init_failed": "Failed to initialize AI features.",
+        "ai_required": "Daily report feature requires AI setup. Please run 'autopr init' to set up AI features.",
+        "commit_dates_failed": "Failed to fetch commit dates",
+        "local_commits_failed": "Failed to fetch local commit data.",
+        "ai_generation_failed": "Error occurred while generating AI summary.",
+        "ai_fallback": "Unable to generate AI summary. Please check your settings and try again."
+      }
     }
   },
   "ai": {
@@ -642,15 +733,16 @@
       "failed": "Failed to initialize AI features"
     },
     "error": {
-      "not_initialized": "AI features are not initialized. Please provide AI configuration",
-      "invalid_key": "Invalid API key",
-      "invalid_provider": "Unsupported AI provider",
+      "not_initialized": "AI features not initialized",
+      "processing_failed": "Error processing with AI",
       "pr_description_failed": "Failed to generate PR description",
-      "code_review_failed": "Failed to perform code review",
-      "conflict_resolution_failed": "Failed to suggest conflict resolution",
-      "test_generation_failed": "Failed to generate test cases",
+      "pr_title_failed": "Failed to generate PR title",
+      "code_review_failed": "Failed to generate code review",
+      "conflict_resolution_failed": "Failed to generate conflict resolution suggestions",
       "commit_message_failed": "Failed to improve commit message",
-      "pr_title_failed": "Failed to generate PR title: {{error}}"
+      "daily_report_failed": "Failed to generate daily report summary",
+      "invalid_key": "Invalid API key",
+      "invalid_provider": "Unsupported AI provider"
     },
     "format": {
       "file": {
@@ -673,8 +765,12 @@
       "conflict_resolution": {
         "analyze": "Please analyze the following merge conflicts and suggest resolutions:\n\n{{conflicts}}\n\nPR Context:{{context}}\n\nFor each conflict:\n1. Explain the nature of the conflict\n2. Suggest the best resolution approach\n3. Provide specific guidance on which changes to keep\n4. Consider the context and impact of the changes\n\nWrite EVERYTHING in English."
       },
+      "daily_report_summary": {
+        "system": "You are a software development report writing expert. Your task is to analyze a developer's daily commits and create a professional and informative daily work report in list format.\n\nWork guidelines:\n1. Analyze the content and patterns of each commit to understand the work the developer has done.\n2. Structure the content as clear, organized lists of items for easy scanning and reading.\n3. Balance technical details and business implications.\n4. Focus on work progress, key achievements, and problems solved.\n5. Interpret statistical data meaningfully and explain it in the context of work.\n6. Write in concise and clear language, while maintaining a professional tone.\n7. If there are no commits, mention this fact while providing a constructive message.\n\nOutput format (use bullet points and numbered lists throughout):\n- Title: \"Daily Development Report: [date]\"\n- Introduction: Brief 1-2 sentence overview of the day's work\n- Key achievements: List of 3-5 bullet points of main completed work items\n- Work details: Numbered list of specific development activities\n  * Each item should be clear and concise\n  * Use sub-bullets for additional details when needed\n- Technical content: Bulleted list showing modified file types, code change stats\n- Next steps: 2-3 bullet points of expected future work\n\nLimit your response to 1000 characters, maintaining a clear list-based format for improved readability.",
+        "prompt": "Please create a daily commit report for developer {{username}} on {{date}}. Write the output IN ENGLISH.\n\n{{commitsInfo}}\n\n{{statsInfo}}\n\nBased on the commit content, please write a professional daily work report explaining what work was done, what features were developed, what problems were solved, etc. Use a list-based format with bullet points and numbered lists for better readability.\n\nIMPORTANT: \n- Write the ENTIRE report in English\n- Use professional business language appropriate for a development work report\n- Format the report as clear lists rather than paragraphs\n- Use bullet points (•) and numbered lists (1., 2., etc.) consistently\n- Make the report easy to scan quickly"
+      },
       "commit_message": {
-        "analyze": "Please analyze the following changes and generate a commit message.\n\n[Required]\n- Language: Write in English\n- Format: type(scope): title\n- Do not use markdown code blocks (```)\n\n[Message Structure]\n1. Title\n- Concise description of core changes\n- Keep under 50 characters\n\n2. Body\n- 1-2 sentences explaining main changes\n- Use concise descriptive style\n\n3. Detailed Changes\n1) File Changes\n- [filename] change description\n  Examples:\n  - [src/cli/commands/init.ts] OpenRouter selection feature\n  - [src/core/ai-manager.ts] API key input process\n  - [src/types/config.ts] OpenRouter token limits\n- If no changes: \"No file changes\"\n- Include all changed files (including i18n files)\n\n2) Functional Changes\n- User-facing actual changes\n- New or modified features\n- If no changes: \"No functional changes\"\n\n3) Performance/Structural Changes\n- Measurable performance improvements\n- Code structure changes\n- If no changes: \"No performance/structural changes\"\n\n[Writing Rules]\n1. No markdown code blocks\n2. Clear and concise descriptions\n3. Focus on actual changes\n4. Remove redundant explanations\n5. Include all changed files\n6. Keep file changes simple and focused\n\nExample format:\nfeat(init): Add new feature\n\nFeature description goes here\n\n1) File Changes\n- [src/cli/commands/file.ts] Specific change details\n\nChanged Files: {{files}}\n\nDiff Content:\n{{diff}}\n\nCurrent message: {{message}}"
+        "analyze": "Please analyze the following changes and generate a commit message.\n\n[Required]\n- Format: type(scope): title\n- Include all changed files\n- Do not use markdown code blocks (```)\n\n[Message Structure]\n1. Title\n- Concise description of core changes\n- Keep under 50 characters\n\n2. Body\n- 1-2 sentences explaining main changes\n- Use concise descriptive style\n\n3. Detailed Changes\n1) File Changes\n- [filename] change description\n  Examples:\n  - [src/cli/commands/init.ts] OpenRouter selection feature\n  - [src/core/ai-manager.ts] API key input process\n  - [src/types/config.ts] OpenRouter token limits\n- If no changes: \"No file changes\"\n- Include all changed files\n\n2) Functional Changes\n- User-facing actual changes\n- New or modified features\n- IMPORTANT: If changes are only in documentation files (.md) without actual code changes, write \"No functional changes\"\n- If no changes: \"No functional changes\"\n\n3) Performance/Structural Changes\n- Measurable performance improvements\n- Code structure changes\n- IMPORTANT: If changes are only in documentation files (.md) without actual code changes, write \"No performance/structural changes\"\n- If no changes: \"No performance/structural changes\"\n\n[Writing Rules]\n1. No markdown code blocks\n2. Clear and concise descriptions\n3. Focus on actual changes\n4. Remove redundant explanations\n5. Include all changed files\n6. Keep file changes simple and focused\n7. Distinguish between actual code changes and documentation-only changes\n8. For documentation-only changes (.md files), do not include functional or performance changes unless explicitly mentioned in the documentation\n\nExample format:\nfeat(init): Add new initialization feature\n\nImplemented automatic initialization for better user experience.\n\n1) File Changes\n- [src/cli/commands/file.ts] Specific change description\n\nChanged Files: {{files}}\n\nDiff Content:\n{{diff}}\n\nCurrent message: {{message}}"
       },
       "pr_title": {
         "analyze": "Please analyze the following changes and generate a concise and descriptive PR title. Write the output IN ENGLISH following these rules:\n\n1. Title Guidelines:\n- Keep it concise but descriptive\n- Focus on the main change or feature\n- Use present tense\n- Do not include the type prefix (it will be added automatically)\n\n2. Content Guidelines:\n- Describe what the changes accomplish\n- Be specific about the main functionality\n- Avoid generic descriptions\n\nExample good titles:\n- Implement login functionality\n- Add user authentication middleware\n- Implement caching for performance\n\nExample bad titles:\n- Fix bug\n- Add feature\n- Update code\n\nChanged Files: {{files}}\n\nDiff Content:\n{{diffContent}}\n\nImportant notes:\n1. Write ONLY the title part in English (without type prefix)\n2. Keep it under 50 characters if possible\n3. Make it easy to understand at a glance\n4. Focus on the actual changes in the diff"
@@ -752,5 +848,9 @@
         "test": "test"
       }
     }
-  }
+  },
+  "created": "PR has been created.",
+  "deleted": "PR has been deleted.",
+  "loading_more": "Loading page {{page}}...",
+  "max_pages_reached": "Maximum number of pages reached (10). Please refine your search if needed."
 } 

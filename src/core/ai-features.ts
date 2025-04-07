@@ -486,4 +486,102 @@ Format Guidelines:
       throw error;
     }
   }
+
+  /**
+   * 일일 커밋 보고서 요약을 생성합니다.
+   * 여러 커밋의 내용을 분석하여 전문적인 일일 보고서 형태로 요약합니다.
+   *
+   * @param commits 커밋 정보 배열
+   * @param username 사용자 이름
+   * @param date 보고서 날짜 또는 날짜 범위
+   * @param stats 커밋 통계 정보
+   * @returns 생성된 보고서 요약
+   */
+  async generateDailyCommitSummary(
+    commits: Array<{
+      sha: string;
+      message: string;
+      date: string;
+      files?: Array<{
+        filename: string;
+        additions: number;
+        deletions: number;
+      }>;
+    }>,
+    username: string,
+    date: string,
+    stats: {
+      totalCommits: number;
+      filesChanged: number;
+      additions: number;
+      deletions: number;
+      branches?: Record<string, number>;
+      fileTypes?: Record<string, number>;
+    },
+  ): Promise<string> {
+    const systemPrompt = t("ai.prompts.daily_report_summary.system");
+
+    // 커밋 메시지와 파일 정보를 문자열로 변환
+    const commitsInfo = commits
+      .map((commit) => {
+        const filesInfo = commit.files
+          ? commit.files
+              .map((f) => `- ${f.filename} (+${f.additions}/-${f.deletions})`)
+              .join("\n")
+          : "파일 정보 없음";
+
+        return `커밋: ${commit.sha.substring(0, 7)}
+시간: ${new Date(commit.date).toLocaleString()}
+메시지: ${commit.message}
+변경된 파일:
+${filesInfo}
+`;
+      })
+      .join("\n---\n");
+
+    // 통계 정보 추가
+    const statsInfo = `
+커밋 통계:
+- 총 커밋 수: ${stats.totalCommits}
+- 변경된 파일: ${stats.filesChanged}
+- 추가된 라인: ${stats.additions}
+- 삭제된 라인: ${stats.deletions}
+${
+  stats.branches
+    ? "\n브랜치별 커밋:" +
+      Object.entries(stats.branches)
+        .map(([branch, count]) => `\n- ${branch}: ${count}`)
+        .join("")
+    : ""
+}
+${
+  stats.fileTypes
+    ? "\n파일 유형별 변경:" +
+      Object.entries(stats.fileTypes)
+        .map(([type, count]) => `\n- ${type}: ${count}`)
+        .join("")
+    : ""
+}
+`;
+
+    const prompt = t("ai.prompts.daily_report_summary.prompt", {
+      username,
+      date,
+      commitsInfo:
+        commits.length > 0 ? commitsInfo : "이 기간에 커밋이 없습니다.",
+      statsInfo,
+    });
+
+    try {
+      return await this.processWithAI(prompt, this.getMaxTokens("summary"), {
+        temperature: 0.5, // 적절한 창의성과 정확성의 균형
+        presence_penalty: 0.2, // 다양한 측면 포함
+        frequency_penalty: 0.3, // 반복 감소
+        systemPrompt,
+      });
+    } catch (error) {
+      log.error(t("ai.error.daily_report_failed"), error);
+      throw error;
+    }
+  }
 }

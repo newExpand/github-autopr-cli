@@ -8,6 +8,9 @@ import { promisify } from "util";
 import inquirer from "inquirer";
 import { createAutoPR } from "../../core/branch-pattern.js";
 import { getOctokit } from "../../core/github.js";
+import { join } from "path";
+import { tmpdir } from "os";
+import { writeFile, unlink } from "fs/promises";
 
 const execAsync = promisify(exec);
 
@@ -515,8 +518,18 @@ export async function commitCommand(
         }
       } catch (error) {
         log.debug("프롬프트 처리 중 오류 발생:", error);
-        // 오류 발생 시 기본 메시지 사용
-        log.info(t("commands.commit.info.using_default_message"));
+        // 중단 신호로 인한 오류인 경우 프로세스 종료
+        if (
+          (error instanceof Error && error.message.includes("canceled")) ||
+          (error as any)?.name === "CancelError" ||
+          String(error).includes("User force closed")
+        ) {
+          log.info(t("commands.commit.info.operation_cancelled"));
+          process.exit(0);
+        }
+        // 다른 종류의 오류도 작업 취소로 처리
+        log.info(t("commands.commit.info.operation_cancelled"));
+        process.exit(0);
       }
     } else {
       // AI가 비활성화되어 있거나 메시지 생성에 실패한 경우: 직접 입력
@@ -531,14 +544,37 @@ export async function commitCommand(
         commitMessage = editedMessage;
       } catch (error) {
         log.debug("프롬프트 처리 중 오류 발생:", error);
-        log.error(t("commands.commit.error.message_input_failed"));
-        process.exit(1);
+        // 중단 신호로 인한 오류인 경우 프로세스 종료
+        if (
+          (error instanceof Error && error.message.includes("canceled")) ||
+          (error as any)?.name === "CancelError" ||
+          String(error).includes("User force closed")
+        ) {
+          log.info(t("commands.commit.info.operation_cancelled"));
+          process.exit(0);
+        }
+        // 다른 종류의 오류도 작업 취소로 처리
+        log.info(t("commands.commit.info.operation_cancelled"));
+        process.exit(0);
       }
     }
 
     // 커밋 실행
     try {
-      await execAsync(`git commit -m "${commitMessage.replace(/"/g, '\\"')}"`);
+      // 특수 문자가 포함된 커밋 메시지 처리를 위해 파일로 저장하는 방식으로 변경
+      const tempFile = join(tmpdir(), `commit-message-${Date.now()}.txt`);
+      await writeFile(tempFile, commitMessage, "utf-8");
+
+      // 파일에서 커밋 메시지를 읽어오는 방식으로 변경
+      await execAsync(`git commit -F "${tempFile}"`);
+
+      // 임시 파일 삭제
+      try {
+        await unlink(tempFile);
+      } catch (unlinkError) {
+        log.debug("임시 파일 삭제 실패:", unlinkError);
+      }
+
       log.info(t("commands.commit.success.committed"));
 
       // push 옵션이 활성화된 경우 자동으로 push 실행
