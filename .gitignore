@@ -15,3 +15,7 @@ src/utils/openrouter-provisioning.ts
 !package.json
 !README.md
 !README-kr.md
+!USAGE.md
+!USAGE-kr.md
+!docs
+!docs/**
