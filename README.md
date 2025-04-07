@@ -22,6 +22,19 @@ A powerful CLI tool for GitHub PR automation. Streamlines PR creation, review, a
 - 🤝 Collaborator management
 - 🪝 Git hooks automation
 
+## Branch Management Workflow
+
+This library provides a customized workflow combining GitFlow, GitHub Flow, and Conventional Commits. For detailed branch strategy guide, workflow examples, and command usage, check out the following document:
+
+👉 [Detailed Branch Strategy Guide](https://github.com/newExpand/github-autopr-cli/blob/main/USAGE.md)
+
+In this document, you'll find:
+- Detailed explanation of GitFlow-based branch management strategy
+- AutoPR installation and initial setup procedures
+- Real terminal command execution processes with example screens
+- Specific examples of branch creation, commits, PR creation, and merging
+- Release branch management and merging methods
+
 ## Installation
 
 ```bash

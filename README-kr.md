@@ -22,6 +22,19 @@ GitHub PR 자동화를 위한 강력한 CLI 도구입니다. PR 생성, 리뷰, 
 - 🤝 Collaborator 관리
 - 🪝 Git 훅 자동화
 
+## 브랜치 관리 워크플로우
+
+해당 라이브러리는 GitFlow, GitHub Flow와 Conventional Commits를 결합한 맞춤형 워크플로우를 제공합니다. 자세한 브랜치 전략 가이드, 워크플로우 예시, 명령어 사용법은 다음 문서에서 확인하세요:
+
+👉 [브랜치 전략 상세 가이드](https://github.com/newExpand/github-autopr-cli/blob/main/USAGE-kr.md)
+
+이 문서에서는 다음 내용을 확인할 수 있습니다:
+- GitFlow 기반 브랜치 관리 전략 상세 설명
+- AutoPR 설치 및 초기 설정 방법
+- 실제 터미널 명령어 실행 과정과 예시 화면
+- 브랜치 생성, 커밋, PR 생성, 병합 과정의 구체적인 예시
+- 릴리즈 브랜치 관리 및 병합 방법
+
 ## 설치 방법
 
 ```bash
