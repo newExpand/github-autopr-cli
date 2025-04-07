@@ -125,22 +125,6 @@ autopr commit improve [message]
 # (브랜치 패턴에 따라 자동으로 처리)
 ```
 
-### OpenRouter API 키 관리
-
-```bash
-# API 키 정보 조회
-autopr openrouter get
-
-# API 키 목록 조회
-autopr openrouter list
-
-# API 키 상태 확인 및 변경
-autopr openrouter status --enable  # 활성화
-autopr openrouter status --disable  # 비활성화
-```
-
-> 참고: OpenRouter API 키는 AI 기능 사용 시 자동으로 활성화 상태가 확인되며, 비활성화된 경우 자동으로 활성화됩니다. 이 과정은 백그라운드에서 조용히 처리되므로 사용자가 별도로 관리할 필요가 없습니다.
-
 ### 리뷰어 그룹 관리
 
 ```bash
@@ -309,6 +293,13 @@ AI_MODEL=gpt-4o
 MIT License
 
 ## 변경 이력
+
+### 0.1.14
+
+- 문서 업데이트
+  - README 파일의 파라미터 표기법 일관성 수정
+  - `autopr commit -sp` 명령어 문서 추가
+  - 영어 및 한국어 문서 동기화
 
 ### 0.1.13
 
@@ -486,13 +477,3 @@ MIT License
   - 제목 생성 과정 로깅 추가
   - 생성 실패 시 기본 제목 유지 로직 개선
   - 디버그 정보 강화
-
-## PR 관리
-
-- `autopr list`: 열린 PR 목록을 기본 정보와 함께 표시합니다.
-  - 이제 대화형 모드를 통해 PR을 선택하고 작업을 수행할 수 있습니다
-  - 작업으로는 리뷰, 병합, 업데이트, 브라우저에서 열기 등이 있습니다
-- `autopr review <PR_NUMBER>`: PR에 대한 상세 정보를 표시하고 리뷰 작업을 수행합니다.
-- `autopr update <PR_NUMBER>`: PR 제목, 내용, 상태(초안/준비됨)를 업데이트합니다.
-- `autopr merge <PR_NUMBER>`: PR을 병합하며 병합 방법과 브랜치 삭제 옵션을 제공합니다.
-- `autopr reopen <PR_NUMBER>`: 닫힌 PR을 다시 엽니다.

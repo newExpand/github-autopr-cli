@@ -115,6 +115,9 @@ autopr commit -p
 # Select specific files to commit
 autopr commit -s
 
+# Select specific files to stage, commit, and automatically push to origin
+autopr commit -sp
+
 # Improve existing commit message
 autopr commit improve [message]
 
@@ -290,6 +293,13 @@ Templates can include:
 MIT License
 
 ## Change Log
+
+### 0.1.14
+
+- Documentation Updates
+  - Fixed parameter notation consistency in README files
+  - Updated `autopr commit -sp` command documentation
+  - Synchronized English and Korean documentation
 
 ### 0.1.13
 
@@ -467,50 +477,3 @@ MIT License
   - Added title generation process logging
   - Improved fallback logic for title generation failures
   - Enhanced debugging information
-
-## Commit Management
-
-- `autopr commit`: Analyzes staged changes and suggests a commit message using AI.
-- `autopr commit -a`: Stages all changes, commits, and automatically pushes.
-- `autopr commit -s`: Selects specific files to stage and commit.
-- `autopr commit -sp`: Selects specific files to stage, commits, and automatically pushes.
-- `autopr commit -p`: Interactively selects changes to stage.
-- `autopr commit improve`: Improves the most recent commit message.
-- `autopr commit improve "message"`: Improves the given message.
-
-### OpenRouter API Key Management
-
-```bash
-# Get API key information
-autopr openrouter get
-
-# List API keys
-autopr openrouter list
-
-# Check and update API key status
-autopr openrouter status --enable  # Enable
-autopr openrouter status --disable  # Disable
-```
-
-> Note: OpenRouter API key status is automatically checked and activated when using AI features. This process runs silently in the background, so users don't need to manage it manually.
-
-### PR Creation
-
-- `autopr new`: Creates a new PR based on staged changes.
-- `autopr new -d`: Creates a new draft PR.
-- `autopr new -t "title"`: Creates a new PR with the specified title.
-- `autopr new -b "body"`: Creates a new PR with the specified body.
-- `autopr new -r "reviewer1,reviewer2"`: Creates a new PR with the specified reviewers.
-- `autopr new -l "label1,label2"`: Creates a new PR with the specified labels.
-- `autopr new -a`: Creates a new PR and automatically pushes changes.
-- `autopr new -m`: Creates a new PR and automatically merges if possible.
-
-## PR Management
-
-- `autopr list`: Lists all open PRs with basic information.
-  - Now includes an interactive mode to select and perform actions on PRs
-  - Actions include review, merge, update, and opening in browser
-- `autopr review <PR_NUMBER>`: Shows detailed info about a PR and prompts for review actions.
-- `autopr update <PR_NUMBER>`: Updates PR title, body, or status (draft/ready).
-- `autopr merge <PR_NUMBER>`: Merges a PR with options for merge method and branch deletion.
-- `autopr reopen <PR_NUMBER>`: Reopens a closed PR.
