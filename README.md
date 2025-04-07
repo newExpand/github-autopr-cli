@@ -307,6 +307,19 @@ MIT License
 
 ## Change Log
 
+### 0.1.15
+
+- Branch Management Workflow Documentation
+  - Added detailed GitFlow-based branch strategy guide (USAGE.md/USAGE-kr.md)
+  - Provided standard workflow examples from branch creation to merging
+  - Added screenshots of key command execution results
+  - Included real PR example links
+  - Detailed branch patterns and naming conventions
+- README Improvements
+  - Added Branch Management Workflow section
+  - Added USAGE document links and summary
+  - Optimized document structure
+
 ### 0.1.14
 
 - Documentation Updates
