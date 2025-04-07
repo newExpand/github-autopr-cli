@@ -83,6 +83,19 @@ autopr merge <pr-번호>
 autopr reopen <pr-번호>
 ```
 
+### 일일 보고서 관리
+
+```bash
+# 일일 커밋 보고서 생성
+autopr daily-report
+
+# 옵션:
+# -d, --date <date>       YYYY-MM-DD 형식의 특정 날짜
+# -u, --username <name>   특정 GitHub 사용자명
+# -f, --format <format>   출력 형식 (console, json, markdown)
+# -o, --output <path>     보고서를 파일로 저장
+```
+
 ### 커밋 관리
 
 ```bash
@@ -299,6 +312,13 @@ MIT License
 
 ### 0.1.13
 
+- 일일 커밋 보고서 생성 기능 추가
+  - 새로운 `autopr daily-report` 명령어 구현
+  - AI가 생성한 일일 커밋 활동 요약 제공
+  - 최근 커밋 히스토리에서 날짜 선택 기능 제공
+  - 상세 통계 포함 (변경된 파일, 추가/삭제된 줄 수)
+  - 다양한 형식의 보고서 생성 (콘솔, JSON, 마크다운)
+  - 로컬 및 원격 저장소 커밋 모두 지원
 - 병합 충돌 해결 경험 개선
   - 충돌 해결 워크플로우 간소화
   - 불필요한 자동 파일 열기 로직 제거

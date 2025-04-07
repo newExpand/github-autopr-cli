@@ -684,45 +684,46 @@
       }
     },
     "daily_report": {
-      "description": "Generate daily commit report",
+      "description": "Generate daily commit report using AI",
       "options": {
-        "username": "GitHub username to generate report for",
+        "username": "GitHub or Git username",
         "format": "Output format (console, json, markdown)",
-        "since": "Start date (YYYY-MM-DD format)",
-        "until": "End date (YYYY-MM-DD format)",
-        "output": "Report output file path",
-        "ai": "Generate commit summary using AI"
+        "date": "Specific date (YYYY-MM-DD format)",
+        "output": "Output file path"
       },
       "title": "Daily Commit Report",
       "date_single": "Date: {{date}}",
       "date_range": "Period: {{from}} to {{to}}",
       "user": "User: {{username}}",
       "summary": "Summary",
-      "ai_summary": "AI Report Summary",
-      "generating_ai_summary": "Generating daily report summary using AI...",
-      "total_commits": "Total commits: {{count}}",
-      "files_changed": "Files changed: {{count}}",
-      "lines_added": "Lines added: {{count}}",
-      "lines_deleted": "Lines deleted: {{count}}",
+      "total_commits": "Total Commits: {{count}}",
+      "files_changed": "Files Changed: {{count}}",
+      "lines_added": "Lines Added: {{count}}",
+      "lines_deleted": "Lines Deleted: {{count}}",
       "hourly_distribution": "Hourly Commit Distribution",
       "branch_distribution": "Branch Distribution",
       "file_types": "File Type Distribution",
-      "fetching": "Fetching commit data for {{username}} for {{date}}...",
-      "fetching_commits": "Fetching commit data...",
-      "no_commits": "No commits found for the specified period.",
-      "analyzing_commits": "Analyzing {{count}} commits...",
+      "ai_summary": "AI Commit Summary",
+      "fetching": "Fetching commits for user '{{username}}' on '{{date}}'...",
+      "fetching_commit_dates": "Fetching commit dates from the last 3 months...",
+      "no_commit_dates": "No commits found in the last 3 months.",
+      "select_date": "Select one of the following dates:",
+      "date_prompt": "Enter a number (default: 1): ",
       "report_saved": "Report saved to: {{path}}",
-      "error": {
-        "user_not_found": "Git user information not found.",
-        "ai_init_failed": "Failed to initialize AI features. Please check your API key and model.",
-        "ai_generation_failed": "Error occurred while generating AI summary.",
-        "ai_fallback": "Unable to generate AI summary. Please check required settings.",
-        "daily_report_failed": "Failed to generate daily report summary"
-      },
       "debug": {
-        "using_github_user": "Using GitHub username: {{username}}",
-        "github_user_failed": "Failed to get GitHub user info. Using Git config username instead.",
-        "using_git_user": "Using Git username: {{username}}"
+        "using_github_user": "Using GitHub user '{{username}}' for commits",
+        "github_user_failed": "Failed to get GitHub user. Using Git user instead.",
+        "using_git_user": "Using Git user '{{username}}' for commits"
+      },
+      "error": {
+        "user_not_found": "Git user not found. Please set 'git config user.name' or use --username option.",
+        "daily_report_failed": "An error occurred while generating daily report",
+        "ai_init_failed": "Failed to initialize AI features.",
+        "ai_required": "Daily report feature requires AI setup. Please run 'autopr init' to set up AI features.",
+        "commit_dates_failed": "Failed to fetch commit dates",
+        "local_commits_failed": "Failed to fetch local commit data.",
+        "ai_generation_failed": "Error occurred while generating AI summary.",
+        "ai_fallback": "Unable to generate AI summary. Please check your settings and try again."
       }
     }
   },

@@ -83,6 +83,19 @@ autopr merge <pr-number>
 autopr reopen <pr-number>
 ```
 
+### Daily Report Management
+
+```bash
+# Generate daily commit report
+autopr daily-report
+
+# Options:
+# -d, --date <date>       Specific date in YYYY-MM-DD format
+# -u, --username <name>   Specific GitHub username
+# -f, --format <format>   Output format (console, json, markdown)
+# -o, --output <path>     Save report to file
+```
+
 ### Commit Management
 
 ```bash
@@ -280,6 +293,13 @@ MIT License
 
 ### 0.1.13
 
+- Added Daily Commit Report Generation
+  - Implemented new `autopr daily-report` command
+  - Provides AI-generated summaries of daily commit activities
+  - Offers date selection from recent commit history
+  - Includes detailed statistics (files changed, lines added/deleted)
+  - Generates reports in multiple formats (console, JSON, markdown)
+  - Supports both local and remote repository commits
 - Improved Merge Conflict Resolution Experience
   - Simplified conflict resolution workflow
   - Removed unnecessary automatic file opening logic
