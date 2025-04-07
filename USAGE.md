@@ -292,3 +292,15 @@ Below are the results of executing commands in an actual terminal.
    *Figure 7: Release PR merge result - Release PR is successfully merged into the main branch and local branch is cleaned up.*
 
 > 💡 **Note**: The `autopr` commands display detailed work progress with user-friendly messages. They provide features such as automatic commit message generation, branch pattern matching, PR creation and merging, enhancing work efficiency.
+
+## Real PR Example
+
+You can check out a real PR example created using AutoPR at the following link:
+[https://github.com/newExpand/github-autopr-cli/pull/56](https://github.com/newExpand/github-autopr-cli/pull/56)
+
+This PR includes the following major feature improvements and additions to the `autopr` CLI tool:
+- Daily commit report feature
+- Enhanced PR list functionality
+- Improved commit process
+- Enhanced conflict resolution guide
+- Improved user interface
