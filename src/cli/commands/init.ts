@@ -352,26 +352,6 @@ export async function initCommand(): Promise<void> {
         default: projectConfig.developmentBranch || "dev",
       },
       {
-        type: "confirm",
-        name: "customizeReleasePR",
-        message: t("commands.init.prompts.customize_release_pr"),
-        default: false,
-      },
-      {
-        type: "input",
-        name: "releasePRTitle",
-        message: t("commands.init.prompts.release_pr_title"),
-        default: "Release: {development} to {production}",
-        when: (answers) => answers.customizeReleasePR,
-      },
-      {
-        type: "editor",
-        name: "releasePRBody",
-        message: t("commands.init.prompts.release_pr_body"),
-        default: "Merge {development} branch into {production} for release",
-        when: (answers) => answers.customizeReleasePR,
-      },
-      {
         type: "input",
         name: "defaultReviewers",
         message: t("commands.init.prompts.reviewers"),
@@ -382,24 +362,21 @@ export async function initCommand(): Promise<void> {
             .map((reviewer) => reviewer.trim())
             .filter(Boolean),
       },
-      {
-        type: "confirm",
-        name: "setupHooks",
-        message: t("commands.init.prompts.setup_hooks"),
-        default: true,
-      },
     ]);
 
     try {
+      // 릴리스 PR 템플릿 기본값 설정
+      const releasePRTitle = "Release: {development} to {production}";
+      const releasePRBody =
+        "Merge {development} branch into {production} for release";
+
       // 설정 저장
       await updateConfig({
         ...answers,
         defaultBranch: projectAnswers.defaultBranch,
         developmentBranch: projectAnswers.developmentBranch,
-        ...(projectAnswers.customizeReleasePR && {
-          releasePRTitle: projectAnswers.releasePRTitle,
-          releasePRBody: projectAnswers.releasePRBody,
-        }),
+        releasePRTitle,
+        releasePRBody,
         defaultReviewers: projectAnswers.defaultReviewers,
       });
 
@@ -415,14 +392,11 @@ export async function initCommand(): Promise<void> {
           branch: projectAnswers.developmentBranch,
         }),
       );
-      if (projectAnswers.customizeReleasePR) {
-        log.info(t("commands.init.info.release_template_set"));
-      }
+      log.info(t("commands.init.info.release_template_set_automatically"));
 
-      // Git 훅 설정
-      if (projectAnswers.setupHooks) {
-        await setupGitHooks();
-      }
+      // Git 훅 설정 - 사용자 선택 없이 무조건 설정
+      await setupGitHooks();
+      log.info(t("commands.init.info.hooks_setup_automatically"));
 
       log.info(t("common.success.init"));
     } catch (error) {
