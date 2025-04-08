@@ -122,8 +122,10 @@
         "development_branch_set": "Development branch set to: {{branch}}",
         "production_branch_set": "Production branch set to: {{branch}}",
         "release_template_set": "Release PR template customized",
+        "release_template_set_automatically": "Release PR template automatically set",
         "openrouter_selected": "OpenRouter selected. Using free Gemini Flash 2.0 model.",
-        "openrouter_config_skipped": "Skipping .env file configuration for OpenRouter as it uses default settings."
+        "openrouter_config_skipped": "Skipping .env file configuration for OpenRouter as it uses default settings.",
+        "hooks_setup_automatically": "Git hooks automatically set up for PR creation"
       }
     },
     "new": {

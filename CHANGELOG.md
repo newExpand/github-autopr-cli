@@ -1,5 +1,16 @@
 # Change Log
 
+## 0.1.17
+
+- Enhanced Initialization Process
+  - Automated Git hooks setup during initialization
+  - Automated Release PR template configuration
+  - Removed manual hook setup and template customization prompts
+  - Added automatic setup status notifications
+  - Improved user experience with streamlined setup flow
+  - Standardized post-checkout hook installation
+  - Simplified onboarding with fewer configuration questions
+
 ## 0.1.16
 
 - Enhanced Multi-language Documentation
