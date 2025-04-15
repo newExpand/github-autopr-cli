@@ -1,5 +1,15 @@
 # Change Log
 
+## 0.1.18
+
+- Improved AI Manager Structure
+  - Refactored AI provider initialization logic using strategy pattern
+  - Separated provider-specific code into dedicated methods for better maintainability
+  - Enhanced extensibility for adding new AI providers
+  - Introduced mapping structure for initialization logic configuration
+  - Strengthened exception handling
+  - Isolated OpenRouter key status check logic
+
 ## 0.1.17
 
 - Enhanced Initialization Process
