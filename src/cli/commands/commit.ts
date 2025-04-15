@@ -6,7 +6,6 @@ import { log } from "../../utils/logger.js";
 import { exec } from "child_process";
 import { promisify } from "util";
 import inquirer from "inquirer";
-import { createAutoPR } from "../../core/branch-pattern.js";
 import { getOctokit } from "../../core/github.js";
 import { join } from "path";
 import { tmpdir } from "os";
@@ -201,104 +200,6 @@ async function pushToRemote(currentBranch: string): Promise<void> {
         }),
       );
     }
-
-    /* 브랜치 선택 기능 일시 비활성화
-    // 사용자에게 푸시할 브랜치 선택 요청
-    const { targetBranch } = await inquirer.prompt([
-      {
-        type: "list",
-        name: "targetBranch",
-        message: t("commands.commit.prompts.select_push_branch"),
-        choices: [
-          // 현재 브랜치를 첫 번째 옵션으로 표시 (원격 상태 포함)
-          {
-            name: `${currentBranch} (${t("commands.commit.branch.current")})${branchExists ? ` (${t("commands.commit.branch.remote")})` : ` (${t("commands.commit.branch.local_only")})`}`,
-            value: currentBranch,
-          },
-          // 다른 브랜치들 표시
-          ...all
-            .filter((branch) => branch !== currentBranch)
-            .map((branch) => ({
-              name: `${branch} ${remote.includes(branch) ? `(${t("commands.commit.branch.remote")})` : `(${t("commands.commit.branch.local_only")})`}`,
-              value: branch,
-            })),
-          // 새 브랜치 생성 옵션
-          { name: t("commands.commit.branch.create_new"), value: "new" },
-        ],
-        default: currentBranch,
-      },
-    ]);
-
-    let pushBranch = targetBranch;
-
-    // 새 브랜치 생성 옵션 선택 시
-    if (targetBranch === "new") {
-      const { newBranchName } = await inquirer.prompt([
-        {
-          type: "input",
-          name: "newBranchName",
-          message: t("commands.commit.prompts.enter_new_branch_name"),
-          validate: (input: string) => {
-            if (!input.trim()) {
-              return t("commands.commit.error.branch_name_empty");
-            }
-            if (all.includes(input.trim())) {
-              return t("commands.commit.error.branch_exists");
-            }
-            return true;
-          },
-        },
-      ]);
-
-      // 새 브랜치 생성
-      await execAsync(`git branch ${newBranchName}`);
-      log.info(
-        t("commands.commit.success.branch_created", { branch: newBranchName }),
-      );
-
-      // 새 브랜치로 체크아웃할지 확인
-      const { checkout } = await inquirer.prompt([
-        {
-          type: "confirm",
-          name: "checkout",
-          message: t("commands.commit.prompts.checkout_new_branch", {
-            branch: newBranchName,
-          }),
-          default: true,
-        },
-      ]);
-
-      if (checkout) {
-        await execAsync(`git checkout ${newBranchName}`);
-        log.info(
-          t("commands.commit.success.branch_checked_out", {
-            branch: newBranchName,
-          }),
-        );
-      }
-
-      pushBranch = newBranchName;
-    }
-
-    // 선택한 브랜치가 현재 브랜치와 다른 경우 확인
-    if (pushBranch !== currentBranch) {
-      const { confirmPush } = await inquirer.prompt([
-        {
-          type: "confirm",
-          name: "confirmPush",
-          message: t("commands.commit.prompts.confirm_push_different_branch", {
-            target: pushBranch,
-          }),
-          default: false,
-        },
-      ]);
-
-      if (!confirmPush) {
-        log.info(t("commands.commit.info.push_cancelled"));
-        return;
-      }
-    }
-    */
 
     // 현재 브랜치만 사용
     const pushBranch = currentBranch;

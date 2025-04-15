@@ -1,6 +1,6 @@
 {
   "name": "newexpand-autopr",
-  "version": "0.1.18",
+  "version": "0.1.19",
   "description": "GitHub PR Automation CLI Tool with AI",
   "type": "module",
   "main": "dist/index.js",
@@ -10,7 +10,7 @@
     "url": "git+https://github.com/newExpand/github-autopr-cli.git"
   },
   "bin": {
-    "autopr": "./dist/cli/index.js"
+    "autopr": "./dist/index.js"
   },
   "files": [
     "dist",
@@ -18,14 +18,14 @@
     "LICENSE"
   ],
   "scripts": {
-    "build": "tsc && npm run copy-i18n",
-    "copy-i18n": "cp -r src/i18n/locales dist/i18n/",
+    "build": "tsup",
+    "dev": "tsup --watch",
     "test": "vitest",
     "lint": "eslint . --ext .ts",
     "format": "prettier --write \"src/**/*.ts\"",
     "prepare": "npm run build",
-    "prepublishOnly": "npm run build",
-    "prepack": "npm run build"
+    "prepublishOnly": "npm run lint && npm test",
+    "prepack": "chmod +x dist/index.js"
   },
   "keywords": [
     "github",
@@ -68,7 +68,9 @@
     "@typescript-eslint/eslint-plugin": "^7.0.1",
     "@typescript-eslint/parser": "^7.0.1",
     "eslint": "^8.56.0",
+    "glob": "^11.0.1",
     "prettier": "^3.2.5",
+    "tsup": "^8.4.0",
     "typescript": "~5.5.0",
     "vitest": "^1.2.2"
   }

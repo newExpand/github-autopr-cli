@@ -12,6 +12,7 @@ src/utils/openrouter-provisioning.ts
 !.prettierrc
 !.gitignore
 !tsconfig.json
+!tsup.config.ts
 !package.json
 !README.md
 !README-kr.md
