@@ -1,5 +1,15 @@
 # Change Log
 
+## 0.1.19
+
+- Enhanced Build System
+  - Introduced tsup bundler for faster build times
+  - Applied tree shaking for package optimization
+  - Improved ES modules support
+  - Optimized i18n file handling
+  - Automated build process
+  - Eliminated unnecessary duplicate builds
+
 ## 0.1.18
 
 - Improved AI Manager Structure
