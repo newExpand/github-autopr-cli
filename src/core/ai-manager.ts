@@ -86,32 +86,24 @@ export class AIManager {
     try {
       // OpenRouter인 경우 API 키 상태 확인
       if (config.provider === "openrouter") {
-        try {
-          // 조용히 API 키 상태 확인 및 활성화
-          log.debug("OpenRouter API 키 상태 확인 중...");
-          await ensureKeyActive().catch(() => {
-            // 에러가 발생해도 무시하고 계속 진행
-          });
-          // 마지막 확인 시간 업데이트
-          this.lastKeyActivationCheck = Date.now();
-        } catch (error) {
-          // 에러 로깅 없이 조용히 진행
-        }
+        await this.checkOpenRouterKeyStatus();
       }
 
-      if (config.provider === "openai") {
-        this.openai = new OpenAI({
-          apiKey: config.apiKey,
-        });
-      } else if (config.provider === "openrouter") {
-        this.openai = new OpenAI({
-          baseURL: OPENROUTER_CONFIG.BASE_URL,
-          apiKey: config.apiKey || OPENROUTER_CONFIG.API_KEY,
-        });
-        config.options = config.options || {};
-        config.options.model =
-          config.options?.model || OPENROUTER_CONFIG.DEFAULT_MODEL;
+      // 제공자별 초기화 함수 매핑
+      const providerInitializers: Record<
+        AIProvider,
+        (config: AIConfig) => void
+      > = {
+        openai: this.initializeOpenAI.bind(this),
+        openrouter: this.initializeOpenRouter.bind(this),
+      };
+
+      const initializer = providerInitializers[config.provider];
+      if (!initializer) {
+        throw new Error(`지원하지 않는 AI 제공자: ${config.provider}`);
       }
+
+      initializer(config);
       this.aiConfig = config;
       this.isInitialized = true;
       this.initializationPromise = null;
@@ -120,6 +112,35 @@ export class AIManager {
       log.error(t("ai.initialization.failed"), error);
       throw error;
     }
+  }
+
+  private async checkOpenRouterKeyStatus(): Promise<void> {
+    try {
+      log.debug("OpenRouter API 키 상태 확인 중...");
+      await ensureKeyActive().catch(() => {
+        // 에러가 발생해도 무시하고 계속 진행
+      });
+      // 마지막 확인 시간 업데이트
+      this.lastKeyActivationCheck = Date.now();
+    } catch (error) {
+      // 에러 로깅 없이 조용히 진행
+    }
+  }
+
+  private initializeOpenAI(config: AIConfig): void {
+    this.openai = new OpenAI({
+      apiKey: config.apiKey,
+    });
+  }
+
+  private initializeOpenRouter(config: AIConfig): void {
+    this.openai = new OpenAI({
+      baseURL: OPENROUTER_CONFIG.BASE_URL,
+      apiKey: config.apiKey || OPENROUTER_CONFIG.API_KEY,
+    });
+    config.options = config.options || {};
+    config.options.model =
+      config.options?.model || OPENROUTER_CONFIG.DEFAULT_MODEL;
   }
 
   private reset(): void {
