@@ -8,7 +8,7 @@ export default defineConfig({
   format: ["esm"],
   dts: true,
   clean: true,
-  sourcemap: true,
+  sourcemap: false,
   target: "node16",
   outDir: "dist",
   shims: true,
@@ -22,14 +22,18 @@ export default defineConfig({
     "i18next",
     "octokit",
   ],
-  splitting: false,
-  treeshake: true,
+  splitting: true,
+  treeshake: {
+    preset: "smallest",
+  },
   platform: "node",
-  minify: false,
+  minify: true,
   esbuildOptions(options) {
     options.mainFields = ["module", "main"];
     options.resolveExtensions = [".ts", ".js", ".mjs", ".cjs", ".json"];
     options.keepNames = true;
+    options.pure = ["console.log", "console.debug"];
+    options.legalComments = "none";
   },
   async onSuccess() {
     console.log("Build completed successfully!");
@@ -50,32 +54,32 @@ export default defineConfig({
       console.error("Error adding shebang:", error);
     }
 
-    // 수동으로 i18n 파일 복사 (새 구조)
+    // 수동으로 i18n 파일 복사 (최적화: 필수 언어 파일만 복사)
     try {
-      // 대상 디렉토리 생성 (수정된 경로)
-      await mkdir(join("dist", "i18n", "locales"), { recursive: true });
+      // 단일 경로에만 복사 (dist/locales)
+      await mkdir(join("dist", "locales"), { recursive: true });
 
-      // 모든 locale 파일 찾기
-      const localeFiles = await glob("src/i18n/locales/**/*.json");
+      // 소스 파일 직접 지정
+      const sourceFiles = [
+        {
+          src: join("src", "i18n", "locales", "en.json"),
+          dest: join("dist", "locales", "en.json"),
+        },
+        {
+          src: join("src", "i18n", "locales", "ko.json"),
+          dest: join("dist", "locales", "ko.json"),
+        },
+      ];
 
-      // 각 파일 복사 (수정된 대상 경로)
-      for (const file of localeFiles) {
-        // 파일을 dist/i18n/locales에 복사하는 대신 dist/i18n에 복사
-        const destPath = file.replace("src/i18n", "dist/i18n");
-
-        // 대상 디렉토리 생성
-        await mkdir(join(destPath, "..").replace(/\\/g, "/"), {
-          recursive: true,
-        });
-
-        // 파일 복사
-        await copyFile(file, destPath);
-        console.log(`Copied: ${file} -> ${destPath}`);
+      // 각 파일 복사
+      for (const { src, dest } of sourceFiles) {
+        await copyFile(src, dest);
+        console.log(`Copied: ${src} -> ${dest}`);
       }
 
-      console.log("i18n files copied successfully!");
+      console.log("Locale files copied successfully!");
     } catch (error) {
-      console.error("Error copying i18n files:", error);
+      console.error("Error copying locale files:", error);
     }
   },
 });

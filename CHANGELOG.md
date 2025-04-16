@@ -1,5 +1,23 @@
 # Change Log
 
+## 0.1.20
+
+- Package size optimization (0.1.18: 340KB → 0.1.19: 695KB → 0.1.20: 216.8KB)
+  - Achieved 36% size reduction from 0.1.19 which had increased package size
+  - Applied aggressive tree shaking (preset: 'smallest')
+  - Enabled code minification (minify: true)
+  - Disabled sourcemaps (sourcemap: false)
+  - Enabled code splitting (splitting: true)
+  - Eliminated development logs and legal comments
+  - Removed duplicate locale files
+  - Streamlined i18n file distribution to single path
+  - Optimized package file inclusion
+- Enhanced i18n module
+  - Strengthened multi-path resolution for locales
+  - Added fallback translations when locale files not found
+  - Added support for global installation environment paths
+  - Improved file loading exception handling
+
 ## 0.1.19
 
 - Enhanced Build System
