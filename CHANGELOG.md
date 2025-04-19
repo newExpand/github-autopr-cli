@@ -1,5 +1,16 @@
 # Change Log
 
+## 0.1.21
+
+- Improved Daily Commit Report Feature
+  - Fixed AI Summary Display Issue
+    - Resolved issue where generated AI summaries weren't displaying in console
+    - Enhanced standard output mechanism (`console.log` → `process.stdout.write`)
+    - Fixed complex markdown rendering issues in console environments
+  - Strengthened Commit Analysis Stability
+    - Fixed type errors in date sorting functionality
+    - Improved commit sorting logic with better code block structure
+
 ## 0.1.20
 
 - Package size optimization (0.1.18: 340KB → 0.1.19: 695KB → 0.1.20: 216.8KB)

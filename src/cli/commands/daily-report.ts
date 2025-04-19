@@ -323,9 +323,9 @@ async function getDailyCommits(
   }
 
   // 날짜순 정렬
-  commits.sort(
-    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
-  );
+  commits.sort((a, b) => {
+    return new Date(b.date).getTime() - new Date(a.date).getTime();
+  });
 
   stats.totalCommits = commits.length;
 
@@ -425,12 +425,20 @@ function printConsoleReport(
 
   log.info(t("commands.daily_report.user", { username }));
 
-  // AI 요약이 있는 경우 먼저 표시
-  if (aiSummary) {
-    log.section(t("commands.daily_report.ai_summary"));
-    console.log(aiSummary);
-    console.log(); // 빈 줄 추가
+  // AI 요약 섹션
+  log.section(t("commands.daily_report.ai_summary"));
+
+  // AI 요약이 있는 경우 출력
+  if (aiSummary && aiSummary.trim().length > 0) {
+    // 콘솔 직접 출력 대신 process.stdout.write 사용
+    process.stdout.write(aiSummary + "\n");
+  } else {
+    process.stdout.write(
+      "AI 요약을 생성하지 못했습니다. 자세한 내용은 로그를 확인하세요.\n",
+    );
   }
+
+  console.log(); // 빈 줄 추가
 
   // 주요 통계
   log.section(t("commands.daily_report.summary"));
