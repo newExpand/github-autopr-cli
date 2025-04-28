@@ -1,5 +1,15 @@
 # Change Log
 
+## 0.1.22
+
+- Enhanced AI Provider Configuration Priority
+  - Modified AI configuration loading logic in `AIFeatures` class
+  - Improved configuration priority order: project config (.autopr.json) > .env file > default settings
+  - Added comprehensive error handling in configuration loading process
+  - Enhanced debugging with detailed log messages for configuration source identification
+  - Fixed issue where environment variables would override project configuration settings
+  - Added graceful fallback to OpenRouter when configuration errors occur
+
 ## 0.1.21
 
 - Improved Daily Commit Report Feature

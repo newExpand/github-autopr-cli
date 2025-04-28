@@ -4,6 +4,7 @@ import { t } from "../i18n/index.js";
 import type { AIProvider } from "./ai-manager.js";
 import dotenv from "dotenv";
 import { OPENROUTER_CONFIG } from "../config/openrouter.js";
+import { loadProjectConfig } from "./config.js";
 
 interface PRChunk {
   files: string[];
@@ -30,26 +31,57 @@ export class AIFeatures {
    * @returns AI 설정 객체
    */
   private async loadConfig() {
-    // .env 파일에서 설정 로드
-    const provider = process.env.AI_PROVIDER as AIProvider;
-    const apiKey = process.env.AI_API_KEY;
-    const model = process.env.AI_MODEL;
+    try {
+      // 1. 프로젝트 설정 파일(.autopr.json)에서 먼저 확인
+      const projectConfig = await loadProjectConfig();
+      if (
+        projectConfig.aiConfig?.enabled &&
+        projectConfig.aiConfig.provider &&
+        projectConfig.aiConfig.options?.model
+      ) {
+        log.debug("프로젝트 설정에서 AI 설정을 로드했습니다.");
+        return {
+          provider: projectConfig.aiConfig.provider as AIProvider,
+          apiKey:
+            projectConfig.aiConfig.provider === "openrouter"
+              ? OPENROUTER_CONFIG.API_KEY
+              : process.env.AI_API_KEY || "",
+          model: projectConfig.aiConfig.options.model,
+        };
+      }
 
-    // OpenAI인 경우 .env 파일의 값 사용
-    if (provider === "openai" && apiKey && model) {
+      // 2. .env 파일에서 설정 로드
+      dotenv.config();
+      const provider = process.env.AI_PROVIDER as AIProvider;
+      const apiKey = process.env.AI_API_KEY;
+      const model = process.env.AI_MODEL;
+
+      // OpenAI인 경우 .env 파일의 값 사용
+      if (provider === "openai" && apiKey && model) {
+        log.debug(".env 파일에서 OpenAI 설정을 로드했습니다.");
+        return {
+          provider: "openai" as AIProvider,
+          apiKey,
+          model,
+        };
+      }
+
+      // 3. 모든 설정이 없는 경우 OpenRouter 기본값 사용
+      log.debug("기본 OpenRouter 설정을 사용합니다.");
       return {
-        provider: "openai" as AIProvider,
-        apiKey,
-        model,
+        provider: "openrouter" as AIProvider,
+        apiKey: OPENROUTER_CONFIG.API_KEY,
+        model: OPENROUTER_CONFIG.DEFAULT_MODEL,
+      };
+    } catch (error) {
+      log.error("AI 설정 로드 중 오류 발생:", error);
+      // 오류 발생시 OpenRouter 기본값 반환
+      return {
+        provider: "openrouter" as AIProvider,
+        apiKey: OPENROUTER_CONFIG.API_KEY,
+        model: OPENROUTER_CONFIG.DEFAULT_MODEL,
       };
     }
-
-    // OpenRouter인 경우 기본값 사용
-    return {
-      provider: "openrouter" as AIProvider,
-      apiKey: OPENROUTER_CONFIG.API_KEY,
-      model: OPENROUTER_CONFIG.DEFAULT_MODEL,
-    };
   }
 
   /**
