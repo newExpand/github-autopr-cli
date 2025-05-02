@@ -119,7 +119,7 @@
         "production_branch_set": "프로덕션 브랜치가 {{branch}}(으)로 설정되었습니다",
         "release_template_set": "릴리스 PR 템플릿이 커스터마이징되었습니다",
         "release_template_set_automatically": "릴리스 PR 템플릿이 자동으로 설정되었습니다",
-        "openrouter_selected": "OpenRouter가 선택되었습니다. 무료 Gemini Flash 2.0 모델을 사용합니다.",
+        "openrouter_selected": "OpenRouter가 선택되었습니다. 무료 AI 모델을 사용합니다.",
         "openrouter_config_skipped": "OpenRouter는 기본 설정을 사용하므로 .env 파일 설정을 건너뜁니다.",
         "hooks_setup_automatically": "PR 생성을 위한 Git 훅이 자동으로 설정되었습니다"
       },
@@ -818,8 +818,8 @@
       },
       "openrouter": {
         "gemini_flash": {
-          "name": "google/gemini-2.0-flash-exp:free",
-          "description": "빠른 응답과 높은 품질을 제공하는 무료 Gemini Flash 2.0 모델"
+          "name": "qwen/qwen3-4b:free",
+          "description": "빠른 응답과 높은 품질을 제공하는 무료 모델"
         }
       }
     }
