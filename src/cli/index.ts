@@ -31,7 +31,7 @@ async function main() {
     program
       .name("autopr")
       .description(t("common.cli.description"))
-      .version("0.1.22");
+      .version("0.1.23");
 
     // 기본 명령어들
     program
