@@ -365,12 +365,16 @@ export class AIFeatures {
         type: pattern.type,
       });
 
-      const generatedTitle = await this.processWithAI(prompt, 100, {
-        temperature: 0.3, // 더 집중적이고 일관된 제목
-        presence_penalty: 0, // 제목은 간단해야 함
-        frequency_penalty: 0.2, // 중복 단어 방지
-        systemPrompt,
-      });
+      const generatedTitle = await this.processWithAI(
+        prompt,
+        this.getMaxTokens("chunk"),
+        {
+          temperature: 0.3, // 더 집중적이고 일관된 제목
+          presence_penalty: 0, // 제목은 간단해야 함
+          frequency_penalty: 0.2, // 중복 단어 방지
+          systemPrompt,
+        },
+      );
       return `[${pattern.type.toUpperCase()}] ${generatedTitle}`;
     } catch (error) {
       log.error(t("ai.error.pr_title_failed"), error);

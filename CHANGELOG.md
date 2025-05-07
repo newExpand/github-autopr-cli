@@ -8,6 +8,10 @@
   - Adjusted model description for improved clarity
   - Maintained all free tier benefits with enhanced capabilities
   - Updated related language strings in localization files
+- Enhanced PR Title Generation
+  - Changed token limit from 100 to `getMaxTokens("chunk")`
+  - Improved title generation stability for large changes
+  - Fixed title generation failures due to token limit constraints
 
 ## 0.1.22
 
