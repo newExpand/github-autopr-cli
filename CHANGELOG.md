@@ -1,5 +1,14 @@
 # Change Log
 
+## 0.1.23
+
+- Updated OpenRouter Free AI Model
+  - Changed from Gemini Flash to Qwen 3.0 (30B) model
+  - Updated model identifier to "qwen/qwen3-30b-a3b:free"
+  - Adjusted model description for improved clarity
+  - Maintained all free tier benefits with enhanced capabilities
+  - Updated related language strings in localization files
+
 ## 0.1.22
 
 - Enhanced AI Provider Configuration Priority

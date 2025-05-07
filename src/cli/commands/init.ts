@@ -57,7 +57,7 @@ async function setupAIConfig(): Promise<{
       message: t("commands.init.prompts.select_ai_provider"),
       choices: [
         {
-          name: "OpenRouter (Free Gemini Flash 2.0)",
+          name: "OpenRouter (Free AI Model)",
           value: "openrouter",
         },
         {
