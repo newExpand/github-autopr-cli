@@ -132,13 +132,9 @@ async function performAICodeReview(params: {
       diffContent,
     });
 
-    // PR에 리뷰 코멘트 작성
-    await client.rest.issues.createComment({
-      owner,
-      repo,
-      issue_number: pull_number,
-      body: review,
-    });
+    // GitHub 봇을 통해 리뷰 코멘트 작성 (항상 GitHub 봇 사용)
+    log.info(t("commands.review.info.triggering_github_bot"));
+    log.info(t("commands.review.info.github_bot_will_comment"));
 
     log.info(
       t("commands.review_bot.success.review_created", { number: pull_number }),

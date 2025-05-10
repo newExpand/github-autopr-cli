@@ -315,6 +315,44 @@ export class AIFeatures {
     }
   }
 
+  async generatePRTitle(
+    files: string[],
+    diffContent: string,
+    pattern: { type: string },
+  ): Promise<string> {
+    try {
+      // t 함수의 현재 언어 설정대로 출력하도록 명시합니다.
+      const systemPrompt = `You are a PR title generator. Your task is to:
+1. Create concise and descriptive titles under 50 characters
+2. Focus on the main change or feature
+3. Use clear and professional language
+4. Avoid generic descriptions
+5. Follow the conventional commit format
+6. Generate output that follows the user's current language setting`;
+
+      const prompt = t("ai.prompts.pr_title.analyze", {
+        files: files.join(", "),
+        diffContent: diffContent,
+        type: pattern.type,
+      });
+
+      const generatedTitle = await this.processWithAI(
+        prompt,
+        this.getMaxTokens("chunk"),
+        {
+          temperature: 0.3, // 더 집중적이고 일관된 제목
+          presence_penalty: 0, // 제목은 간단해야 함
+          frequency_penalty: 0.2, // 중복 단어 방지
+          systemPrompt,
+        },
+      );
+      return `[${pattern.type.toUpperCase()}] ${generatedTitle}`;
+    } catch (error) {
+      log.error(t("ai.error.pr_title_failed"), error);
+      throw error;
+    }
+  }
+
   async generatePRDescription(
     files: string[],
     diffContent: string,
@@ -324,12 +362,14 @@ export class AIFeatures {
       const chunks = await this.chunkPRContent(files, diffContent);
       const descriptions: string[] = [];
 
+      // t 함수의 현재 언어 설정대로 출력하도록 명시합니다.
       const systemPrompt = `You are an expert code reviewer and technical writer. Your task is to analyze code changes and generate clear, comprehensive PR descriptions that:
 1. Focus on the actual changes and their impact
 2. Use professional and technical language
 3. Organize information logically
 4. Highlight important implementation details
-5. Consider security and performance implications`;
+5. Consider security and performance implications
+6. Generate output that follows the user's current language setting`;
 
       // 각 청크에 대한 설명 생성
       for (const chunk of chunks) {
@@ -354,12 +394,14 @@ export class AIFeatures {
 
       // 여러 청크가 있는 경우 최종 요약 생성
       if (chunks.length > 1) {
+        // t 함수의 현재 언어 설정대로 출력하도록 명시합니다.
         const summarySystemPrompt = `You are a technical documentation expert. Your task is to:
 1. Combine multiple descriptions into a cohesive summary
 2. Remove redundant information
 3. Maintain technical accuracy
 4. Ensure logical flow
-5. Preserve all important implementation details`;
+5. Preserve all important implementation details
+6. Generate output that follows the user's current language setting`;
 
         const summaryPrompt = t("ai.prompts.pr_description.summarize", {
           descriptions: descriptions.join("\n\n"),
@@ -378,42 +420,6 @@ export class AIFeatures {
       return descriptions[0];
     } catch (error) {
       log.error(t("ai.error.pr_description_failed"), error);
-      throw error;
-    }
-  }
-
-  async generatePRTitle(
-    files: string[],
-    diffContent: string,
-    pattern: { type: string },
-  ): Promise<string> {
-    try {
-      const systemPrompt = `You are a PR title generator. Your task is to:
-1. Create concise and descriptive titles under 50 characters
-2. Focus on the main change or feature
-3. Use clear and professional language
-4. Avoid generic descriptions
-5. Follow the conventional commit format`;
-
-      const prompt = t("ai.prompts.pr_title.analyze", {
-        files: files.join(", "),
-        diffContent: diffContent,
-        type: pattern.type,
-      });
-
-      const generatedTitle = await this.processWithAI(
-        prompt,
-        this.getMaxTokens("chunk"),
-        {
-          temperature: 0.3, // 더 집중적이고 일관된 제목
-          presence_penalty: 0, // 제목은 간단해야 함
-          frequency_penalty: 0.2, // 중복 단어 방지
-          systemPrompt,
-        },
-      );
-      return `[${pattern.type.toUpperCase()}] ${generatedTitle}`;
-    } catch (error) {
-      log.error(t("ai.error.pr_title_failed"), error);
       throw error;
     }
   }
