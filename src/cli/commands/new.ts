@@ -122,8 +122,8 @@ async function performAICodeReview(params: {
       }),
     );
 
-    // AI 리뷰 생성
-    const review = await ai.reviewPR({
+    // AI 리뷰 생성 - 이제 리뷰 요약과 라인별 코멘트를 반환
+    const reviewResult = await ai.reviewPR({
       prNumber: pull_number,
       title,
       description: body,
@@ -132,9 +132,55 @@ async function performAICodeReview(params: {
       diffContent,
     });
 
-    // GitHub 봇을 통해 리뷰 코멘트 작성 (항상 GitHub 봇 사용)
-    log.info(t("commands.review.info.triggering_github_bot"));
-    log.info(t("commands.review.info.github_bot_will_comment"));
+    // 전체 리뷰 요약을 PR 코멘트로 추가
+    await client.rest.issues.createComment({
+      owner,
+      repo,
+      issue_number: pull_number,
+      body: reviewResult.summary,
+    });
+
+    // 라인별 코멘트 추가
+    if (reviewResult.lineComments && reviewResult.lineComments.length > 0) {
+      log.info(
+        `${reviewResult.lineComments.length}개의 라인별 코멘트를 추가합니다...`,
+      );
+
+      // GitHub API를 통해 PR 리뷰 생성 (라인별 코멘트를 포함)
+      try {
+        // 가장 최근 커밋 SHA 가져오기
+        const commitsResponse = await client.rest.pulls.listCommits({
+          owner,
+          repo,
+          pull_number,
+        });
+
+        const latestCommit =
+          commitsResponse.data[commitsResponse.data.length - 1];
+        const commitSha = latestCommit.sha;
+
+        // PR 리뷰 코멘트 구성
+        const comments = reviewResult.lineComments.map((comment) => ({
+          path: comment.path,
+          line: comment.line,
+          body: comment.comment,
+        }));
+
+        // PR 리뷰 생성
+        await client.rest.pulls.createReview({
+          owner,
+          repo,
+          pull_number,
+          commit_id: commitSha,
+          event: "COMMENT",
+          comments: comments,
+        });
+
+        log.info(`${comments.length}개의 라인별 코멘트가 PR에 추가되었습니다.`);
+      } catch (reviewError) {
+        log.error(`라인별 코멘트 추가 중 오류가 발생했습니다: ${reviewError}`);
+      }
+    }
 
     log.info(
       t("commands.review_bot.success.review_created", { number: pull_number }),

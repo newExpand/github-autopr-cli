@@ -47,6 +47,16 @@ interface CommentResponseContext {
   }>;
 }
 
+// PR 리뷰 결과를 위한 인터페이스 추가
+export interface PRReviewResult {
+  summary: string;
+  lineComments: Array<{
+    path: string;
+    line: number;
+    comment: string;
+  }>;
+}
+
 export class AIFeatures {
   private aiManager: AIManager;
   // OpenAI 기본 토큰 제한
@@ -785,10 +795,11 @@ IMPORTANT: Generate your response in the user's current language setting. If the
   /**
    * PR을 리뷰하여 자세한 코드 리뷰 코멘트를 생성합니다.
    * @param context PR 리뷰 컨텍스트
-   * @returns 생성된 리뷰 코멘트
+   * @returns 생성된 리뷰 코멘트와 라인별 코멘트
    */
-  async reviewPR(context: PRReviewContext): Promise<string> {
+  async reviewPR(context: PRReviewContext): Promise<PRReviewResult> {
     try {
+      // 기존 리뷰 요약 생성
       const systemPrompt = `You are an expert code reviewer who specializes in identifying:
 1. Code quality issues
 2. Potential bugs
@@ -804,6 +815,7 @@ Your reviews should be:
 4. Actionable with clear suggestions
 5. Professional and respectful
 6. Written in the user's language setting (use the same language as the user's locale)
+7. Well-structured with proper Markdown formatting including tables
 
 IMPORTANT: Generate the review in the user's current language setting. If the user is using Korean locale, the review must be in Korean.`;
 
@@ -837,18 +849,36 @@ Diff:
 ${context.diffContent}
 \`\`\`
 
-Please provide a thorough code review with:
-1. A summary of the overall changes
-2. Specific comments on code quality
-3. Potential bugs or issues
-4. Suggestions for improvements
-5. Any security concerns
-6. Performance considerations
+Your review should include the following sections:
 
-Format your review with clear sections and use markdown for readability.
+1. **Overview**: A brief summary of the changes and their purpose.
+
+2. **Changed Files Summary**: A Markdown table with the following columns:
+   - File Path
+   - Type of Change (Added, Modified, Deleted)
+   - Lines Added/Removed
+   - Summary of Changes (brief, 1-2 sentences maximum)
+
+   Format like this:
+   | File Path | Type of Change | Lines Added/Removed | Summary of Changes |
+   | --- | --- | --- | --- |
+   | src/example.ts | Modified | +15/-5 | Added new validation function and updated error handling |
+
+3. **Detailed Review**:
+   - Code quality assessment
+   - Potential bugs or issues
+   - Security concerns (if any)
+   - Performance considerations
+   - Architectural feedback
+
+4. **Suggestions for Improvement**: Specific, actionable recommendations.
+
+5. **Conclusion**: Overall assessment and next steps.
+
+Format your review with clear sections and use proper Markdown formatting.
 IMPORTANT: Your response must be in the user's current language setting. If the user is using Korean locale, write the entire review in Korean.`;
 
-      const review = await this.processWithAI(
+      const reviewSummary = await this.processWithAI(
         prompt,
         this.getMaxTokens("chunk"),
         {
@@ -859,11 +889,198 @@ IMPORTANT: Your response must be in the user's current language setting. If the 
         },
       );
 
-      return review;
+      // 특정 코드 라인에 대한 코멘트 생성
+      const lineComments = await this.generateLineComments(context);
+
+      return {
+        summary: reviewSummary,
+        lineComments,
+      };
     } catch (error) {
       log.error("PR 리뷰 생성 중 오류가 발생했습니다:", error);
       throw new Error(t("ai.error.pr_review_failed"));
     }
+  }
+
+  /**
+   * PR의 특정 코드 라인에 대한 코멘트를 생성합니다.
+   * @param context PR 리뷰 컨텍스트
+   * @returns 코드 라인별 코멘트 배열
+   */
+  private async generateLineComments(
+    context: PRReviewContext,
+  ): Promise<Array<{ path: string; line: number; comment: string }>> {
+    try {
+      const systemPrompt = `You are a code reviewer who provides detailed line-by-line feedback on code changes.
+Focus on identifying:
+1. Clean code issues
+2. Potential bugs
+3. Security vulnerabilities
+4. Performance problems
+5. Typos and grammatical errors
+6. Inconsistent naming or formatting
+
+Your line comments should be:
+1. Specific and actionable
+2. Brief but informative (1-3 sentences maximum)
+3. Constructive and helpful
+4. Written in the user's language setting
+
+IMPORTANT: Generate the comments in the user's current language setting. If the user is using Korean locale, all comments must be in Korean.`;
+
+      // diff 콘텐츠로부터 변경된 라인 분석
+      const fileChanges = this.parseDiffContent(context.diffContent);
+
+      // 빈 코멘트 배열 준비
+      const lineComments: Array<{
+        path: string;
+        line: number;
+        comment: string;
+      }> = [];
+
+      // 각 파일별로 변경된 라인에 대한 코멘트 생성
+      for (const file of context.changedFiles) {
+        if (!file.content || !fileChanges[file.path]) continue;
+
+        const changedLines = fileChanges[file.path];
+        if (changedLines.length === 0) continue;
+
+        // 파일 내용 분석
+        const prompt = `Please analyze the following file and provide specific line-by-line comments for issues that need attention:
+
+File: ${file.path}
+
+Content:
+\`\`\`
+${file.content}
+\`\`\`
+
+Changed Lines (line number: content):
+${changedLines.map((line) => `${line.lineNumber}: ${line.content}`).join("\n")}
+
+For each line with issues, provide a JSON object with line number and comment:
+[
+  {"lineNumber": 123, "comment": "Brief comment about the issue"},
+  {"lineNumber": 456, "comment": "Another comment about a different issue"}
+]
+
+Only comment on lines that have actual issues like:
+- Clean code problems
+- Potential bugs
+- Security vulnerabilities
+- Performance issues
+- Typos or grammatical errors
+- Inconsistent naming or formatting
+
+Don't comment on every line - focus only on the ones that need improvement.
+If no issues are found, return an empty array: []
+
+IMPORTANT: Write all comments in the user's current language setting. If the user is using Korean locale, all comments must be in Korean.`;
+
+        try {
+          const responseFormat = { type: "json_object" as const };
+          const result = await this.processWithAI(
+            prompt,
+            this.getMaxTokens("chunk"),
+            {
+              temperature: 0.3,
+              presence_penalty: 0.1,
+              frequency_penalty: 0.1,
+              systemPrompt,
+              response_format: responseFormat,
+            },
+          );
+
+          try {
+            // JSON 응답 파싱
+            const comments = JSON.parse(result);
+            if (Array.isArray(comments)) {
+              for (const comment of comments) {
+                if (comment.lineNumber && comment.comment) {
+                  lineComments.push({
+                    path: file.path,
+                    line: comment.lineNumber,
+                    comment: comment.comment,
+                  });
+                }
+              }
+            }
+          } catch (parseError) {
+            log.debug(
+              `파일 ${file.path}의 라인 코멘트 파싱 실패: ${parseError}`,
+            );
+          }
+        } catch (fileError) {
+          log.debug(
+            `파일 ${file.path}에 대한 라인 코멘트 생성 실패: ${fileError}`,
+          );
+        }
+      }
+
+      return lineComments;
+    } catch (error) {
+      log.error("라인 코멘트 생성 중 오류가 발생했습니다:", error);
+      return [];
+    }
+  }
+
+  /**
+   * diff 콘텐츠를 파싱하여 각 파일의 변경된 라인 정보를 추출합니다.
+   * @param diffContent diff 콘텐츠 문자열
+   * @returns 파일별 변경된 라인 정보
+   */
+  private parseDiffContent(
+    diffContent: string,
+  ): Record<string, Array<{ lineNumber: number; content: string }>> {
+    const result: Record<
+      string,
+      Array<{ lineNumber: number; content: string }>
+    > = {};
+
+    // diff 콘텐츠가 없으면 빈 객체 반환
+    if (!diffContent) return result;
+
+    let currentFile = "";
+    let lineNumber = 0;
+
+    // diff 콘텐츠를 라인별로 분석
+    const lines = diffContent.split("\n");
+    for (const line of lines) {
+      // 새로운 파일 diff 시작
+      if (line.startsWith("diff --git")) {
+        const match = line.match(/diff --git a\/(.+) b\/(.+)/);
+        if (match) {
+          currentFile = match[2]; // b/의 파일명 사용
+          result[currentFile] = [];
+          lineNumber = 0;
+        }
+      }
+      // 청크 헤더 (@@ -1,7 +1,9 @@ 형식)
+      else if (line.startsWith("@@")) {
+        const match = line.match(/@@ -\d+(?:,\d+)? \+(\d+)(?:,\d+)? @@/);
+        if (match) {
+          lineNumber = parseInt(match[1]) - 1; // 다음 라인부터 시작하므로 1을 빼줌
+        }
+      }
+      // 추가된 라인 (+ 로 시작)
+      else if (line.startsWith("+") && !line.startsWith("+++")) {
+        lineNumber++;
+        result[currentFile]?.push({
+          lineNumber,
+          content: line.substring(1), // '+' 제거
+        });
+      }
+      // 삭제된 라인 (- 로 시작)
+      else if (line.startsWith("-") && !line.startsWith("---")) {
+        // 삭제된 라인은 새 파일에 없으므로 무시
+      }
+      // 변경 없는 라인 (공백으로 시작)
+      else if (line.startsWith(" ")) {
+        lineNumber++;
+      }
+    }
+
+    return result;
   }
 
   /**

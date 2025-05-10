@@ -1,7 +1,7 @@
 import { Octokit } from "@octokit/rest";
 import { log } from "../../utils/logger.js";
 import { t } from "../../i18n/index.js";
-import { AIFeatures } from "../../core/ai-features.js";
+import { AIFeatures, PRReviewResult } from "../../core/ai-features.js";
 
 interface PREvent {
   action: string;
@@ -117,7 +117,8 @@ async function handlePREvent(event: PREvent, octokit: Octokit): Promise<void> {
     const ai = new AIFeatures();
     await ai.initialize();
 
-    const review = await ai.reviewPR({
+    // 이제 reviewPR은 요약과 라인별 코멘트를 반환
+    const reviewResult = await ai.reviewPR({
       prNumber,
       title: pull_request.title,
       description: pull_request.body || "",
@@ -126,13 +127,54 @@ async function handlePREvent(event: PREvent, octokit: Octokit): Promise<void> {
       diffContent,
     });
 
-    // PR에 리뷰 코멘트 작성
+    // PR에 리뷰 요약 코멘트 작성
     await octokit.issues.createComment({
       owner,
       repo,
       issue_number: prNumber,
-      body: review,
+      body: reviewResult.summary,
     });
+
+    // 라인별 코멘트 추가
+    if (reviewResult.lineComments && reviewResult.lineComments.length > 0) {
+      log.info(
+        `${reviewResult.lineComments.length}개의 라인별 코멘트를 추가합니다...`,
+      );
+
+      try {
+        // 가장 최근 커밋 SHA 가져오기
+        const commitsResponse = await octokit.pulls.listCommits({
+          owner,
+          repo,
+          pull_number: prNumber,
+        });
+
+        const latestCommit =
+          commitsResponse.data[commitsResponse.data.length - 1];
+        const commitSha = latestCommit.sha;
+
+        // PR 리뷰 코멘트 구성
+        const comments = reviewResult.lineComments.map((comment) => ({
+          path: comment.path,
+          line: comment.line,
+          body: comment.comment,
+        }));
+
+        // PR 리뷰 생성
+        await octokit.pulls.createReview({
+          owner,
+          repo,
+          pull_number: prNumber,
+          commit_id: commitSha,
+          event: "COMMENT",
+          comments: comments,
+        });
+
+        log.info(`${comments.length}개의 라인별 코멘트가 PR에 추가되었습니다.`);
+      } catch (reviewError) {
+        log.error(`라인별 코멘트 추가 중 오류가 발생했습니다: ${reviewError}`);
+      }
+    }
 
     log.info(
       t("commands.review_bot.success.review_created", { number: prNumber }),
