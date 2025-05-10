@@ -107,13 +107,15 @@
         "development_branch": "Enter your development branch name (e.g., dev, develop, staging)",
         "customize_release_pr": "Would you like to customize the Release PR template?",
         "release_pr_title": "Enter Release PR title template (use {development} and {production} as placeholders)",
-        "release_pr_body": "Enter Release PR body template (use {development} and {production} as placeholders)"
+        "release_pr_body": "Enter Release PR body template (use {development} and {production} as placeholders)",
+        "setup_github_action": "Would you like to set up GitHub Actions for PR review bot?"
       },
       "error": {
         "git_hooks": "Error occurred while setting up Git hooks: {{error}}",
         "invalid_token": "Invalid GitHub token",
         "model_fetch_failed": "Failed to fetch models. Using default models.",
-        "ai_config_save_failed": "Failed to save AI configuration: {{error}}"
+        "ai_config_save_failed": "Failed to save AI configuration: {{error}}",
+        "github_actions": "Error occurred while setting up GitHub Actions: {{error}}"
       },
       "info": {
         "creating_env": "Creating new .env file",
@@ -125,7 +127,8 @@
         "release_template_set_automatically": "Release PR template automatically set",
         "openrouter_selected": "OpenRouter selected. Using free AI model.",
         "openrouter_config_skipped": "Skipping .env file configuration for OpenRouter as it uses default settings.",
-        "hooks_setup_automatically": "Git hooks automatically set up for PR creation"
+        "hooks_setup_automatically": "Git hooks automatically set up for PR creation",
+        "github_actions_setup": "GitHub Actions workflow for PR review bot has been set up"
       }
     },
     "new": {
@@ -159,7 +162,8 @@
         "reviewers": "Enter reviewers (press enter to skip)",
         "use_ai_description": "Use AI-generated description?",
         "edit_ai_description": "Would you like to edit the AI-generated description?",
-        "create_as_draft": "Create as draft PR?"
+        "create_as_draft": "Create as draft PR?",
+        "perform_ai_review": "Would you like to automatically perform AI code review?"
       },
       "success": {
         "pr_updated": "PR #{{number}} has been successfully updated.",
@@ -727,6 +731,33 @@
         "ai_generation_failed": "Error occurred while generating AI summary.",
         "ai_fallback": "Unable to generate AI summary. Please check your settings and try again."
       }
+    },
+    "review_bot": {
+      "description": "GitHub Actions PR review bot",
+      "options": {
+        "event": "Event type (pull_request, issue_comment, etc.)",
+        "payload": "Event payload as JSON string"
+      },
+      "info": {
+        "processing_pr": "Processing PR #{{number}}",
+        "processing_comment": "Processing comment #{{id}}"
+      },
+      "success": {
+        "review_created": "Review created for PR #{{number}}",
+        "comment_response_created": "Response created for comment #{{id}}"
+      },
+      "error": {
+        "no_github_token": "GITHUB_TOKEN not found in environment variables",
+        "invalid_payload": "Invalid payload JSON",
+        "event_file_read": "Failed to read event file",
+        "missing_event_or_payload": "Missing event type or payload",
+        "execution_failed": "PR review bot execution failed",
+        "review_failed": "Failed to create PR review",
+        "comment_response_failed": "Failed to create comment response"
+      },
+      "warning": {
+        "unsupported_event": "Unsupported event type: {{event}}"
+      }
     }
   },
   "ai": {
@@ -744,7 +775,9 @@
       "commit_message_failed": "Failed to improve commit message",
       "daily_report_failed": "Failed to generate daily report summary",
       "invalid_key": "Invalid API key",
-      "invalid_provider": "Unsupported AI provider"
+      "invalid_provider": "Unsupported AI provider",
+      "pr_review_failed": "Failed to generate PR review",
+      "comment_response_failed": "Failed to generate comment response"
     },
     "format": {
       "file": {

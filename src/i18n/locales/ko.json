@@ -109,7 +109,8 @@
         "setup_ai": "AI 기능을 설정하시겠습니까?",
         "select_ai_provider": "AI 제공자를 선택하세요:",
         "enter_api_key": "{{provider}} API 키를 입력하세요:",
-        "select_model": "사용할 모델을 선택하세요:"
+        "select_model": "사용할 모델을 선택하세요:",
+        "setup_github_action": "PR 리뷰 봇을 위한 GitHub Actions를 설정하시겠습니까?"
       },
       "info": {
         "creating_env": "새로운 .env 파일을 생성합니다",
@@ -121,13 +122,15 @@
         "release_template_set_automatically": "릴리스 PR 템플릿이 자동으로 설정되었습니다",
         "openrouter_selected": "OpenRouter가 선택되었습니다. 무료 AI 모델을 사용합니다.",
         "openrouter_config_skipped": "OpenRouter는 기본 설정을 사용하므로 .env 파일 설정을 건너뜁니다.",
-        "hooks_setup_automatically": "PR 생성을 위한 Git 훅이 자동으로 설정되었습니다"
+        "hooks_setup_automatically": "PR 생성을 위한 Git 훅이 자동으로 설정되었습니다",
+        "github_actions_setup": "PR 리뷰 봇을 위한 GitHub Actions 워크플로우가 설정되었습니다"
       },
       "error": {
         "git_hooks": "Git 훅 설정 중 오류가 발생했습니다: {{error}}",
         "invalid_token": "GitHub 토큰이 유효하지 않습니다",
         "model_fetch_failed": "모델 목록을 가져오는데 실패했습니다. 기본 모델을 사용합니다.",
-        "ai_config_save_failed": "AI 설정 저장에 실패했습니다: {{error}}"
+        "ai_config_save_failed": "AI 설정 저장에 실패했습니다: {{error}}",
+        "github_actions": "GitHub Actions 설정 중 오류가 발생했습니다: {{error}}"
       }
     },
     "new": {
@@ -146,7 +149,8 @@
         "reviewers": "리뷰어를 입력하세요 (건너뛰려면 엔터)",
         "use_ai_description": "AI가 생성한 설명을 사용하시겠습니까?",
         "edit_ai_description": "AI가 생성한 설명을 수정하시겠습니까?",
-        "create_as_draft": "Draft PR로 생성하시겠습니까?"
+        "create_as_draft": "Draft PR로 생성하시겠습니까?",
+        "perform_ai_review": "AI 코드 리뷰를 자동으로 수행하시겠습니까?"
       },
       "info": {
         "pr_exists": "PR #{{number}}이(가) 이미 존재합니다.",
@@ -726,6 +730,33 @@
         "github_user_failed": "GitHub API에서 사용자 정보를 가져오지 못했습니다. Git 사용자 정보를 사용합니다.",
         "using_git_user": "Git 사용자 '{{username}}'를 사용하여 커밋 조회 중"
       }
+    },
+    "review_bot": {
+      "description": "GitHub Actions PR 리뷰 봇",
+      "options": {
+        "event": "이벤트 유형 (pull_request, issue_comment 등)",
+        "payload": "이벤트 페이로드 (JSON 문자열)"
+      },
+      "info": {
+        "processing_pr": "PR #{{number}} 처리 중",
+        "processing_comment": "코멘트 #{{id}} 처리 중"
+      },
+      "success": {
+        "review_created": "PR #{{number}}에 대한 리뷰가 생성되었습니다",
+        "comment_response_created": "코멘트 #{{id}}에 대한 응답이 생성되었습니다"
+      },
+      "error": {
+        "no_github_token": "환경 변수에서 GITHUB_TOKEN을 찾을 수 없습니다",
+        "invalid_payload": "잘못된 페이로드 JSON",
+        "event_file_read": "이벤트 파일을 읽는데 실패했습니다",
+        "missing_event_or_payload": "이벤트 유형 또는 페이로드가 없습니다",
+        "execution_failed": "PR 리뷰 봇 실행에 실패했습니다",
+        "review_failed": "PR 리뷰 생성에 실패했습니다",
+        "comment_response_failed": "코멘트 응답 생성에 실패했습니다"
+      },
+      "warning": {
+        "unsupported_event": "지원하지 않는 이벤트 유형: {{event}}"
+      }
     }
   },
   "ai": {
@@ -743,7 +774,9 @@
       "conflict_resolution_failed": "충돌 해결 제안 생성 중 오류가 발생했습니다",
       "commit_message_failed": "커밋 메시지 개선 중 오류가 발생했습니다",
       "pr_title_failed": "PR 제목 생성 중 오류가 발생했습니다",
-      "daily_report_failed": "일일 보고서 요약 생성 중 오류가 발생했습니다"
+      "daily_report_failed": "일일 보고서 요약 생성 중 오류가 발생했습니다",
+      "pr_review_failed": "PR 리뷰 생성 중 오류가 발생했습니다",
+      "comment_response_failed": "코멘트 응답 생성 중 오류가 발생했습니다"
     },
     "format": {
       "file": {

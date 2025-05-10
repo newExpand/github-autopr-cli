@@ -17,6 +17,7 @@ import { log } from "../utils/logger.js";
 import { createReviewerGroupCommand } from "./commands/reviewer-group.js";
 import { createOpenRouterCommand } from "./commands/openrouter.js";
 import { createDailyReportCommand } from "./commands/daily-report.js";
+import { reviewBotCommand } from "./commands/review-bot.js";
 
 // 개발 모드 확인 (NODE_ENV가 development인 경우에만 true)
 const isDevelopment = process.env.NODE_ENV === "development";
@@ -97,6 +98,17 @@ async function main() {
       `,
       )
       .action(commitCommand);
+
+    // GitHub Actions PR 리뷰 봇 명령어 추가
+    program
+      .command("review-bot")
+      .description(t("commands.review_bot.description"))
+      .option("-e, --event <event>", t("commands.review_bot.options.event"))
+      .option(
+        "-p, --payload <payload>",
+        t("commands.review_bot.options.payload"),
+      )
+      .action(reviewBotCommand);
 
     // 일일 커밋 보고서 명령어 추가
     program.addCommand(createDailyReportCommand());
