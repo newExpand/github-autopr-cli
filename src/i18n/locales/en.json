@@ -819,7 +819,7 @@
       },
       "openrouter": {
         "gemini_flash": {
-          "name": "qwen/qwen3-30b-a3b:free",
+          "name": "google/gemini-2.0-flash-exp:free",
           "description": "Free model with fast response and high quality"
         }
       }

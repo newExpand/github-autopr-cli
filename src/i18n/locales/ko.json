@@ -818,7 +818,7 @@
       },
       "openrouter": {
         "gemini_flash": {
-          "name": "qwen/qwen3-30b-a3b:free",
+          "name": "google/gemini-2.0-flash-exp:free",
           "description": "빠른 응답과 높은 품질을 제공하는 무료 AI 모델"
         }
       }

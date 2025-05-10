@@ -5,6 +5,7 @@ import type { AIProvider } from "./ai-manager.js";
 import dotenv from "dotenv";
 import { OPENROUTER_CONFIG } from "../config/openrouter.js";
 import { loadProjectConfig } from "./config.js";
+import OpenAI from "openai";
 
 interface PRChunk {
   files: string[];
@@ -17,8 +18,8 @@ export class AIFeatures {
   private readonly OPENAI_MAX_CHUNK_TOKENS = 1500;
   private readonly OPENAI_MAX_SUMMARY_TOKENS = 1000;
   // OpenRouter 토큰 제한 (Gemini Flash 2.0 기준)
-  private readonly OPENROUTER_MAX_CHUNK_TOKENS = 4000;
-  private readonly OPENROUTER_MAX_SUMMARY_TOKENS = 2000;
+  private readonly OPENROUTER_MAX_CHUNK_TOKENS = 800000; // 1,048,576 입력 토큰 중 대부분 활용
+  private readonly OPENROUTER_MAX_SUMMARY_TOKENS = 8192; // 최대 출력 토큰 전체 활용
   private initialized = false;
 
   constructor() {
@@ -214,7 +215,7 @@ export class AIFeatures {
   }
 
   private async processWithAI(
-    prompt: string,
+    prompt: string | Array<OpenAI.ChatCompletionContentPart>,
     maxTokens: number,
     options: {
       temperature?: number;
@@ -242,19 +243,19 @@ export class AIFeatures {
     try {
       const openai = this.aiManager.getOpenAI();
 
-      const messages = [];
+      const messages: OpenAI.ChatCompletionMessageParam[] = [];
 
       // 시스템 프롬프트 추가 (있는 경우)
       if (options.systemPrompt) {
         messages.push({
-          role: "system" as const,
+          role: "system",
           content: options.systemPrompt,
         });
       }
 
       // 사용자 프롬프트 추가
       messages.push({
-        role: "user" as const,
+        role: "user",
         content: prompt,
       });
 
@@ -617,6 +618,55 @@ ${
       });
     } catch (error) {
       log.error(t("ai.error.daily_report_failed"), error);
+      throw error;
+    }
+  }
+
+  /**
+   * 이미지와 텍스트를 함께 처리하는 멀티모달 질문을 수행합니다.
+   * @param text 질문 텍스트
+   * @param images 이미지 URL 배열
+   * @returns AI 응답
+   */
+  async processMultiModal(
+    text: string,
+    images: string[],
+    options: {
+      temperature?: number;
+      maxTokens?: number;
+    } = {},
+  ): Promise<string> {
+    try {
+      if (!this.isEnabled()) {
+        throw new Error(t("ai.error.not_initialized"));
+      }
+
+      const content: OpenAI.ChatCompletionContentPart[] = [
+        {
+          type: "text",
+          text: text,
+        },
+      ];
+
+      // 이미지 추가
+      for (const imageUrl of images) {
+        content.push({
+          type: "image_url",
+          image_url: {
+            url: imageUrl,
+          },
+        });
+      }
+
+      return await this.processWithAI(
+        content,
+        options.maxTokens || this.getMaxTokens("chunk"),
+        {
+          temperature: options.temperature || 0.7,
+        },
+      );
+    } catch (error) {
+      log.error(t("ai.error.multimodal_processing_failed"), error);
       throw error;
     }
   }
