@@ -732,7 +732,10 @@ Your reviews should be:
 2. Specific with line references
 3. Balanced (mention positives and areas for improvement)
 4. Actionable with clear suggestions
-5. Professional and respectful`;
+5. Professional and respectful
+6. Written in the user's language setting (use the same language as the user's locale)
+
+IMPORTANT: Generate the review in the user's current language setting. If the user is using Korean locale, the review must be in Korean.`;
 
       // 파일 내용들을 포맷팅
       const filesContent = context.changedFiles
@@ -746,7 +749,7 @@ ${file.content}
         .filter(Boolean)
         .join("\n\n");
 
-      const prompt = `Please review the following PR:
+      const prompt = `Please review the following PR and write the response in the user's current language setting (if Korean locale is used, respond in Korean):
 
 PR #${context.prNumber}: ${context.title}
 Author: ${context.author}
@@ -772,7 +775,8 @@ Please provide a thorough code review with:
 5. Any security concerns
 6. Performance considerations
 
-Format your review with clear sections and use markdown for readability.`;
+Format your review with clear sections and use markdown for readability.
+IMPORTANT: Your response must be in the user's current language setting. If the user is using Korean locale, write the entire review in Korean.`;
 
       const review = await this.processWithAI(
         prompt,
@@ -807,14 +811,17 @@ Format your review with clear sections and use markdown for readability.`;
 3. Provides technical explanations when needed
 4. Suggests solutions to problems
 5. Keeps responses professional and constructive
-6. Mentions relevant users when appropriate`;
+6. Mentions relevant users when appropriate
+7. Always responds in the user's current language setting
+
+IMPORTANT: Generate the response in the user's current language setting. If the user is using Korean locale, the response must be in Korean.`;
 
       // 대화 히스토리 포맷팅
       const conversationHistory = context.conversationHistory
         .map((msg) => `${msg.author} (${msg.timestamp}): ${msg.content}`)
         .join("\n\n");
 
-      const prompt = `Please respond to the following comment on PR #${context.prNumber}:
+      const prompt = `Please respond to the following comment on PR #${context.prNumber} and write the response in the user's current language setting (if Korean locale is used, respond in Korean):
 
 Comment by ${context.author}:
 ${context.commentBody}
@@ -826,7 +833,8 @@ ${conversationHistory}
 
 ${context.replyTo ? `You should mention @${context.replyTo} in your response.` : ""}
 
-Please provide a helpful, technical, and constructive response. Be concise but thorough.`;
+Please provide a helpful, technical, and constructive response. Be concise but thorough.
+IMPORTANT: Your response must be in the user's current language setting. If the user is using Korean locale, write the entire response in Korean.`;
 
       const response = await this.processWithAI(
         prompt,
