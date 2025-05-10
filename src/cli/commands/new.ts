@@ -67,6 +67,7 @@ async function performAICodeReview(params: {
   title: string;
   body: string;
   author: string;
+  skipIfBotExists?: boolean; // 봇 리뷰가 존재하면 건너뛰기 옵션
 }): Promise<void> {
   const {
     owner,
@@ -78,13 +79,49 @@ async function performAICodeReview(params: {
     title,
     body,
     author,
+    skipIfBotExists = false, // 기본값은 false
   } = params;
 
   try {
+    // GitHub API 클라이언트 생성
+    const client = await getOctokit();
+
+    // 이미 코드 리뷰가 존재하는지 확인
+    if (skipIfBotExists) {
+      try {
+        // PR의 모든 코멘트 가져오기
+        const comments = await client.rest.issues.listComments({
+          owner,
+          repo,
+          issue_number: pull_number,
+        });
+
+        // 봇 사용자 계정명 가져오기 (현재 인증된 사용자)
+        const { data: currentUser } =
+          await client.rest.users.getAuthenticated();
+        const botUsername = currentUser.login;
+
+        // GitHub Actions Bot 또는 현재 인증된 사용자에 의한 코멘트 찾기
+        const botComments = comments.data.filter(
+          (comment) =>
+            comment.user?.login === botUsername ||
+            comment.user?.login === "github-actions[bot]",
+        );
+
+        if (botComments.length > 0) {
+          log.info(
+            "이미 봇에 의한 AI 리뷰가 존재합니다. 중복 리뷰를 방지하기 위해 건너뜁니다.",
+          );
+          return;
+        }
+      } catch (error) {
+        log.debug("PR 코멘트 가져오기 실패, 리뷰 계속 진행:", error);
+      }
+    }
+
     log.info(t("commands.review.info.ai_review_start"));
 
     // GitHub API로 PR 파일 정보 가져오기
-    const client = await getOctokit();
     const filesResponse = await client.rest.pulls.listFiles({
       owner,
       repo,
@@ -485,6 +522,7 @@ ${answers.useAIDescription ? generatedDescription : answers.body || ""}
               title: answers.title,
               body: newBody,
               author: (await getGitUserName()) || "unknown",
+              skipIfBotExists: true,
             });
           }
 
@@ -540,6 +578,7 @@ ${answers.useAIDescription ? generatedDescription : answers.body || ""}
             ? generatedDescription
             : answers.body || "",
           author: (await getGitUserName()) || "unknown",
+          skipIfBotExists: true,
         });
       }
     } catch (error: any) {

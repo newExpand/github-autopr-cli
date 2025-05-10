@@ -904,6 +904,92 @@ IMPORTANT: Your response must be in the user's current language setting. If the 
   }
 
   /**
+   * diff 콘텐츠를 파싱하여 각 파일의 변경된 라인 정보를 추출합니다.
+   * @param diffContent diff 콘텐츠 문자열
+   * @returns 파일별 변경된 라인 정보
+   */
+  private parseDiffContent(
+    diffContent: string,
+  ): Record<
+    string,
+    Array<{ lineNumber: number; position: number; content: string }>
+  > {
+    const result: Record<
+      string,
+      Array<{ lineNumber: number; position: number; content: string }>
+    > = {};
+
+    // diff 콘텐츠가 없으면 빈 객체 반환
+    if (!diffContent) return result;
+
+    let currentFile = "";
+    let position = 0; // diff 파일 내에서의 위치 추적
+    let lineNumber = 0;
+    let inHunk = false; // 현재 diff 청크 내부에 있는지 여부
+
+    try {
+      // diff 콘텐츠를 라인별로 분석
+      const lines = diffContent.split("\n");
+
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+
+        // 새로운 파일 diff 시작
+        if (line.startsWith("diff --git")) {
+          const match = line.match(/diff --git a\/(.+) b\/(.+)/);
+          if (match) {
+            currentFile = match[2]; // b/의 파일명 사용
+            if (!result[currentFile]) {
+              result[currentFile] = [];
+            }
+            inHunk = false; // 아직의 새로운 챵크 시작 전
+          }
+          continue;
+        }
+
+        // 청크 헤더 (@@ -1,7 +1,9 @@ 형식)
+        if (line.startsWith("@@")) {
+          const match = line.match(/@@ -\d+(?:,\d+)? \+(\d+)(?:,\d+)? @@/);
+          if (match) {
+            lineNumber = parseInt(match[1]) - 1; // 다음 라인부터 시작하므로 1을 빼줌
+            inHunk = true; // 새로운 청크 시작
+            position = i; // 현재 라인 인덱스를 position으로 사용
+          }
+          continue;
+        }
+
+        if (!inHunk) continue; // 청크 내부가 아니면 무시
+
+        // 추가된 라인 (+ 로 시작)
+        if (line.startsWith("+") && !line.startsWith("+++")) {
+          lineNumber++;
+          position = i; // 현재 라인의 인덱스(라인 번호가 아닌 diff에서의 위치)
+
+          if (currentFile && position > 0) {
+            result[currentFile].push({
+              lineNumber,
+              position, // diff에서의 라인 위치
+              content: line.substring(1), // '+' 제거
+            });
+          }
+        }
+        // 삭제된 라인 (- 로 시작)
+        else if (line.startsWith("-") && !line.startsWith("---")) {
+          // 삭제된 라인은 새 파일에 없으므로 무시
+        }
+        // 변경 없는 라인 (공백으로 시작)
+        else if (line.startsWith(" ")) {
+          lineNumber++;
+        }
+      }
+    } catch (error) {
+      log.error(`diff 파싱 중 오류 발생: ${error}`);
+    }
+
+    return result;
+  }
+
+  /**
    * PR의 특정 코드 라인에 대한 코멘트를 생성합니다.
    * @param context PR 리뷰 컨텍스트
    * @returns 코드 라인별 코멘트 배열
@@ -946,10 +1032,24 @@ Return only a raw JSON array.`;
 
       // 각 파일별로 변경된 라인에 대한 코멘트 생성
       for (const file of context.changedFiles) {
-        if (!file.content || !fileChanges[file.path]) continue;
+        if (!file.content) {
+          log.debug(`파일 ${file.path}의 내용이 없습니다.`);
+          continue;
+        }
 
-        const changedLines = fileChanges[file.path];
+        if (!fileChanges[file.path] || fileChanges[file.path].length === 0) {
+          log.debug(`파일 ${file.path}의 변경된 라인 정보를 찾을 수 없습니다.`);
+          continue;
+        }
+
+        const changedLines = fileChanges[file.path] || [];
         if (changedLines.length === 0) continue;
+
+        // 라인 정보 로깅 (디버깅용)
+        log.debug(
+          `파일 ${file.path}에서 ${changedLines.length}개의 변경된 라인을 찾았습니다.`,
+        );
+        log.debug(`첫 번째 변경 라인: ${JSON.stringify(changedLines[0])}`);
 
         // 파일 내용 분석
         const prompt = `Analyze the following file and generate comments ONLY for lines that have issues:
@@ -1026,7 +1126,7 @@ IMPORTANT: Return ONLY a valid JSON array without any markdown formatting or exp
                     (l) => l.lineNumber === comment.lineNumber,
                   );
 
-                  if (lineInfo) {
+                  if (lineInfo && lineInfo.position > 0) {
                     lineComments.push({
                       path: file.path,
                       line: comment.lineNumber,
@@ -1035,7 +1135,7 @@ IMPORTANT: Return ONLY a valid JSON array without any markdown formatting or exp
                     });
                   } else {
                     log.debug(
-                      `파일 ${file.path}의 라인 ${comment.lineNumber}에 대한 position 정보를 찾을 수 없습니다.`,
+                      `파일 ${file.path}의 라인 ${comment.lineNumber}에 대한 유효한 position 정보를 찾을 수 없습니다.`,
                     );
                   }
                 }
@@ -1048,10 +1148,16 @@ IMPORTANT: Return ONLY a valid JSON array without any markdown formatting or exp
             log.debug(`원본 응답: ${result.substring(0, 100)}...`); // 문제 디버깅을 위한 로그 추가
           }
         } catch (fileError) {
-          log.debug(
+          log.error(
             `파일 ${file.path}에 대한 라인 코멘트 생성 실패: ${fileError}`,
           );
         }
+      }
+
+      // 최종 로깅
+      log.debug(`총 ${lineComments.length}개의 라인 코멘트가 생성되었습니다.`);
+      if (lineComments.length > 0) {
+        log.debug(`첫 번째 코멘트 예시: ${JSON.stringify(lineComments[0])}`);
       }
 
       return lineComments;
@@ -1059,72 +1165,6 @@ IMPORTANT: Return ONLY a valid JSON array without any markdown formatting or exp
       log.error("라인 코멘트 생성 중 오류가 발생했습니다:", error);
       return [];
     }
-  }
-
-  /**
-   * diff 콘텐츠를 파싱하여 각 파일의 변경된 라인 정보를 추출합니다.
-   * @param diffContent diff 콘텐츠 문자열
-   * @returns 파일별 변경된 라인 정보
-   */
-  private parseDiffContent(
-    diffContent: string,
-  ): Record<
-    string,
-    Array<{ lineNumber: number; position: number; content: string }>
-  > {
-    const result: Record<
-      string,
-      Array<{ lineNumber: number; position: number; content: string }>
-    > = {};
-
-    // diff 콘텐츠가 없으면 빈 객체 반환
-    if (!diffContent) return result;
-
-    let currentFile = "";
-    let lineNumber = 0;
-    let position = 0; // diff 파일 내에서의 위치 추적
-
-    // diff 콘텐츠를 라인별로 분석
-    const lines = diffContent.split("\n");
-    for (const line of lines) {
-      position++; // 모든 라인에 대해 position 증가
-
-      // 새로운 파일 diff 시작
-      if (line.startsWith("diff --git")) {
-        const match = line.match(/diff --git a\/(.+) b\/(.+)/);
-        if (match) {
-          currentFile = match[2]; // b/의 파일명 사용
-          result[currentFile] = [];
-          lineNumber = 0;
-        }
-      }
-      // 청크 헤더 (@@ -1,7 +1,9 @@ 형식)
-      else if (line.startsWith("@@")) {
-        const match = line.match(/@@ -\d+(?:,\d+)? \+(\d+)(?:,\d+)? @@/);
-        if (match) {
-          lineNumber = parseInt(match[1]) - 1; // 다음 라인부터 시작하므로 1을 빼줌
-        }
-      }
-      // 추가된 라인 (+ 로 시작)
-      else if (line.startsWith("+") && !line.startsWith("+++")) {
-        lineNumber++;
-        result[currentFile]?.push({
-          lineNumber,
-          position, // 현재 diff에서의 위치
-          content: line.substring(1), // '+' 제거
-        });
-      }
-      // 삭제된 라인 (- 로 시작)
-      else if (line.startsWith("-") && !line.startsWith("---")) {
-        // 삭제된 라인은 새 파일에 없으므로 무시
-      }
-      // 변경 없는 라인 (공백으로 시작)
-      else if (line.startsWith(" ")) {
-        lineNumber++;
-      }
-    }
-
-    return result;
   }
 
   /**
