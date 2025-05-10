@@ -38,7 +38,7 @@ interface CommentEvent {
     };
     created_at: string;
   };
-  pull_request: {
+  pull_request?: {
     number: number;
     title: string;
     body: string;
@@ -48,6 +48,12 @@ interface CommentEvent {
       login: string;
     };
     name: string;
+  };
+  issue?: {
+    number: number;
+    title: string;
+    body?: string;
+    pull_request?: any; // PR 관련 이슈인지 확인하기 위한 필드
   };
 }
 
@@ -225,6 +231,13 @@ async function handleCommentEvent(
 ): Promise<void> {
   try {
     const { comment, pull_request, repository } = event;
+
+    // PR 번호가 없는 경우 (일반 이슈 댓글인 경우) 처리하지 않음
+    if (!pull_request) {
+      log.debug("PR 관련 댓글이 아니므로 무시합니다.");
+      return;
+    }
+
     const prNumber = pull_request.number;
     const owner = repository.owner.login;
     const repo = repository.name;
@@ -471,7 +484,24 @@ export async function reviewBotCommand(options: {
         await handlePREvent(payload as PREvent, octokit);
         break;
       case "issue_comment":
-        await handleCommentEvent(payload as CommentEvent, octokit);
+        // issue_comment 이벤트가 PR 관련 댓글인지 확인
+        if (payload.issue && payload.issue.pull_request) {
+          // PR 관련 댓글인 경우에만 처리
+          // CommentEvent 인터페이스와 맞지 않을 수 있으므로 필요한 필드 매핑
+          const commentEvent: CommentEvent = {
+            action: payload.action,
+            comment: payload.comment,
+            pull_request: {
+              number: payload.issue.number,
+              title: payload.issue.title,
+              body: payload.issue.body || "",
+            },
+            repository: payload.repository,
+          };
+          await handleCommentEvent(commentEvent, octokit);
+        } else {
+          log.debug("PR 관련 댓글이 아니므로 무시합니다.");
+        }
         break;
       case "pull_request_review_comment":
         await handlePRReviewCommentEvent(
