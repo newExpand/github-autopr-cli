@@ -328,7 +328,10 @@ export class AIFeatures {
 3. Use clear and professional language
 4. Avoid generic descriptions
 5. Follow the conventional commit format
-6. Generate output that follows the user's current language setting`;
+6. Generate output that follows the user's current language setting
+7. Respond in the same language as the user's locale
+
+IMPORTANT: Generate the PR title in the user's current language setting. If the user is using Korean locale, the title must be written entirely in Korean.`;
 
       const prompt = t("ai.prompts.pr_title.analyze", {
         files: files.join(", "),
@@ -336,8 +339,11 @@ export class AIFeatures {
         type: pattern.type,
       });
 
+      // 프롬프트에 언어 설정 강조 추가
+      const enhancedPrompt = `${prompt}\n\nIMPORTANT: Your response must be in the user's current language setting. If the user is using Korean locale, write the PR title in Korean.`;
+
       const generatedTitle = await this.processWithAI(
-        prompt,
+        enhancedPrompt,
         this.getMaxTokens("chunk"),
         {
           temperature: 0.3, // 더 집중적이고 일관된 제목
@@ -448,7 +454,11 @@ IMPORTANT: Generate the PR description summary in the user's current language se
 5. Verify proper error handling
 6. Suggest specific improvements
 7. Consider test coverage
-8. Look for architectural issues`;
+8. Look for architectural issues
+9. Generate output that follows the user's current language setting
+10. Respond in the same language as the user's locale
+
+IMPORTANT: Generate the code review in the user's current language setting. If the user is using Korean locale, the review must be written entirely in Korean.`;
 
     const filesStr = files
       .map((file) => {
@@ -462,14 +472,21 @@ IMPORTANT: Generate the PR description summary in the user's current language se
       files: filesStr,
     });
 
+    // 프롬프트에 언어 설정 강조 추가
+    const enhancedPrompt = `${prompt}\n\nIMPORTANT: Your response must be in the user's current language setting. If the user is using Korean locale, write the entire code review in Korean.`;
+
     try {
-      return await this.processWithAI(prompt, this.getMaxTokens("chunk"), {
-        temperature: 0.6, // 균형잡힌 리뷰
-        presence_penalty: 0.1, // 다양한 관점
-        frequency_penalty: 0.1, // 반복 감소
-        stop: ["```"], // 코드 블록 끝에서 중지
-        systemPrompt,
-      });
+      return await this.processWithAI(
+        enhancedPrompt,
+        this.getMaxTokens("chunk"),
+        {
+          temperature: 0.6, // 균형잡힌 리뷰
+          presence_penalty: 0.1, // 다양한 관점
+          frequency_penalty: 0.1, // 반복 감소
+          stop: ["```"], // 코드 블록 끝에서 중지
+          systemPrompt,
+        },
+      );
     } catch (error) {
       log.error(t("ai.error.code_review_failed"), error);
       throw error;
@@ -496,7 +513,11 @@ IMPORTANT: Generate the PR description summary in the user's current language se
 4. Explain the reasoning behind suggestions
 5. Highlight potential risks
 6. Consider code functionality and integrity
-7. Maintain consistent code style`;
+7. Maintain consistent code style
+8. Generate output that follows the user's current language setting
+9. Respond in the same language as the user's locale
+
+IMPORTANT: Generate the conflict resolution suggestions in the user's current language setting. If the user is using Korean locale, the suggestions must be written entirely in Korean.`;
 
     const conflictsStr = conflicts
       .map((c) => {
@@ -522,13 +543,20 @@ IMPORTANT: Generate the PR description summary in the user's current language se
       context: contextStr,
     });
 
+    // 프롬프트에 언어 설정 강조 추가
+    const enhancedPrompt = `${prompt}\n\nIMPORTANT: Your response must be in the user's current language setting. If the user is using Korean locale, write the entire conflict resolution suggestions in Korean.`;
+
     try {
-      return await this.processWithAI(prompt, this.getMaxTokens("chunk"), {
-        temperature: 0.4, // 더 신중한 결정
-        presence_penalty: 0, // 정확한 해결책 필요
-        frequency_penalty: 0.1, // 약간의 다양성
-        systemPrompt,
-      });
+      return await this.processWithAI(
+        enhancedPrompt,
+        this.getMaxTokens("chunk"),
+        {
+          temperature: 0.4, // 더 신중한 결정
+          presence_penalty: 0, // 정확한 해결책 필요
+          frequency_penalty: 0.1, // 약간의 다양성
+          systemPrompt,
+        },
+      );
     } catch (error) {
       log.error(t("ai.error.conflict_resolution_failed"), error);
       throw error;
@@ -550,6 +578,8 @@ IMPORTANT: Generate the PR description summary in the user's current language se
 7. Prioritize user-facing changes
 8. Keep technical details clear but brief
 9. Include ALL changed files without exception
+10. Generate output that follows the user's current language setting
+11. Respond in the same language as the user's locale
 
 Format Guidelines:
 - Follow the format specified in the prompt
@@ -557,7 +587,9 @@ Format Guidelines:
 - Use consistent terminology
 - Focus on actual changes
 - Avoid redundancy
-- Include file names for specific changes`;
+- Include file names for specific changes
+
+IMPORTANT: Generate the commit message in the user's current language setting. If the user is using Korean locale, the commit message (except for type/scope) must be written entirely in Korean.`;
 
     const prompt = t("ai.prompts.commit_message.analyze", {
       message,
@@ -565,13 +597,20 @@ Format Guidelines:
       files: changedFiles?.join(", ") || "",
     });
 
+    // 프롬프트에 언어 설정 강조 추가
+    const enhancedPrompt = `${prompt}\n\nIMPORTANT: Your response must be in the user's current language setting. If the user is using Korean locale, write the commit message in Korean (except for the type(scope) part).`;
+
     try {
-      return await this.processWithAI(prompt, this.getMaxTokens("chunk"), {
-        temperature: 0.4, // 더 일관된 출력을 위해 낮춤
-        presence_penalty: 0.1,
-        frequency_penalty: 0.3, // 중복 방지를 위해 높임
-        systemPrompt,
-      });
+      return await this.processWithAI(
+        enhancedPrompt,
+        this.getMaxTokens("chunk"),
+        {
+          temperature: 0.4, // 더 일관된 출력을 위해 낮춤
+          presence_penalty: 0.1,
+          frequency_penalty: 0.3, // 중복 방지를 위해 높임
+          systemPrompt,
+        },
+      );
     } catch (error) {
       log.error(t("ai.error.commit_message_failed"), error);
       throw error;
@@ -610,7 +649,9 @@ Format Guidelines:
       fileTypes?: Record<string, number>;
     },
   ): Promise<string> {
-    const systemPrompt = t("ai.prompts.daily_report_summary.system");
+    const systemPrompt = `${t("ai.prompts.daily_report_summary.system")}
+
+IMPORTANT: Generate the daily report summary in the user's current language setting. If the user is using Korean locale, the summary must be written entirely in Korean.`;
 
     // 커밋 메시지와 파일 정보를 문자열로 변환
     const commitsInfo = commits
@@ -663,13 +704,20 @@ ${
       statsInfo,
     });
 
+    // 프롬프트에 언어 설정 강조 추가
+    const enhancedPrompt = `${prompt}\n\nIMPORTANT: Your response must be in the user's current language setting. If the user is using Korean locale, write the entire daily report summary in Korean.`;
+
     try {
-      return await this.processWithAI(prompt, this.getMaxTokens("summary"), {
-        temperature: 0.5, // 적절한 창의성과 정확성의 균형
-        presence_penalty: 0.2, // 다양한 측면 포함
-        frequency_penalty: 0.3, // 반복 감소
-        systemPrompt,
-      });
+      return await this.processWithAI(
+        enhancedPrompt,
+        this.getMaxTokens("summary"),
+        {
+          temperature: 0.5, // 적절한 창의성과 정확성의 균형
+          presence_penalty: 0.2, // 다양한 측면 포함
+          frequency_penalty: 0.3, // 반복 감소
+          systemPrompt,
+        },
+      );
     } catch (error) {
       log.error(t("ai.error.daily_report_failed"), error);
       throw error;
@@ -695,10 +743,13 @@ ${
         throw new Error(t("ai.error.not_initialized"));
       }
 
+      // 텍스트에 언어 설정 지시 추가
+      const enhancedText = `${text}\n\nIMPORTANT: Your response must be in the user's current language setting. If the user is using Korean locale, respond entirely in Korean.`;
+
       const content: OpenAI.ChatCompletionContentPart[] = [
         {
           type: "text",
-          text: text,
+          text: enhancedText,
         },
       ];
 
@@ -712,11 +763,17 @@ ${
         });
       }
 
+      // 시스템 프롬프트 설정
+      const systemPrompt = `You are a helpful multimodal assistant that can analyze both text and images. Please provide clear, concise, and helpful responses.
+
+IMPORTANT: Generate your response in the user's current language setting. If the user is using Korean locale, your response must be written entirely in Korean.`;
+
       return await this.processWithAI(
         content,
         options.maxTokens || this.getMaxTokens("chunk"),
         {
           temperature: options.temperature || 0.7,
+          systemPrompt,
         },
       );
     } catch (error) {

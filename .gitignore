@@ -7,8 +7,6 @@
 !.github
 !.github/**
 src/**/__tests__/**
-src/config/openrouter.ts
-src/utils/openrouter-provisioning.ts
 
 !.eslintrc.json
 !.prettierrc
