@@ -188,6 +188,8 @@ on:
     types: [created]
   pull_request_review:
     types: [submitted]
+  issue_comment:
+    types: [created]
 
 # 명시적으로 권한 설정 추가
 permissions:
