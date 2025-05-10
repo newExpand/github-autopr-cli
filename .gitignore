@@ -16,6 +16,7 @@ src/utils/openrouter-provisioning.ts
 !tsconfig.json
 !tsup.config.ts
 !package.json
+!package-lock.json
 !README.md
 !README-kr.md
 !USAGE.md
