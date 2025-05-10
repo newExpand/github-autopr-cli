@@ -189,6 +189,12 @@ on:
   pull_request_review:
     types: [submitted]
 
+# 명시적으로 권한 설정 추가
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
 jobs:
   review:
     runs-on: ubuntu-latest

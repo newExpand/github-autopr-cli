@@ -9,6 +9,12 @@ on:
   pull_request_review:
     types: [submitted]
 
+# 명시적으로 권한 설정 추가
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
 jobs:
   review:
     runs-on: ubuntu-latest
@@ -16,16 +22,16 @@ jobs:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
-          cache: 'npm'
-      
+          node-version: "18"
+          cache: "npm"
+
       - name: Install dependencies
         run: npm ci
-      
+
       - name: Run PR Review Bot
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
