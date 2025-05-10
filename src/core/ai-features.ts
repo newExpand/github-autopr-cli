@@ -926,7 +926,9 @@ Your line comments should be:
 3. Constructive and helpful
 4. Written in the user's language setting
 
-IMPORTANT: Generate the comments in the user's current language setting. If the user is using Korean locale, all comments must be in Korean.`;
+IMPORTANT: Your response must be a valid JSON array WITHOUT markdown code block formatting. 
+DO NOT wrap your JSON in markdown code blocks or any other formatting. 
+Return only a raw JSON array.`;
 
       // diff 콘텐츠로부터 변경된 라인 분석
       const fileChanges = this.parseDiffContent(context.diffContent);
@@ -946,7 +948,7 @@ IMPORTANT: Generate the comments in the user's current language setting. If the 
         if (changedLines.length === 0) continue;
 
         // 파일 내용 분석
-        const prompt = `Please analyze the following file and provide specific line-by-line comments for issues that need attention:
+        const prompt = `Analyze the following file and generate comments ONLY for lines that have issues:
 
 File: ${file.path}
 
@@ -958,24 +960,21 @@ ${file.content}
 Changed Lines (line number: content):
 ${changedLines.map((line) => `${line.lineNumber}: ${line.content}`).join("\n")}
 
-For each line with issues, provide a JSON object with line number and comment:
+Return a JSON array of objects with lineNumber and comment fields for ONLY the lines that have issues:
+
 [
   {"lineNumber": 123, "comment": "Brief comment about the issue"},
   {"lineNumber": 456, "comment": "Another comment about a different issue"}
 ]
 
-Only comment on lines that have actual issues like:
-- Clean code problems
-- Potential bugs
-- Security vulnerabilities
-- Performance issues
-- Typos or grammatical errors
-- Inconsistent naming or formatting
+Important rules:
+1. Comment only on lines with actual issues like clean code problems, bugs, security issues, performance issues, typos, etc.
+2. If no issues are found, return an empty array: []
+3. Write all comments in the user's current language setting (in Korean if user is using Korean locale)
+4. DO NOT wrap your response in markdown code blocks - return ONLY the raw JSON array
+5. Only include lineNumber and comment fields in each object
 
-Don't comment on every line - focus only on the ones that need improvement.
-If no issues are found, return an empty array: []
-
-IMPORTANT: Write all comments in the user's current language setting. If the user is using Korean locale, all comments must be in Korean.`;
+IMPORTANT: Return ONLY a valid JSON array without any markdown formatting or explanation text. Just the raw JSON data.`;
 
         try {
           const responseFormat = { type: "json_object" as const };
@@ -992,8 +991,29 @@ IMPORTANT: Write all comments in the user's current language setting. If the use
           );
 
           try {
-            // JSON 응답 파싱
-            const comments = JSON.parse(result);
+            // 마크다운 코드 블록 제거 후 JSON 파싱 시도
+            let jsonContent = result;
+
+            // 마크다운 코드 블록으로 감싸진 경우 추출
+            const markdownJsonRegex = /```(?:json)?\s*(\[[\s\S]*?\])\s*```/;
+            const markdownMatch = jsonContent.match(markdownJsonRegex);
+            if (markdownMatch && markdownMatch[1]) {
+              jsonContent = markdownMatch[1];
+            }
+
+            // 앞뒤 불필요한 텍스트 제거
+            jsonContent = jsonContent.trim();
+
+            // 첫 [와 마지막 ] 사이의 내용만 추출
+            const jsonArrayRegex = /(\[[\s\S]*\])/;
+            const arrayMatch = jsonContent.match(jsonArrayRegex);
+            if (arrayMatch && arrayMatch[1]) {
+              jsonContent = arrayMatch[1];
+            }
+
+            // JSON 파싱
+            const comments = JSON.parse(jsonContent);
+
             if (Array.isArray(comments)) {
               for (const comment of comments) {
                 if (comment.lineNumber && comment.comment) {
@@ -1009,6 +1029,7 @@ IMPORTANT: Write all comments in the user's current language setting. If the use
             log.debug(
               `파일 ${file.path}의 라인 코멘트 파싱 실패: ${parseError}`,
             );
+            log.debug(`원본 응답: ${result.substring(0, 100)}...`); // 문제 디버깅을 위한 로그 추가
           }
         } catch (fileError) {
           log.debug(
