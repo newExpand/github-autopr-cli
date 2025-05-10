@@ -53,6 +53,7 @@ export interface PRReviewResult {
   lineComments: Array<{
     path: string;
     line: number;
+    position?: number;
     comment: string;
   }>;
 }
@@ -909,7 +910,9 @@ IMPORTANT: Your response must be in the user's current language setting. If the 
    */
   private async generateLineComments(
     context: PRReviewContext,
-  ): Promise<Array<{ path: string; line: number; comment: string }>> {
+  ): Promise<
+    Array<{ path: string; line: number; position: number; comment: string }>
+  > {
     try {
       const systemPrompt = `You are a code reviewer who provides detailed line-by-line feedback on code changes.
 Focus on identifying:
@@ -937,6 +940,7 @@ Return only a raw JSON array.`;
       const lineComments: Array<{
         path: string;
         line: number;
+        position: number;
         comment: string;
       }> = [];
 
@@ -1017,11 +1021,23 @@ IMPORTANT: Return ONLY a valid JSON array without any markdown formatting or exp
             if (Array.isArray(comments)) {
               for (const comment of comments) {
                 if (comment.lineNumber && comment.comment) {
-                  lineComments.push({
-                    path: file.path,
-                    line: comment.lineNumber,
-                    comment: comment.comment,
-                  });
+                  // 해당 라인 번호에 맞는 position 찾기
+                  const lineInfo = changedLines.find(
+                    (l) => l.lineNumber === comment.lineNumber,
+                  );
+
+                  if (lineInfo) {
+                    lineComments.push({
+                      path: file.path,
+                      line: comment.lineNumber,
+                      position: lineInfo.position,
+                      comment: comment.comment,
+                    });
+                  } else {
+                    log.debug(
+                      `파일 ${file.path}의 라인 ${comment.lineNumber}에 대한 position 정보를 찾을 수 없습니다.`,
+                    );
+                  }
                 }
               }
             }
@@ -1052,10 +1068,13 @@ IMPORTANT: Return ONLY a valid JSON array without any markdown formatting or exp
    */
   private parseDiffContent(
     diffContent: string,
-  ): Record<string, Array<{ lineNumber: number; content: string }>> {
+  ): Record<
+    string,
+    Array<{ lineNumber: number; position: number; content: string }>
+  > {
     const result: Record<
       string,
-      Array<{ lineNumber: number; content: string }>
+      Array<{ lineNumber: number; position: number; content: string }>
     > = {};
 
     // diff 콘텐츠가 없으면 빈 객체 반환
@@ -1063,10 +1082,13 @@ IMPORTANT: Return ONLY a valid JSON array without any markdown formatting or exp
 
     let currentFile = "";
     let lineNumber = 0;
+    let position = 0; // diff 파일 내에서의 위치 추적
 
     // diff 콘텐츠를 라인별로 분석
     const lines = diffContent.split("\n");
     for (const line of lines) {
+      position++; // 모든 라인에 대해 position 증가
+
       // 새로운 파일 diff 시작
       if (line.startsWith("diff --git")) {
         const match = line.match(/diff --git a\/(.+) b\/(.+)/);
@@ -1088,6 +1110,7 @@ IMPORTANT: Return ONLY a valid JSON array without any markdown formatting or exp
         lineNumber++;
         result[currentFile]?.push({
           lineNumber,
+          position, // 현재 diff에서의 위치
           content: line.substring(1), // '+' 제거
         });
       }

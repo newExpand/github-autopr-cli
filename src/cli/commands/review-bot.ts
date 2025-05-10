@@ -192,11 +192,19 @@ async function handlePREvent(event: PREvent, octokit: Octokit): Promise<void> {
         const commitSha = latestCommit.sha;
 
         // PR 리뷰 코멘트 구성
-        const comments = reviewResult.lineComments.map((comment) => ({
-          path: comment.path,
-          line: comment.line,
-          body: comment.comment,
-        }));
+        const comments = reviewResult.lineComments
+          .map((comment) => ({
+            path: comment.path,
+            position: comment.position,
+            body: comment.comment,
+          }))
+          .filter((comment) => comment.position !== undefined);
+
+        // 코멘트가 없는 경우 리뷰를 건너뜀
+        if (comments.length === 0) {
+          log.warn("유효한 라인 코멘트가 없어 리뷰를 생성하지 않습니다.");
+          return;
+        }
 
         // PR 리뷰 생성
         await octokit.pulls.createReview({
