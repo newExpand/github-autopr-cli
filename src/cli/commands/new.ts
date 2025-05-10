@@ -54,6 +54,96 @@ async function getChangedFiles(baseBranch: string): Promise<string[]> {
   }
 }
 
+/**
+ * PR이 생성된 후 AI 코드 리뷰를 수행하고 결과를 PR에 코멘트로 추가합니다.
+ */
+async function performAICodeReview(params: {
+  owner: string;
+  repo: string;
+  pull_number: number;
+  head_ref: string;
+  ai: AIFeatures;
+  diffContent: string;
+  title: string;
+  body: string;
+  author: string;
+}): Promise<void> {
+  const {
+    owner,
+    repo,
+    pull_number,
+    head_ref,
+    ai,
+    diffContent,
+    title,
+    body,
+    author,
+  } = params;
+
+  try {
+    log.info(t("commands.review.info.ai_review_start"));
+
+    // GitHub API로 PR 파일 정보 가져오기
+    const client = await getOctokit();
+    const filesResponse = await client.rest.pulls.listFiles({
+      owner,
+      repo,
+      pull_number,
+    });
+
+    // 파일 내용 가져오기
+    const fileDetails = await Promise.all(
+      filesResponse.data.map(async (file) => {
+        let content = "";
+        if (file.status !== "removed") {
+          try {
+            const contentResponse = await client.rest.repos.getContent({
+              owner,
+              repo,
+              path: file.filename,
+              ref: head_ref,
+            });
+
+            if ("content" in contentResponse.data) {
+              const base64Content = contentResponse.data.content;
+              content = Buffer.from(base64Content, "base64").toString("utf-8");
+            }
+          } catch (error) {
+            log.debug(`파일 내용을 가져오는데 실패했습니다: ${file.filename}`);
+          }
+        }
+
+        return {
+          path: file.filename,
+          additions: file.additions,
+          deletions: file.deletions,
+          content,
+        };
+      }),
+    );
+
+    // AI 리뷰 생성
+    const review = await ai.reviewPR({
+      prNumber: pull_number,
+      title,
+      description: body,
+      author,
+      changedFiles: fileDetails,
+      diffContent,
+    });
+
+    // GitHub 봇을 통해 리뷰 코멘트 작성 (항상 GitHub 봇 사용)
+    log.info(t("commands.review.info.triggering_github_bot"));
+    log.info(t("commands.review.info.github_bot_will_comment"));
+
+    log.info(
+      t("commands.review_bot.success.review_created", { number: pull_number }),
+    );
+  } catch (error) {
+    log.error(t("commands.review_bot.error.review_failed"), error);
+  }
+}
+
 export async function newCommand(): Promise<void> {
   try {
     const config = await loadConfig();
@@ -224,6 +314,15 @@ export async function newCommand(): Promise<void> {
             .map((reviewer) => reviewer.trim())
             .filter(Boolean),
       },
+      {
+        type: "confirm",
+        name: "performAIReview",
+        message: t("commands.new.prompts.perform_ai_review", {
+          defaultMessage: "AI 코드 리뷰를 자동으로 수행하시겠습니까?",
+        }),
+        default: true,
+        when: () => aiEnabled && ai !== null,
+      },
     ]);
 
     // PR 생성 시작을 알림
@@ -319,6 +418,22 @@ ${answers.useAIDescription ? generatedDescription : answers.body || ""}
             t("commands.new.success.pr_updated", { number: existingPR.number }),
           );
           log.info(`PR URL: ${existingPR.html_url}`);
+
+          // 기존 PR에 AI 리뷰 수행
+          if (answers.performAIReview && ai && aiEnabled) {
+            await performAICodeReview({
+              owner: repoInfo.owner,
+              repo: repoInfo.repo,
+              pull_number: existingPR.number,
+              head_ref: headBranch,
+              ai,
+              diffContent,
+              title: answers.title,
+              body: newBody,
+              author: (await getGitUserName()) || "unknown",
+            });
+          }
+
           return;
         } else {
           log.info(t("commands.new.success.cancelled"));
@@ -356,6 +471,23 @@ ${answers.useAIDescription ? generatedDescription : answers.body || ""}
 
       log.info(t("common.success.pr_created"));
       log.info(`PR URL: ${pr.html_url}`);
+
+      // PR 생성 후 AI 리뷰 수행
+      if (answers.performAIReview && ai && aiEnabled) {
+        await performAICodeReview({
+          owner: repoInfo.owner,
+          repo: repoInfo.repo,
+          pull_number: pr.number,
+          head_ref: headBranch,
+          ai,
+          diffContent,
+          title: answers.title,
+          body: answers.useAIDescription
+            ? generatedDescription
+            : answers.body || "",
+          author: (await getGitUserName()) || "unknown",
+        });
+      }
     } catch (error: any) {
       if (error.message?.includes("No commits between")) {
         log.error(t("common.error.no_commits"));
@@ -373,5 +505,18 @@ ${answers.useAIDescription ? generatedDescription : answers.body || ""}
   } catch (error) {
     log.error(t("common.error.unknown"), String(error));
     process.exit(1);
+  }
+}
+
+/**
+ * Git 사용자 이름을 가져옵니다.
+ */
+async function getGitUserName(): Promise<string | null> {
+  try {
+    const { stdout } = await execAsync("git config user.name");
+    return stdout.trim();
+  } catch (error) {
+    log.debug("Git 사용자 이름을 가져오는데 실패했습니다:", error);
+    return null;
   }
 }

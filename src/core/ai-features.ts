@@ -5,10 +5,46 @@ import type { AIProvider } from "./ai-manager.js";
 import dotenv from "dotenv";
 import { OPENROUTER_CONFIG } from "../config/openrouter.js";
 import { loadProjectConfig } from "./config.js";
+import OpenAI from "openai";
 
 interface PRChunk {
   files: string[];
   diff: string;
+}
+
+// PR 리뷰 봇을 위한 인터페이스 추가
+interface PRReviewContext {
+  prNumber: number;
+  title: string;
+  description: string;
+  author: string;
+  changedFiles: Array<{
+    path: string;
+    additions: number;
+    deletions: number;
+    content?: string;
+  }>;
+  diffContent: string;
+  conversationHistory?: Array<{
+    author: string;
+    content: string;
+    timestamp: string;
+  }>;
+}
+
+// 코멘트 응답을 위한 인터페이스 추가
+interface CommentResponseContext {
+  prNumber: number;
+  commentId: number;
+  commentBody: string;
+  author: string;
+  replyTo?: string;
+  codeContext?: string;
+  conversationHistory: Array<{
+    author: string;
+    content: string;
+    timestamp: string;
+  }>;
 }
 
 export class AIFeatures {
@@ -17,8 +53,8 @@ export class AIFeatures {
   private readonly OPENAI_MAX_CHUNK_TOKENS = 1500;
   private readonly OPENAI_MAX_SUMMARY_TOKENS = 1000;
   // OpenRouter 토큰 제한 (Gemini Flash 2.0 기준)
-  private readonly OPENROUTER_MAX_CHUNK_TOKENS = 4000;
-  private readonly OPENROUTER_MAX_SUMMARY_TOKENS = 2000;
+  private readonly OPENROUTER_MAX_CHUNK_TOKENS = 800000; // 1,048,576 입력 토큰 중 대부분 활용
+  private readonly OPENROUTER_MAX_SUMMARY_TOKENS = 8192; // 최대 출력 토큰 전체 활용
   private initialized = false;
 
   constructor() {
@@ -214,7 +250,7 @@ export class AIFeatures {
   }
 
   private async processWithAI(
-    prompt: string,
+    prompt: string | Array<OpenAI.ChatCompletionContentPart>,
     maxTokens: number,
     options: {
       temperature?: number;
@@ -242,19 +278,19 @@ export class AIFeatures {
     try {
       const openai = this.aiManager.getOpenAI();
 
-      const messages = [];
+      const messages: OpenAI.ChatCompletionMessageParam[] = [];
 
       // 시스템 프롬프트 추가 (있는 경우)
       if (options.systemPrompt) {
         messages.push({
-          role: "system" as const,
+          role: "system",
           content: options.systemPrompt,
         });
       }
 
       // 사용자 프롬프트 추가
       messages.push({
-        role: "user" as const,
+        role: "user",
         content: prompt,
       });
 
@@ -279,6 +315,44 @@ export class AIFeatures {
     }
   }
 
+  async generatePRTitle(
+    files: string[],
+    diffContent: string,
+    pattern: { type: string },
+  ): Promise<string> {
+    try {
+      // t 함수의 현재 언어 설정대로 출력하도록 명시합니다.
+      const systemPrompt = `You are a PR title generator. Your task is to:
+1. Create concise and descriptive titles under 50 characters
+2. Focus on the main change or feature
+3. Use clear and professional language
+4. Avoid generic descriptions
+5. Follow the conventional commit format
+6. Generate output that follows the user's current language setting`;
+
+      const prompt = t("ai.prompts.pr_title.analyze", {
+        files: files.join(", "),
+        diffContent: diffContent,
+        type: pattern.type,
+      });
+
+      const generatedTitle = await this.processWithAI(
+        prompt,
+        this.getMaxTokens("chunk"),
+        {
+          temperature: 0.3, // 더 집중적이고 일관된 제목
+          presence_penalty: 0, // 제목은 간단해야 함
+          frequency_penalty: 0.2, // 중복 단어 방지
+          systemPrompt,
+        },
+      );
+      return `[${pattern.type.toUpperCase()}] ${generatedTitle}`;
+    } catch (error) {
+      log.error(t("ai.error.pr_title_failed"), error);
+      throw error;
+    }
+  }
+
   async generatePRDescription(
     files: string[],
     diffContent: string,
@@ -288,12 +362,14 @@ export class AIFeatures {
       const chunks = await this.chunkPRContent(files, diffContent);
       const descriptions: string[] = [];
 
+      // t 함수의 현재 언어 설정대로 출력하도록 명시합니다.
       const systemPrompt = `You are an expert code reviewer and technical writer. Your task is to analyze code changes and generate clear, comprehensive PR descriptions that:
 1. Focus on the actual changes and their impact
 2. Use professional and technical language
 3. Organize information logically
 4. Highlight important implementation details
-5. Consider security and performance implications`;
+5. Consider security and performance implications
+6. Generate output that follows the user's current language setting`;
 
       // 각 청크에 대한 설명 생성
       for (const chunk of chunks) {
@@ -318,12 +394,14 @@ export class AIFeatures {
 
       // 여러 청크가 있는 경우 최종 요약 생성
       if (chunks.length > 1) {
+        // t 함수의 현재 언어 설정대로 출력하도록 명시합니다.
         const summarySystemPrompt = `You are a technical documentation expert. Your task is to:
 1. Combine multiple descriptions into a cohesive summary
 2. Remove redundant information
 3. Maintain technical accuracy
 4. Ensure logical flow
-5. Preserve all important implementation details`;
+5. Preserve all important implementation details
+6. Generate output that follows the user's current language setting`;
 
         const summaryPrompt = t("ai.prompts.pr_description.summarize", {
           descriptions: descriptions.join("\n\n"),
@@ -342,42 +420,6 @@ export class AIFeatures {
       return descriptions[0];
     } catch (error) {
       log.error(t("ai.error.pr_description_failed"), error);
-      throw error;
-    }
-  }
-
-  async generatePRTitle(
-    files: string[],
-    diffContent: string,
-    pattern: { type: string },
-  ): Promise<string> {
-    try {
-      const systemPrompt = `You are a PR title generator. Your task is to:
-1. Create concise and descriptive titles under 50 characters
-2. Focus on the main change or feature
-3. Use clear and professional language
-4. Avoid generic descriptions
-5. Follow the conventional commit format`;
-
-      const prompt = t("ai.prompts.pr_title.analyze", {
-        files: files.join(", "),
-        diffContent: diffContent,
-        type: pattern.type,
-      });
-
-      const generatedTitle = await this.processWithAI(
-        prompt,
-        this.getMaxTokens("chunk"),
-        {
-          temperature: 0.3, // 더 집중적이고 일관된 제목
-          presence_penalty: 0, // 제목은 간단해야 함
-          frequency_penalty: 0.2, // 중복 단어 방지
-          systemPrompt,
-        },
-      );
-      return `[${pattern.type.toUpperCase()}] ${generatedTitle}`;
-    } catch (error) {
-      log.error(t("ai.error.pr_title_failed"), error);
       throw error;
     }
   }
@@ -618,6 +660,189 @@ ${
     } catch (error) {
       log.error(t("ai.error.daily_report_failed"), error);
       throw error;
+    }
+  }
+
+  /**
+   * 이미지와 텍스트를 함께 처리하는 멀티모달 질문을 수행합니다.
+   * @param text 질문 텍스트
+   * @param images 이미지 URL 배열
+   * @returns AI 응답
+   */
+  async processMultiModal(
+    text: string,
+    images: string[],
+    options: {
+      temperature?: number;
+      maxTokens?: number;
+    } = {},
+  ): Promise<string> {
+    try {
+      if (!this.isEnabled()) {
+        throw new Error(t("ai.error.not_initialized"));
+      }
+
+      const content: OpenAI.ChatCompletionContentPart[] = [
+        {
+          type: "text",
+          text: text,
+        },
+      ];
+
+      // 이미지 추가
+      for (const imageUrl of images) {
+        content.push({
+          type: "image_url",
+          image_url: {
+            url: imageUrl,
+          },
+        });
+      }
+
+      return await this.processWithAI(
+        content,
+        options.maxTokens || this.getMaxTokens("chunk"),
+        {
+          temperature: options.temperature || 0.7,
+        },
+      );
+    } catch (error) {
+      log.error(t("ai.error.multimodal_processing_failed"), error);
+      throw error;
+    }
+  }
+
+  /**
+   * PR을 리뷰하여 자세한 코드 리뷰 코멘트를 생성합니다.
+   * @param context PR 리뷰 컨텍스트
+   * @returns 생성된 리뷰 코멘트
+   */
+  async reviewPR(context: PRReviewContext): Promise<string> {
+    try {
+      const systemPrompt = `You are an expert code reviewer who specializes in identifying:
+1. Code quality issues
+2. Potential bugs
+3. Security vulnerabilities
+4. Performance problems
+5. Architectural considerations
+6. Best practices
+
+Your reviews should be:
+1. Constructive and helpful
+2. Specific with line references
+3. Balanced (mention positives and areas for improvement)
+4. Actionable with clear suggestions
+5. Professional and respectful`;
+
+      // 파일 내용들을 포맷팅
+      const filesContent = context.changedFiles
+        .map((file) => {
+          if (!file.content) return null;
+          return `File: ${file.path} (+${file.additions}/-${file.deletions})
+\`\`\`
+${file.content}
+\`\`\``;
+        })
+        .filter(Boolean)
+        .join("\n\n");
+
+      const prompt = `Please review the following PR:
+
+PR #${context.prNumber}: ${context.title}
+Author: ${context.author}
+Description:
+${context.description}
+
+Changed Files:
+${context.changedFiles.map((f) => `- ${f.path} (+${f.additions}/-${f.deletions})`).join("\n")}
+
+File Contents:
+${filesContent}
+
+Diff:
+\`\`\`diff
+${context.diffContent}
+\`\`\`
+
+Please provide a thorough code review with:
+1. A summary of the overall changes
+2. Specific comments on code quality
+3. Potential bugs or issues
+4. Suggestions for improvements
+5. Any security concerns
+6. Performance considerations
+
+Format your review with clear sections and use markdown for readability.`;
+
+      const review = await this.processWithAI(
+        prompt,
+        this.getMaxTokens("chunk"),
+        {
+          temperature: 0.5,
+          presence_penalty: 0.1,
+          frequency_penalty: 0.1,
+          systemPrompt,
+        },
+      );
+
+      return review;
+    } catch (error) {
+      log.error("PR 리뷰 생성 중 오류가 발생했습니다:", error);
+      throw new Error(t("ai.error.pr_review_failed"));
+    }
+  }
+
+  /**
+   * PR 코멘트에 대한 응답을 생성합니다.
+   * @param context 코멘트 응답 컨텍스트
+   * @returns 생성된 응답 코멘트
+   */
+  async generateCommentResponse(
+    context: CommentResponseContext,
+  ): Promise<string> {
+    try {
+      const systemPrompt = `You are a helpful code review assistant who:
+1. Responds to user questions and comments thoughtfully
+2. Maintains context of the conversation
+3. Provides technical explanations when needed
+4. Suggests solutions to problems
+5. Keeps responses professional and constructive
+6. Mentions relevant users when appropriate`;
+
+      // 대화 히스토리 포맷팅
+      const conversationHistory = context.conversationHistory
+        .map((msg) => `${msg.author} (${msg.timestamp}): ${msg.content}`)
+        .join("\n\n");
+
+      const prompt = `Please respond to the following comment on PR #${context.prNumber}:
+
+Comment by ${context.author}:
+${context.commentBody}
+
+${context.codeContext ? `Related code context:\n${context.codeContext}\n` : ""}
+
+Conversation history:
+${conversationHistory}
+
+${context.replyTo ? `You should mention @${context.replyTo} in your response.` : ""}
+
+Please provide a helpful, technical, and constructive response. Be concise but thorough.`;
+
+      const response = await this.processWithAI(
+        prompt,
+        this.getMaxTokens("chunk"),
+        {
+          temperature: 0.7, // 약간 더 창의적인 응답을 위해
+          presence_penalty: 0.2,
+          frequency_penalty: 0.2,
+          systemPrompt,
+        },
+      );
+
+      return response;
+    } catch (error) {
+      log.error("코멘트 응답 생성 중 오류가 발생했습니다:", error);
+      throw new Error(t("ai.error.comment_response_failed"));
     }
   }
 }

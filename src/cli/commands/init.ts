@@ -162,6 +162,64 @@ npx autopr hook post-checkout "$BRANCH_NAME"
   }
 }
 
+async function setupGitHubActions(aiProvider?: string): Promise<void> {
+  try {
+    // GitHub Actions 디렉토리 생성
+    const workflowsDir = join(process.cwd(), ".github", "workflows");
+    await mkdir(workflowsDir, { recursive: true });
+
+    // AI 환경 변수 설정 부분 생성
+    // OpenRouter는 API 키가 필요 없으므로, OpenRouter 선택 시 AI_PROVIDER만 설정
+    // 다른 AI 제공자는 GitHub Secrets의 AI_API_KEY를 사용
+    const aiEnvVars =
+      aiProvider === "openrouter"
+        ? `          AI_PROVIDER: "openrouter"`
+        : `          AI_API_KEY: \${{ secrets.AI_API_KEY }}`;
+
+    // PR 리뷰 워크플로우 파일 생성
+    const workflowPath = join(workflowsDir, "pr-review.yml");
+    const workflowContent = `# PR Review Bot Workflow
+name: PR Review Bot
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+  pull_request_review_comment:
+    types: [created]
+  pull_request_review:
+    types: [submitted]
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run PR Review Bot
+        env:
+          GITHUB_TOKEN: \${{ secrets.GITHUB_TOKEN }}
+${aiEnvVars}
+        run: npx autopr review-bot
+`;
+
+    await writeFile(workflowPath, workflowContent);
+    log.info(t("commands.init.info.github_actions_setup"));
+  } catch (error) {
+    log.error(t("commands.init.error.github_actions", { error }));
+  }
+}
+
 export async function initCommand(): Promise<void> {
   try {
     // 기존 설정 로드
@@ -318,6 +376,19 @@ export async function initCommand(): Promise<void> {
       },
     ]);
 
+    // GitHub Actions 설정 추가
+    const { setupGitHubAction } = await inquirer.prompt([
+      {
+        type: "confirm",
+        name: "setupGitHubAction",
+        message: t("commands.init.prompts.setup_github_action"),
+        default: true,
+      },
+    ]);
+
+    // AI 제공자 정보를 저장
+    let aiProvider = "openrouter"; // 기본값
+
     if (setupAI) {
       const aiConfig = await setupAIConfig();
       await updateEnvFile(aiConfig);
@@ -331,10 +402,17 @@ export async function initCommand(): Promise<void> {
         },
       };
 
+      // AI 제공자 정보 업데이트
+      aiProvider = aiConfig.provider;
+
       // 프로젝트 설정 업데이트
       await updateProjectConfig({
         aiConfig: projectAIConfig,
       });
+    }
+
+    if (setupGitHubAction) {
+      await setupGitHubActions(aiProvider);
     }
 
     // 프로젝트 설정

@@ -137,6 +137,7 @@ export class AIManager {
     this.openai = new OpenAI({
       baseURL: OPENROUTER_CONFIG.BASE_URL,
       apiKey: config.apiKey || OPENROUTER_CONFIG.API_KEY,
+      defaultHeaders: OPENROUTER_CONFIG.HTTP_HEADERS,
     });
     config.options = config.options || {};
     config.options.model =
