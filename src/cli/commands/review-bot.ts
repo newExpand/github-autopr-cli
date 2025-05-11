@@ -226,25 +226,27 @@ async function handlePREvent(event: PREvent, octokit: Octokit): Promise<void> {
           commitsResponse.data[commitsResponse.data.length - 1];
         const commitSha = latestCommit.sha;
 
-        // PR 리뷰 코멘트 구성 - GitHub 문서에 맞게 필드 이름 수정 및 유효성 검사 강화
-        const comments = reviewResult.lineComments
-          .map((comment) => {
-            // position이 정의되어 있고 0보다 큰 경우에만 포함
-            if (comment.position && comment.position > 0) {
-              return {
-                path: comment.path,
-                position: comment.position,
-                body: comment.comment,
-              };
-            }
-            return undefined;
-          })
-          .filter(
-            (
-              comment,
-            ): comment is { path: string; position: number; body: string } =>
-              comment !== undefined,
-          );
+        // 유효한 코멘트만 필터링하여 배열 생성
+        interface ValidComment {
+          path: string;
+          position: number;
+          body: string;
+          line?: number;
+        }
+
+        const comments: ValidComment[] = [];
+
+        // 코멘트 필터링 및 변환
+        reviewResult.lineComments.forEach((comment) => {
+          if (comment.position && comment.position > 0) {
+            comments.push({
+              path: comment.path,
+              position: comment.position,
+              body: comment.comment,
+              line: comment.line,
+            });
+          }
+        });
 
         // 코멘트가 없는 경우 리뷰를 건너뜀
         if (comments.length === 0) {
@@ -254,21 +256,40 @@ async function handlePREvent(event: PREvent, octokit: Octokit): Promise<void> {
 
         // 디버깅을 위한 코멘트 정보 로깅
         log.debug(`유효한 라인 코멘트 ${comments.length}개를 제출합니다.`);
-        log.debug(`첫 번째 코멘트 예시: ${JSON.stringify(comments[0])}`);
+        if (comments.length > 0) {
+          log.debug(`첫 번째 코멘트 예시: ${JSON.stringify(comments[0])}`);
+          log.debug(
+            `생성된 모든 코멘트의 position 값: ${comments.map((c) => c.position).join(", ")}`,
+          );
+        }
 
         try {
-          // PR 리뷰 생성
-          await octokit.pulls.createReview({
-            owner,
-            repo,
-            pull_number: prNumber,
-            commit_id: commitSha,
-            event: "COMMENT",
-            comments: comments,
-          });
+          // 개별 라인 코멘트로 분리하여 추가
+          log.debug("라인별 개별 코멘트로 추가하는 방식으로 전환합니다.");
+
+          let successCount = 0;
+          for (const comment of comments) {
+            try {
+              await octokit.pulls.createReviewComment({
+                owner,
+                repo,
+                pull_number: prNumber,
+                commit_id: commitSha,
+                path: comment.path,
+                position: comment.position,
+                body: comment.body,
+              });
+              successCount++;
+              log.debug(
+                `성공적으로 추가된 라인 코멘트: ${comment.path}:${comment.position}`,
+              );
+            } catch (commentError) {
+              log.debug(`개별 코멘트 추가 실패: ${commentError}`);
+            }
+          }
 
           log.info(
-            `${comments.length}개의 라인별 코멘트가 PR에 추가되었습니다.`,
+            `${successCount}/${comments.length}개의 라인별 코멘트가 PR에 추가되었습니다.`,
           );
         } catch (reviewError) {
           log.error(
@@ -292,6 +313,23 @@ async function handlePREvent(event: PREvent, octokit: Octokit): Promise<void> {
               }
             }
           }
+
+          // 백업 계획: 일반 댓글로 리뷰 피드백 추가
+          log.debug("라인별 코멘트 추가 실패로 인해 일반 코멘트로 변환합니다.");
+
+          let commentBody = "## 코드 리뷰 피드백\n\n";
+          for (const comment of comments) {
+            commentBody += `### ${comment.path}:${comment.line || "라인 정보 없음"}\n\n${comment.body}\n\n---\n\n`;
+          }
+
+          await octokit.issues.createComment({
+            owner,
+            repo,
+            issue_number: prNumber,
+            body: commentBody,
+          });
+
+          log.info("일반 코멘트로 리뷰 피드백이 추가되었습니다.");
         }
       } catch (error) {
         log.error(`PR #${prNumber} 처리 중 오류 발생: ${error}`);
