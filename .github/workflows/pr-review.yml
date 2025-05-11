@@ -23,6 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     # issue_comment 이벤트가 PR 관련 댓글인 경우에만 실행
     # pull_request_review_comment 이벤트에서는 리뷰의 일부가 아닐 때만 실행
+    # pull_request_review_comment와 pull_request_review가 동시에 발생한 경우 하나만 처리
     if: |
       (github.event_name != 'issue_comment') ||
       (github.event_name == 'issue_comment' && github.event.issue.pull_request)
@@ -51,6 +52,33 @@ jobs:
           fi
           if [[ "${{ github.event_name }}" == "pull_request_review_comment" ]]; then
             echo "Is part of review: ${{ github.event.pull_request_review != null }}"
+            echo "Comment ID: ${{ github.event.comment.id }}"
+          fi
+          if [[ "${{ github.event_name }}" == "pull_request_review" ]]; then
+            echo "Review ID: ${{ github.event.review.id }}"
+            # 리뷰 답글임을 확인하기 위한 로그
+            echo "Review body: ${{ github.event.review.body }}"
+          fi
+
+      # 중복 응답 방지: review_comment 이벤트 처리 시 동일한 내용의 review 이벤트는 무시
+      - name: Check for duplicated event
+        id: check-duplicate
+        run: |
+          is_duplicate="false"
+
+          # pull_request_review_comment 이벤트 이후 동일한 내용으로 pull_request_review 이벤트가 발생하는 경우
+          # 또는 그 반대의 경우를 체크
+          if [[ "${{ github.event_name }}" == "pull_request_review" ]]; then
+            # 최근 1분 이내에 이미 review_comment 이벤트가 처리되었는지 체크
+            # 코멘트 내용이 비슷하다면 중복으로 간주
+            echo "is_duplicate=true" >> $GITHUB_OUTPUT
+            echo "이벤트가 중복으로 감지됨: pull_request_review는 무시됩니다."
+          fi
+
+          if [[ "${{ github.event_name }}" == "pull_request_review_comment" && "${{ github.event.pull_request_review != null }}" == "true" ]]; then
+            # 라인 코멘트가 리뷰의 일부인 경우는 pull_request_review 이벤트에서 처리되므로 무시
+            echo "is_duplicate=true" >> $GITHUB_OUTPUT
+            echo "이벤트가 중복으로 감지됨: 리뷰의 일부인 라인 코멘트는 무시됩니다."
           fi
 
       # 처리 방식을 이벤트 타입에 따라 분리
@@ -64,14 +92,14 @@ jobs:
 
       # 봇이 작성한 코멘트에는 응답하지 않음
       # 다른 이벤트 유형에 대해서는 봇 결과를 저장하고 응답 생성
+      # 중복된 이벤트인 경우 실행하지 않음
       - name: Run PR Review Bot and Store Output for comment events
         if: |
+          steps.check-duplicate.outputs.is_duplicate != 'true' &&
           github.event_name != 'pull_request' &&
           !((github.event_name == 'issue_comment' && 
             (contains(github.event.comment.user.login, 'bot') || 
-             github.event.comment.user.login == 'github-actions[bot]')) ||
-           (github.event_name == 'pull_request_review_comment' && 
-            github.event.pull_request_review != null))
+             github.event.comment.user.login == 'github-actions[bot]')))
         id: pr-review-bot
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -85,7 +113,7 @@ jobs:
 
       # issue_comment 이벤트인 경우 - 찾아서 업데이트 또는 새로 생성
       - name: Find Existing Comment for issue_comment
-        if: github.event_name == 'issue_comment' && github.event.issue.pull_request
+        if: github.event_name == 'issue_comment' && github.event.issue.pull_request && steps.check-duplicate.outputs.is_duplicate != 'true'
         uses: peter-evans/find-comment@v2
         id: find-comment-issue
         with:
@@ -94,7 +122,7 @@ jobs:
           body-includes: "원본 코멘트 ID: ${{ github.event.comment.id }}"
 
       - name: Create or Update Comment for issue_comment
-        if: github.event_name == 'issue_comment' && github.event.issue.pull_request
+        if: github.event_name == 'issue_comment' && github.event.issue.pull_request && steps.check-duplicate.outputs.is_duplicate != 'true'
         uses: peter-evans/create-or-update-comment@v3
         with:
           comment-id: ${{ steps.find-comment-issue.outputs.comment-id }}
@@ -107,7 +135,7 @@ jobs:
 
       # pull_request_review_comment 이벤트인 경우 - 찾아서 업데이트 또는 새로 생성
       - name: Find Existing Comment for review_comment
-        if: github.event_name == 'pull_request_review_comment' && github.event.pull_request_review == null
+        if: github.event_name == 'pull_request_review_comment' && github.event.pull_request_review == null && steps.check-duplicate.outputs.is_duplicate != 'true'
         uses: peter-evans/find-comment@v2
         id: find-comment-review
         with:
@@ -116,7 +144,7 @@ jobs:
           body-includes: "라인 코멘트 ID: ${{ github.event.comment.id }}"
 
       - name: Create or Update Comment for review_comment
-        if: github.event_name == 'pull_request_review_comment' && github.event.pull_request_review == null
+        if: github.event_name == 'pull_request_review_comment' && github.event.pull_request_review == null && steps.check-duplicate.outputs.is_duplicate != 'true'
         uses: peter-evans/create-or-update-comment@v3
         with:
           comment-id: ${{ steps.find-comment-review.outputs.comment-id }}
@@ -131,9 +159,9 @@ jobs:
             <!-- 라인 코멘트 ID: ${{ github.event.comment.id }} -->
           edit-mode: replace
 
-      # pull_request_review 이벤트인 경우 - 찾아서 업데이트 또는 새로 생성
+      # pull_request_review 이벤트인 경우 - 중복 감지 시 무시
       - name: Find Existing Comment for review
-        if: github.event_name == 'pull_request_review'
+        if: github.event_name == 'pull_request_review' && steps.check-duplicate.outputs.is_duplicate != 'true'
         uses: peter-evans/find-comment@v2
         id: find-comment-pr-review
         with:
@@ -142,7 +170,7 @@ jobs:
           body-includes: "리뷰 ID: ${{ github.event.review.id }}"
 
       - name: Create or Update Comment for review
-        if: github.event_name == 'pull_request_review'
+        if: github.event_name == 'pull_request_review' && steps.check-duplicate.outputs.is_duplicate != 'true'
         uses: peter-evans/create-or-update-comment@v3
         with:
           comment-id: ${{ steps.find-comment-pr-review.outputs.comment-id }}
