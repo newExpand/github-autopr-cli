@@ -196,32 +196,73 @@ async function performAICodeReview(params: {
           commitsResponse.data[commitsResponse.data.length - 1];
         const commitSha = latestCommit.sha;
 
-        // PR 리뷰 코멘트 구성
+        // PR 리뷰 코멘트 구성 - GitHub 문서에 맞게 필드 이름 수정 및 유효성 검사 강화
         const comments = reviewResult.lineComments
-          .map((comment) => ({
-            path: comment.path,
-            position: comment.position,
-            body: comment.comment,
-          }))
-          .filter((comment) => comment.position !== undefined);
+          .map((comment) => {
+            // position이 정의되어 있고 0보다 큰 경우에만 포함
+            if (comment.position && comment.position > 0) {
+              return {
+                path: comment.path,
+                position: comment.position,
+                body: comment.comment,
+              };
+            }
+            return undefined;
+          })
+          .filter(
+            (
+              comment,
+            ): comment is { path: string; position: number; body: string } =>
+              comment !== undefined,
+          );
 
         // 코멘트가 없는 경우 리뷰를 건너뜀
         if (comments.length === 0) {
-          log.warn("유효한 라인 코멘트가 없어 리뷰를 생성하지 않습니다.");
+          log.warn("유효한 라인 코멘트가 없어 라인 리뷰를 생성하지 않습니다.");
           return;
         }
 
-        // PR 리뷰 생성
-        await client.rest.pulls.createReview({
-          owner,
-          repo,
-          pull_number,
-          commit_id: commitSha,
-          event: "COMMENT",
-          comments: comments,
-        });
+        // 디버깅을 위한 코멘트 정보 로깅
+        log.debug(`유효한 라인 코멘트 ${comments.length}개를 제출합니다.`);
+        log.debug(`첫 번째 코멘트 예시: ${JSON.stringify(comments[0])}`);
 
-        log.info(`${comments.length}개의 라인별 코멘트가 PR에 추가되었습니다.`);
+        try {
+          // PR 리뷰 생성
+          await client.rest.pulls.createReview({
+            owner,
+            repo,
+            pull_number,
+            commit_id: commitSha,
+            event: "COMMENT",
+            comments: comments,
+          });
+
+          log.info(
+            `${comments.length}개의 라인별 코멘트가 PR에 추가되었습니다.`,
+          );
+        } catch (reviewError) {
+          log.error(
+            `라인별 코멘트 추가 중 오류가 발생했습니다: ${reviewError}`,
+          );
+          // 오류 메시지 상세 로깅
+          if (reviewError instanceof Error) {
+            log.debug(`오류 상세 정보: ${reviewError.message}`);
+            if (
+              typeof reviewError === "object" &&
+              reviewError !== null &&
+              "response" in reviewError
+            ) {
+              const errorWithResponse = reviewError as {
+                response?: { data?: unknown };
+              };
+              if (errorWithResponse.response?.data) {
+                log.debug(
+                  `API 응답: ${JSON.stringify(errorWithResponse.response.data)}`,
+                );
+              }
+            }
+          }
+        }
       } catch (reviewError) {
         log.error(`라인별 코멘트 추가 중 오류가 발생했습니다: ${reviewError}`);
       }

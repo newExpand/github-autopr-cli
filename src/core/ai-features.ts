@@ -923,16 +923,15 @@ IMPORTANT: Your response must be in the user's current language setting. If the 
     if (!diffContent) return result;
 
     let currentFile = "";
-    let position = 0; // diff 파일 내에서의 위치 추적
     let lineNumber = 0;
-    let inHunk = false; // 현재 diff 청크 내부에 있는지 여부
 
     try {
-      // diff 콘텐츠를 라인별로 분석
-      const lines = diffContent.split("\n");
+      // 전체 diff 라인을 배열로 변환
+      const allLines = diffContent.split("\n");
 
-      for (let i = 0; i < lines.length; i++) {
-        const line = lines[i];
+      // 각 라인을 순회하면서 파일별 변경 정보 추출
+      for (let position = 0; position < allLines.length; position++) {
+        const line = allLines[position];
 
         // 새로운 파일 diff 시작
         if (line.startsWith("diff --git")) {
@@ -942,36 +941,27 @@ IMPORTANT: Your response must be in the user's current language setting. If the 
             if (!result[currentFile]) {
               result[currentFile] = [];
             }
-            inHunk = false; // 아직의 새로운 챵크 시작 전
           }
           continue;
         }
 
-        // 청크 헤더 (@@ -1,7 +1,9 @@ 형식)
+        // 새로운 청크 시작
         if (line.startsWith("@@")) {
           const match = line.match(/@@ -\d+(?:,\d+)? \+(\d+)(?:,\d+)? @@/);
           if (match) {
             lineNumber = parseInt(match[1]) - 1; // 다음 라인부터 시작하므로 1을 빼줌
-            inHunk = true; // 새로운 청크 시작
-            position = i; // 현재 라인 인덱스를 position으로 사용
           }
           continue;
         }
 
-        if (!inHunk) continue; // 청크 내부가 아니면 무시
-
         // 추가된 라인 (+ 로 시작)
         if (line.startsWith("+") && !line.startsWith("+++")) {
           lineNumber++;
-          position = i; // 현재 라인의 인덱스(라인 번호가 아닌 diff에서의 위치)
-
-          if (currentFile && position > 0) {
-            result[currentFile].push({
-              lineNumber,
-              position, // diff에서의 라인 위치
-              content: line.substring(1), // '+' 제거
-            });
-          }
+          result[currentFile]?.push({
+            lineNumber,
+            position,
+            content: line.substring(1), // '+' 제거
+          });
         }
         // 삭제된 라인 (- 로 시작)
         else if (line.startsWith("-") && !line.startsWith("---")) {
@@ -980,6 +970,24 @@ IMPORTANT: Your response must be in the user's current language setting. If the 
         // 변경 없는 라인 (공백으로 시작)
         else if (line.startsWith(" ")) {
           lineNumber++;
+        }
+      }
+
+      // 디버깅을 위한 결과 요약 출력
+      for (const file in result) {
+        log.debug(
+          `파일 ${file}에서 ${result[file].length}개의 변경된 라인 정보를 추출했습니다.`,
+        );
+        if (result[file].length > 0) {
+          log.debug(
+            `첫 번째 라인: ${result[file][0].lineNumber}, position: ${result[file][0].position}`,
+          );
+          // 마지막 5개 라인 위치 정보 로깅
+          const lastEntries = result[file].slice(-5);
+          log.debug(`마지막 ${lastEntries.length}개 라인 정보:`);
+          lastEntries.forEach((entry) => {
+            log.debug(`라인 ${entry.lineNumber}, position: ${entry.position}`);
+          });
         }
       }
     } catch (error) {
@@ -1019,8 +1027,28 @@ IMPORTANT: Your response must be a valid JSON array WITHOUT markdown code block 
 DO NOT wrap your JSON in markdown code blocks or any other formatting. 
 Return only a raw JSON array.`;
 
+      // diff 내용 디버깅
+      log.debug(
+        `실행 중인 diff 길이: ${
+          context.diffContent.length > 1000
+            ? context.diffContent.length + " 문자"
+            : "너무 짧음: " +
+              context.diffContent.substring(
+                0,
+                Math.min(100, context.diffContent.length),
+              ) +
+              "..."
+        }`,
+      );
+
       // diff 콘텐츠로부터 변경된 라인 분석
       const fileChanges = this.parseDiffContent(context.diffContent);
+
+      // 변경된 파일 요약 로깅
+      const changedFilesInfo = Object.keys(fileChanges)
+        .map((file) => `${file}(${fileChanges[file].length}개 라인)`)
+        .join(", ");
+      log.debug(`변경된 파일 요약: ${changedFilesInfo}`);
 
       // 빈 코멘트 배열 준비
       const lineComments: Array<{
@@ -1042,14 +1070,25 @@ Return only a raw JSON array.`;
           continue;
         }
 
-        const changedLines = fileChanges[file.path] || [];
-        if (changedLines.length === 0) continue;
-
-        // 라인 정보 로깅 (디버깅용)
+        const changedLines = fileChanges[file.path];
         log.debug(
           `파일 ${file.path}에서 ${changedLines.length}개의 변경된 라인을 찾았습니다.`,
         );
-        log.debug(`첫 번째 변경 라인: ${JSON.stringify(changedLines[0])}`);
+
+        // 각 파일에 대해 최대 10개 라인만 처리 (성능 고려)
+        const processedLines = changedLines.slice(0, 10);
+
+        if (processedLines.length === 0) {
+          log.debug(`파일 ${file.path}에 처리할 라인이 없습니다.`);
+          continue;
+        }
+
+        // 처리할 라인의 범위 출력
+        const firstLine = processedLines[0];
+        const lastLine = processedLines[processedLines.length - 1];
+        log.debug(
+          `처리할 라인 범위: ${firstLine.lineNumber}(pos:${firstLine.position}) ~ ${lastLine.lineNumber}(pos:${lastLine.position})`,
+        );
 
         // 파일 내용 분석
         const prompt = `Analyze the following file and generate comments ONLY for lines that have issues:
@@ -1062,7 +1101,7 @@ ${file.content}
 \`\`\`
 
 Changed Lines (line number: content):
-${changedLines.map((line) => `${line.lineNumber}: ${line.content}`).join("\n")}
+${processedLines.map((line) => `${line.lineNumber}: ${line.content}`).join("\n")}
 
 Return a JSON array of objects with lineNumber and comment fields for ONLY the lines that have issues:
 
@@ -1077,6 +1116,7 @@ Important rules:
 3. Write all comments in the user's current language setting (in Korean if user is using Korean locale)
 4. DO NOT wrap your response in markdown code blocks - return ONLY the raw JSON array
 5. Only include lineNumber and comment fields in each object
+6. Only comment on lines that are in the changed lines list provided above
 
 IMPORTANT: Return ONLY a valid JSON array without any markdown formatting or explanation text. Just the raw JSON data.`;
 
@@ -1133,6 +1173,9 @@ IMPORTANT: Return ONLY a valid JSON array without any markdown formatting or exp
                       position: lineInfo.position,
                       comment: comment.comment,
                     });
+                    log.debug(
+                      `코멘트 추가됨: 파일 ${file.path}, 라인 ${comment.lineNumber}, position: ${lineInfo.position}`,
+                    );
                   } else {
                     log.debug(
                       `파일 ${file.path}의 라인 ${comment.lineNumber}에 대한 유효한 position 정보를 찾을 수 없습니다.`,
@@ -1158,6 +1201,10 @@ IMPORTANT: Return ONLY a valid JSON array without any markdown formatting or exp
       log.debug(`총 ${lineComments.length}개의 라인 코멘트가 생성되었습니다.`);
       if (lineComments.length > 0) {
         log.debug(`첫 번째 코멘트 예시: ${JSON.stringify(lineComments[0])}`);
+        // 모든 코멘트의 position 값 로깅
+        log.debug(
+          `생성된 모든 코멘트의 position 값: ${lineComments.map((c) => c.position).join(", ")}`,
+        );
       }
 
       return lineComments;
