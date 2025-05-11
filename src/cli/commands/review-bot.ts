@@ -449,43 +449,135 @@ export async function reviewBotCommand(options: {
       process.exit(1);
     }
 
-    // 이제 명령어 핸들러는 오직 PR 이벤트만 처리합니다.
-    // 다른 이벤트 타입은 GitHub Actions 워크플로우에서 직접 처리합니다.
-    if (event === "pull_request") {
-      await handlePREvent(payload as PREvent, octokit);
-    } else {
-      // 내부 로그는 디버그 로그로 남기고 (GitHub Actions 로그에만 표시)
-      log.debug(
-        `이벤트 타입: ${event} - GitHub Actions 워크플로우에서 처리됩니다.`,
-      );
+    // 내부 로그는 디버그 로그로 남기고 (GitHub Actions 로그에만 표시)
+    log.debug(
+      `이벤트 타입: ${event} - GitHub Actions 워크플로우에서 처리됩니다.`,
+    );
 
-      // 실제 응답 메시지 생성 (디버그 로그 없이 깔끔하게)
-      if (
-        event === "issue_comment" &&
-        payload.issue &&
-        payload.issue.pull_request
-      ) {
-        // 코멘트 작성자에게 응답
-        console.log(
-          `@${payload.comment.user.login}님의 질문에 대한 답변입니다.`,
-        );
-      } else if (event === "pull_request_review_comment") {
-        // 코드 리뷰 코멘트 작성자에게 응답
-        console.log(
-          `${payload.comment.user.login}님의 코드 리뷰 코멘트에 대한 답변입니다.`,
-        );
-      } else if (event === "pull_request_review") {
-        // PR 리뷰 작성자에게 응답
-        console.log(`${payload.review.user.login}님의 리뷰에 대한 답변입니다.`);
-      } else {
-        // 응답하지 않는 이벤트는 로그만 남김
-        log.warn(t("commands.review_bot.warning.unsupported_event", { event }));
-        // 사용자에게는 빈 응답
-        console.log("");
-      }
+    // 이벤트 타입에 따라 처리
+    if (event === "pull_request") {
+      // PR 이벤트는 기존대로 처리
+      await handlePREvent(payload as PREvent, octokit);
+    } else if (
+      event === "issue_comment" &&
+      payload.issue &&
+      payload.issue.pull_request
+    ) {
+      // 이슈 코멘트 처리 (PR 관련 코멘트)
+      await generateAIResponse(event, payload);
+    } else if (event === "pull_request_review_comment") {
+      // PR 리뷰 코멘트 처리
+      await generateAIResponse(event, payload);
+    } else if (event === "pull_request_review") {
+      // PR 리뷰 처리
+      await generateAIResponse(event, payload);
+    } else {
+      // 지원하지 않는 이벤트
+      log.warn(t("commands.review_bot.warning.unsupported_event", { event }));
+      console.log(""); // 빈 응답
     }
   } catch (error) {
     log.error(t("commands.review_bot.error.execution_failed"), error);
     process.exit(1);
+  }
+}
+
+/**
+ * 이벤트 타입과 페이로드에 따라 적절한 AI 응답을 생성합니다.
+ */
+async function generateAIResponse(
+  eventType: string,
+  payload: any,
+): Promise<void> {
+  try {
+    // AIFeatures 동적 import
+    const { AIFeatures } = await import("../../core/ai-features.js");
+    const ai = new AIFeatures();
+    await ai.initialize();
+
+    // 응답 컨텍스트 준비
+    let prNumber = 0;
+    let commentId = 0;
+    let commentBody = "";
+    let author = "";
+
+    if (eventType === "issue_comment") {
+      prNumber = payload.issue.number;
+      commentId = payload.comment.id;
+      commentBody = payload.comment.body;
+      author = payload.comment.user.login;
+
+      // AI 응답 생성
+      const response = await ai.generateCommentResponse({
+        prNumber,
+        commentId,
+        commentBody,
+        author,
+        conversationHistory: [
+          {
+            author,
+            content: commentBody,
+            timestamp: new Date(payload.comment.created_at).toLocaleString(),
+          },
+        ],
+      });
+
+      // 응답 출력 (디버그 로그 없이)
+      console.log(`@${author}님의 질문에 대한 답변입니다:\n\n${response}`);
+    } else if (eventType === "pull_request_review_comment") {
+      prNumber = payload.pull_request.number;
+      commentId = payload.comment.id;
+      commentBody = payload.comment.body;
+      author = payload.comment.user.login;
+
+      // 코드 컨텍스트 추가
+      const codeContext = `파일: ${payload.comment.path}\n라인: ${payload.comment.line}`;
+
+      // AI 응답 생성
+      const response = await ai.generateCommentResponse({
+        prNumber,
+        commentId,
+        commentBody,
+        author,
+        codeContext,
+        conversationHistory: [
+          {
+            author,
+            content: commentBody,
+            timestamp: new Date(payload.comment.created_at).toLocaleString(),
+          },
+        ],
+      });
+
+      // 응답 출력 (디버그 로그 없이)
+      console.log(`${response}`);
+    } else if (eventType === "pull_request_review") {
+      prNumber = payload.pull_request.number;
+      commentId = payload.review.id;
+      commentBody = payload.review.body || "";
+      author = payload.review.user.login;
+
+      // AI 응답 생성
+      const response = await ai.generateCommentResponse({
+        prNumber,
+        commentId,
+        commentBody,
+        author,
+        conversationHistory: [
+          {
+            author,
+            content: commentBody,
+            timestamp: new Date().toLocaleString(),
+          },
+        ],
+      });
+
+      // 응답 출력 (디버그 로그 없이)
+      console.log(`${response}`);
+    }
+  } catch (error) {
+    // 오류 시에도 로그만 남기고 응답에는 디버그 정보 제외
+    log.error("AI 응답 생성 중 오류 발생:", error);
+    console.log("AI 응답을 생성할 수 없습니다. 다시 시도해 주세요.");
   }
 }

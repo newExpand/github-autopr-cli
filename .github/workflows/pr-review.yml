@@ -105,11 +105,17 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           AI_PROVIDER: "openrouter"
         run: |
-          # 봇 실행 결과를 저장
+          # 봇 실행 결과를 저장 (마지막 줄에 AI 응답 출력됨)
           output=$(npx autopr review-bot)
-          # 디버그 메시지 제거 (정규식 사용)
-          clean_output=$(echo "$output" | grep -v -E '^\[.*debug.*\]')
-          echo "review_output=$clean_output" >> $GITHUB_OUTPUT
+
+          # 디버그 메시지 완전히 제거하고 실제 AI 응답만 추출
+          # 줄바꿈 문자 유지를 위해 개행 문자를 특수 문자로 변환 후 처리
+          clean_output=$(echo "$output" | grep -v -E "^\[[^]]+\]" | tr '\n' '#' | sed -e 's/[#]\{3,\}/#/g' | tr '#' '\n')
+
+          # GITHUB_OUTPUT에 저장
+          echo "review_output<<EOF" >> $GITHUB_OUTPUT
+          echo "$clean_output" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
 
       # issue_comment 이벤트인 경우 - 찾아서 업데이트 또는 새로 생성
       - name: Find Existing Comment for issue_comment
@@ -128,7 +134,7 @@ jobs:
           comment-id: ${{ steps.find-comment-issue.outputs.comment-id }}
           issue-number: ${{ github.event.issue.number }}
           body: |
-            @${{ github.event.comment.user.login }} ${{ steps.pr-review-bot.outputs.review_output }}
+            ${{ steps.pr-review-bot.outputs.review_output }}
 
             <!-- 원본 코멘트 ID: ${{ github.event.comment.id }} -->
           edit-mode: replace
@@ -176,8 +182,6 @@ jobs:
           comment-id: ${{ steps.find-comment-pr-review.outputs.comment-id }}
           issue-number: ${{ github.event.pull_request.number }}
           body: |
-            @${{ github.event.review.user.login }}님의 리뷰에 대한 응답입니다.
-
             ${{ steps.pr-review-bot.outputs.review_output }}
 
             <!-- 리뷰 ID: ${{ github.event.review.id }} -->
