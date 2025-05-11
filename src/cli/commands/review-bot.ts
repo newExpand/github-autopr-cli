@@ -454,26 +454,34 @@ export async function reviewBotCommand(options: {
     if (event === "pull_request") {
       await handlePREvent(payload as PREvent, octokit);
     } else {
-      // 디버깅 목적으로 이벤트 타입 로깅
+      // 내부 로그는 디버그 로그로 남기고 (GitHub Actions 로그에만 표시)
       log.debug(
         `이벤트 타입: ${event} - GitHub Actions 워크플로우에서 처리됩니다.`,
       );
 
-      // stdout으로 출력 (GitHub Actions에서 사용 가능)
+      // 실제 응답 메시지 생성 (디버그 로그 없이 깔끔하게)
       if (
         event === "issue_comment" &&
         payload.issue &&
         payload.issue.pull_request
       ) {
-        console.log(`이슈 코멘트(#${payload.comment.id})에 대한 응답입니다.`);
-      } else if (event === "pull_request_review_comment") {
+        // 코멘트 작성자에게 응답
         console.log(
-          `PR 리뷰 코멘트(#${payload.comment.id})에 대한 응답입니다.`,
+          `@${payload.comment.user.login}님의 질문에 대한 답변입니다.`,
+        );
+      } else if (event === "pull_request_review_comment") {
+        // 코드 리뷰 코멘트 작성자에게 응답
+        console.log(
+          `${payload.comment.user.login}님의 코드 리뷰 코멘트에 대한 답변입니다.`,
         );
       } else if (event === "pull_request_review") {
-        console.log(`PR 리뷰(#${payload.review.id})에 대한 응답입니다.`);
+        // PR 리뷰 작성자에게 응답
+        console.log(`${payload.review.user.login}님의 리뷰에 대한 답변입니다.`);
       } else {
+        // 응답하지 않는 이벤트는 로그만 남김
         log.warn(t("commands.review_bot.warning.unsupported_event", { event }));
+        // 사용자에게는 빈 응답
+        console.log("");
       }
     }
   } catch (error) {

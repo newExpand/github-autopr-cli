@@ -53,10 +53,20 @@ jobs:
             echo "Is part of review: ${{ github.event.pull_request_review != null }}"
           fi
 
+      # 처리 방식을 이벤트 타입에 따라 분리
+      # pull_request 이벤트는 직접 실행
+      - name: Run PR Review Bot for pull_request events
+        if: github.event_name == 'pull_request'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          AI_PROVIDER: "openrouter"
+        run: npx autopr review-bot
+
       # 봇이 작성한 코멘트에는 응답하지 않음
-      # PR 리뷰 봇 실행 및 결과 저장
-      - name: Run PR Review Bot and Store Output
+      # 다른 이벤트 유형에 대해서는 봇 결과를 저장하고 응답 생성
+      - name: Run PR Review Bot and Store Output for comment events
         if: |
+          github.event_name != 'pull_request' &&
           !((github.event_name == 'issue_comment' && 
             (contains(github.event.comment.user.login, 'bot') || 
              github.event.comment.user.login == 'github-actions[bot]')) ||
@@ -67,10 +77,11 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           AI_PROVIDER: "openrouter"
         run: |
-          # 봇 실행 결과를 파일로 저장
+          # 봇 실행 결과를 저장
           output=$(npx autopr review-bot)
-          echo "$output" > review_output.txt
-          echo "::set-output name=review_output::$(cat review_output.txt)"
+          # 디버그 메시지 제거 (정규식 사용)
+          clean_output=$(echo "$output" | grep -v -E '^\[.*debug.*\]')
+          echo "review_output=$clean_output" >> $GITHUB_OUTPUT
 
       # issue_comment 이벤트인 경우 - 찾아서 업데이트 또는 새로 생성
       - name: Find Existing Comment for issue_comment
@@ -143,11 +154,3 @@ jobs:
 
             <!-- 리뷰 ID: ${{ github.event.review.id }} -->
           edit-mode: replace
-
-      # pull_request 이벤트인 경우 - 그냥 실행
-      - name: Run PR Review Bot Directly for pull_request events
-        if: github.event_name == 'pull_request'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          AI_PROVIDER: "openrouter"
-        run: npx autopr review-bot
