@@ -1,7 +1,7 @@
 import { Octokit } from "@octokit/rest";
 import { log } from "../../utils/logger.js";
 import { t } from "../../i18n/index.js";
-import { AIFeatures, PRReviewResult } from "../../core/ai-features.js";
+import { AIFeatures } from "../../core/ai-features.js";
 
 interface PREvent {
   action: string;
@@ -122,6 +122,113 @@ interface PRReviewEvent {
     };
     name: string;
   };
+}
+
+/**
+ * 봇 사용자 이름을 가져오는 공통 함수
+ */
+async function getBotUsername(octokit: Octokit): Promise<string> {
+  // 기본값 설정
+  let botUsername = "github-actions[bot]";
+  try {
+    const { data: currentUser } = await octokit.users.getAuthenticated();
+    botUsername = currentUser.login;
+    log.debug(`인증된 사용자: ${botUsername}`);
+  } catch (error) {
+    log.debug(`인증된 사용자 정보를 가져올 수 없습니다. 기본값 사용: ${error}`);
+  }
+  return botUsername;
+}
+
+/**
+ * 사용자가 봇인지 확인
+ */
+function isBot(username: string, botUsername: string): boolean {
+  return (
+    username === botUsername ||
+    username === "github-actions[bot]" ||
+    username.includes("bot")
+  );
+}
+
+/**
+ * 라인별 코멘트 처리 및 추가를 위한 도우미 함수
+ */
+async function addLineComments(
+  owner: string,
+  repo: string,
+  prNumber: number,
+  comments: Array<{
+    path: string;
+    position: number;
+    body: string;
+    line?: number;
+  }>,
+  commitSha: string,
+  octokit: Octokit,
+): Promise<number> {
+  // 개별 라인 코멘트로 분리하여 추가
+  log.debug("라인별 개별 코멘트로 추가하는 방식으로 전환합니다.");
+
+  let successCount = 0;
+  for (const comment of comments) {
+    try {
+      await octokit.pulls.createReviewComment({
+        owner,
+        repo,
+        pull_number: prNumber,
+        commit_id: commitSha,
+        path: comment.path,
+        position: comment.position,
+        body: comment.body,
+      });
+      successCount++;
+      log.debug(
+        `성공적으로 추가된 라인 코멘트: ${comment.path}:${comment.position}`,
+      );
+    } catch (commentError) {
+      log.debug(`개별 코멘트 추가 실패: ${commentError}`);
+    }
+  }
+
+  log.info(
+    `${successCount}/${comments.length}개의 라인별 코멘트가 PR에 추가되었습니다.`,
+  );
+
+  return successCount;
+}
+
+/**
+ * 라인별 코멘트 실패 시 일반 코멘트로 변환하는 도우미 함수
+ */
+async function addFallbackComment(
+  owner: string,
+  repo: string,
+  prNumber: number,
+  comments: Array<{
+    path: string;
+    position: number;
+    body: string;
+    line?: number;
+  }>,
+  octokit: Octokit,
+): Promise<void> {
+  // 백업 계획: 일반 댓글로 리뷰 피드백 추가
+  log.debug("라인별 코멘트 추가 실패로 인해 일반 코멘트로 변환합니다.");
+
+  let commentBody = "## 코드 리뷰 피드백\n\n";
+  for (const comment of comments) {
+    commentBody += `### ${comment.path}:${comment.line || "라인 정보 없음"}\n\n${comment.body}\n\n---\n\n`;
+  }
+
+  await octokit.issues.createComment({
+    owner,
+    repo,
+    issue_number: prNumber,
+    body: commentBody,
+  });
+
+  log.info("일반 코멘트로 리뷰 피드백이 추가되었습니다.");
 }
 
 /**
@@ -264,33 +371,20 @@ async function handlePREvent(event: PREvent, octokit: Octokit): Promise<void> {
         }
 
         try {
-          // 개별 라인 코멘트로 분리하여 추가
-          log.debug("라인별 개별 코멘트로 추가하는 방식으로 전환합니다.");
-
-          let successCount = 0;
-          for (const comment of comments) {
-            try {
-              await octokit.pulls.createReviewComment({
-                owner,
-                repo,
-                pull_number: prNumber,
-                commit_id: commitSha,
-                path: comment.path,
-                position: comment.position,
-                body: comment.body,
-              });
-              successCount++;
-              log.debug(
-                `성공적으로 추가된 라인 코멘트: ${comment.path}:${comment.position}`,
-              );
-            } catch (commentError) {
-              log.debug(`개별 코멘트 추가 실패: ${commentError}`);
-            }
-          }
-
-          log.info(
-            `${successCount}/${comments.length}개의 라인별 코멘트가 PR에 추가되었습니다.`,
+          // 라인별 코멘트 추가
+          const successCount = await addLineComments(
+            owner,
+            repo,
+            prNumber,
+            comments,
+            commitSha,
+            octokit,
           );
+
+          // 모든 코멘트 추가 실패 시 대체 방법 사용
+          if (successCount === 0 && comments.length > 0) {
+            await addFallbackComment(owner, repo, prNumber, comments, octokit);
+          }
         } catch (reviewError) {
           log.error(
             `라인별 코멘트 추가 중 오류가 발생했습니다: ${reviewError}`,
@@ -314,22 +408,8 @@ async function handlePREvent(event: PREvent, octokit: Octokit): Promise<void> {
             }
           }
 
-          // 백업 계획: 일반 댓글로 리뷰 피드백 추가
-          log.debug("라인별 코멘트 추가 실패로 인해 일반 코멘트로 변환합니다.");
-
-          let commentBody = "## 코드 리뷰 피드백\n\n";
-          for (const comment of comments) {
-            commentBody += `### ${comment.path}:${comment.line || "라인 정보 없음"}\n\n${comment.body}\n\n---\n\n`;
-          }
-
-          await octokit.issues.createComment({
-            owner,
-            repo,
-            issue_number: prNumber,
-            body: commentBody,
-          });
-
-          log.info("일반 코멘트로 리뷰 피드백이 추가되었습니다.");
+          // 오류 발생 시 대체 방법으로 일반 코멘트 사용
+          await addFallbackComment(owner, repo, prNumber, comments, octokit);
         }
       } catch (error) {
         log.error(`PR #${prNumber} 처리 중 오류 발생: ${error}`);
@@ -384,25 +464,11 @@ async function handleCommentEvent(
       `"Conversation" 탭에서 작성된 코멘트 ID ${commentId}를 처리합니다.`,
     );
 
-    // 봇 사용자 계정명 가져오기 (권한 문제를 방지하기 위해 try-catch로 감싸기)
-    let botUsername = "github-actions[bot]"; // 기본값 설정
-    try {
-      const { data: currentUser } = await octokit.users.getAuthenticated();
-      botUsername = currentUser.login;
-      log.debug(`인증된 사용자: ${botUsername}`);
-    } catch (error) {
-      // 권한 문제로 사용자 정보를 가져올 수 없는 경우 기본값 사용
-      log.debug(
-        `인증된 사용자 정보를 가져올 수 없습니다. 기본값 사용: ${error}`,
-      );
-    }
+    // 봇 사용자 계정명 가져오기
+    const botUsername = await getBotUsername(octokit);
 
     // 자신의 코멘트 또는 다른 봇의 코멘트는 무시
-    if (
-      comment.user.login === botUsername ||
-      comment.user.login === "github-actions[bot]" ||
-      comment.user.login.includes("bot")
-    ) {
+    if (isBot(comment.user.login, botUsername)) {
       log.debug("봇의 코멘트는 무시합니다.");
       return;
     }
@@ -501,25 +567,11 @@ async function handlePRReviewCommentEvent(
       `"Files changed" 탭에서 작성된 단일 코멘트 ID ${commentId}를 처리합니다.`,
     );
 
-    // 봇 사용자 계정명 가져오기 (권한 문제를 방지하기 위해 try-catch로 감싸기)
-    let botUsername = "github-actions[bot]"; // 기본값 설정
-    try {
-      const { data: currentUser } = await octokit.users.getAuthenticated();
-      botUsername = currentUser.login;
-      log.debug(`인증된 사용자: ${botUsername}`);
-    } catch (error) {
-      // 권한 문제로 사용자 정보를 가져올 수 없는 경우 기본값 사용
-      log.debug(
-        `인증된 사용자 정보를 가져올 수 없습니다. 기본값 사용: ${error}`,
-      );
-    }
+    // 봇 사용자 계정명 가져오기
+    const botUsername = await getBotUsername(octokit);
 
     // 자신의 코멘트 또는 다른 봇의 코멘트는 무시
-    if (
-      comment.user.login === botUsername ||
-      comment.user.login === "github-actions[bot]" ||
-      comment.user.login.includes("bot")
-    ) {
+    if (isBot(comment.user.login, botUsername)) {
       log.debug("봇의 코멘트는 무시합니다.");
       return;
     }
@@ -660,22 +712,12 @@ async function handlePRReviewEvent(
 
     log.info(`PR #${prNumber}에 대한 리뷰 이벤트를 처리합니다.`);
 
-    // 봇 사용자 정보 확인 (권한 문제를 방지하기 위해 try-catch로 감싸기)
-    let botUsername = "github-actions[bot]"; // 기본값 설정
-    try {
-      const { data: currentUser } = await octokit.users.getAuthenticated();
-      botUsername = currentUser.login;
-      log.debug(`인증된 사용자: ${botUsername}`);
-    } catch (error) {
-      // 권한 문제로 사용자 정보를 가져올 수 없는 경우 기본값 사용
-      log.debug(
-        `인증된 사용자 정보를 가져올 수 없습니다. 기본값 사용: ${error}`,
-      );
-    }
+    // 봇 사용자 정보 확인
+    const botUsername = await getBotUsername(octokit);
 
     // 자신의 리뷰는 무시
-    if (review.user.login === botUsername) {
-      log.debug("자신의 리뷰는 무시합니다.");
+    if (isBot(review.user.login, botUsername)) {
+      log.debug("봇의 리뷰는 무시합니다.");
       return;
     }
 
@@ -687,15 +729,11 @@ async function handlePRReviewEvent(
     });
 
     // 봇이 이미 응답한 코멘트 확인
-    const botComments = commentsResponse.data.filter(
+    const alreadyResponded = commentsResponse.data.some(
       (comment) =>
-        comment.user?.login === botUsername ||
-        comment.user?.login === "github-actions[bot]",
-    );
-
-    // 리뷰 ID에 기반한 응답 체크
-    const alreadyResponded = botComments.some((comment) =>
-      comment.body?.includes(`리뷰 ID: ${review.id}`),
+        (comment.user?.login === botUsername ||
+          comment.user?.login === "github-actions[bot]") &&
+        comment.body?.includes(`리뷰 ID: ${review.id}`),
     );
 
     if (alreadyResponded) {
@@ -706,13 +744,6 @@ async function handlePRReviewEvent(
     // AI를 사용하여 리뷰에 대한 응답 생성
     const ai = new AIFeatures();
     await ai.initialize();
-
-    const contextPrompt = `
-PR #${prNumber} "${pull_request.title}"에 대한 리뷰에 응답합니다.
-리뷰어: ${review.user.login}
-리뷰 내용: ${review.body || "(내용 없음)"}
-리뷰 상태: ${review.state}
-`;
 
     const response = await ai.generateCommentResponse({
       prNumber,
