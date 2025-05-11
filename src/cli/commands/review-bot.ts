@@ -1,7 +1,6 @@
 import { Octokit } from "@octokit/rest";
 import { log } from "../../utils/logger.js";
 import { t } from "../../i18n/index.js";
-import { AIFeatures } from "../../core/ai-features.js";
 
 interface PREvent {
   action: string;
@@ -28,6 +27,8 @@ interface PREvent {
   };
 }
 
+// 이 부분은 GitHub Actions에서 직접 처리하므로 처리 로직은 제거하지만,
+// 타입 인터페이스는 남겨둡니다 (이후에 참조할 수 있도록)
 interface CommentEvent {
   action: string;
   comment: {
@@ -57,7 +58,6 @@ interface CommentEvent {
   };
 }
 
-// PR 라인 코멘트 이벤트를 위한 인터페이스 추가
 interface PRReviewCommentEvent {
   action: string;
   comment: {
@@ -88,12 +88,10 @@ interface PRReviewCommentEvent {
     name: string;
   };
   pull_request_review?: {
-    // 리뷰의 일부인 코멘트인 경우 존재
     id: number;
   };
 }
 
-// PR 리뷰 이벤트를 위한 인터페이스 추가
 interface PRReviewEvent {
   action: string;
   review: {
@@ -122,33 +120,6 @@ interface PRReviewEvent {
     };
     name: string;
   };
-}
-
-/**
- * 봇 사용자 이름을 가져오는 공통 함수
- */
-async function getBotUsername(octokit: Octokit): Promise<string> {
-  // 기본값 설정
-  let botUsername = "github-actions[bot]";
-  try {
-    const { data: currentUser } = await octokit.users.getAuthenticated();
-    botUsername = currentUser.login;
-    log.debug(`인증된 사용자: ${botUsername}`);
-  } catch (error) {
-    log.debug(`인증된 사용자 정보를 가져올 수 없습니다. 기본값 사용: ${error}`);
-  }
-  return botUsername;
-}
-
-/**
- * 사용자가 봇인지 확인
- */
-function isBot(username: string, botUsername: string): boolean {
-  return (
-    username === botUsername ||
-    username === "github-actions[bot]" ||
-    username.includes("bot")
-  );
 }
 
 /**
@@ -293,7 +264,8 @@ async function handlePREvent(event: PREvent, octokit: Octokit): Promise<void> {
 
     const diffContent = String(diffResponse.data);
 
-    // AI를 사용하여 PR 리뷰 생성
+    // AIFeatures 동적 import로 변경
+    const { AIFeatures } = await import("../../core/ai-features.js");
     const ai = new AIFeatures();
     await ai.initialize();
 
@@ -424,361 +396,8 @@ async function handlePREvent(event: PREvent, octokit: Octokit): Promise<void> {
   }
 }
 
-/**
- * PR 코멘트 이벤트를 처리합니다.
- */
-async function handleCommentEvent(
-  event: CommentEvent,
-  octokit: Octokit,
-): Promise<void> {
-  try {
-    const { comment, pull_request, repository, issue } = event;
-
-    // PR 번호 확인 (pull_request 또는 issue.pull_request에서)
-    let prNumber: number | undefined;
-
-    if (pull_request) {
-      // pull_request_review_comment 이벤트인 경우
-      prNumber = pull_request.number;
-    } else if (issue?.pull_request) {
-      // issue_comment 이벤트이면서 PR 관련 이슈인 경우
-      prNumber = issue.number;
-    }
-
-    // PR 번호가 없는 경우 (일반 이슈 댓글인 경우) 처리하지 않음
-    if (!prNumber) {
-      log.debug("PR 관련 댓글이 아니므로 무시합니다.");
-      return;
-    }
-
-    const owner = repository.owner.login;
-    const repo = repository.name;
-    const commentId = comment.id;
-
-    log.info(
-      t("commands.review_bot.info.processing_comment", { id: commentId }),
-    );
-
-    // Conversation 탭의 코멘트임을 로깅
-    log.debug(
-      `"Conversation" 탭에서 작성된 코멘트 ID ${commentId}를 처리합니다.`,
-    );
-
-    // 봇 사용자 계정명 가져오기
-    const botUsername = await getBotUsername(octokit);
-
-    // 자신의 코멘트 또는 다른 봇의 코멘트는 무시
-    if (isBot(comment.user.login, botUsername)) {
-      log.debug("봇의 코멘트는 무시합니다.");
-      return;
-    }
-
-    // 이미 이 코멘트에 응답했는지 확인
-    const commentsResponse = await octokit.issues.listComments({
-      owner,
-      repo,
-      issue_number: prNumber,
-    });
-
-    // 봇이 이미 응답한 코멘트 확인 (코멘트 ID 참조)
-    const alreadyResponded = commentsResponse.data.some(
-      (existingComment) =>
-        (existingComment.user?.login === botUsername ||
-          existingComment.user?.login === "github-actions[bot]") &&
-        existingComment.body?.includes(`원본 코멘트 ID: ${commentId}`),
-    );
-
-    if (alreadyResponded) {
-      log.debug(`이미 코멘트 ID ${commentId}에 응답했습니다.`);
-      return;
-    }
-
-    // 대화 히스토리 구성
-    const conversationHistory = commentsResponse.data
-      .filter((c) => c.id <= commentId) // 현재 코멘트까지만 포함
-      .map((c) => ({
-        author: c.user?.login || "unknown",
-        content: c.body || "",
-        timestamp: c.created_at,
-      }));
-
-    // AI를 사용하여 코멘트 응답 생성
-    const ai = new AIFeatures();
-    await ai.initialize();
-
-    const response = await ai.generateCommentResponse({
-      prNumber,
-      commentId,
-      commentBody: comment.body,
-      author: comment.user.login,
-      replyTo: comment.user.login,
-      conversationHistory,
-    });
-
-    // PR에 응답 코멘트 작성 (코멘트 ID 포함)
-    await octokit.issues.createComment({
-      owner,
-      repo,
-      issue_number: prNumber,
-      body: `@${comment.user.login} ${response}\n\n<!-- 원본 코멘트 ID: ${commentId} -->`,
-    });
-
-    log.info(
-      t("commands.review_bot.success.comment_response_created", {
-        id: commentId,
-      }),
-    );
-  } catch (error) {
-    log.error(t("commands.review_bot.error.comment_response_failed"), error);
-  }
-}
-
-/**
- * PR 라인 코멘트 이벤트를 처리합니다. 특정 파일의 특정 라인에 대한 코멘트에 응답합니다.
- */
-async function handlePRReviewCommentEvent(
-  event: PRReviewCommentEvent,
-  octokit: Octokit,
-): Promise<void> {
-  try {
-    const { comment, pull_request, repository, pull_request_review } = event;
-    const prNumber = pull_request.number;
-    const owner = repository.owner.login;
-    const repo = repository.name;
-    const commentId = comment.id;
-
-    // 리뷰의 일부인 코멘트인지 확인
-    // "Start a review" 기능으로 코멘트를 남긴 경우 pull_request_review 필드가 존재함
-    if (pull_request_review) {
-      log.debug(
-        `리뷰 ID: ${pull_request_review.id}의 일부인 코멘트입니다. 이 코멘트는 리뷰가 제출될 때 처리됩니다.`,
-      );
-      return;
-    }
-
-    log.info(
-      t("commands.review_bot.info.processing_review_comment", {
-        id: commentId,
-      }),
-    );
-
-    // "Files changed" 탭의 개별 코멘트임을 로깅
-    log.debug(
-      `"Files changed" 탭에서 작성된 단일 코멘트 ID ${commentId}를 처리합니다.`,
-    );
-
-    // 봇 사용자 계정명 가져오기
-    const botUsername = await getBotUsername(octokit);
-
-    // 자신의 코멘트 또는 다른 봇의 코멘트는 무시
-    if (isBot(comment.user.login, botUsername)) {
-      log.debug("봇의 코멘트는 무시합니다.");
-      return;
-    }
-
-    // PR의 기존 코멘트 확인
-    const commentsResponse = await octokit.issues.listComments({
-      owner,
-      repo,
-      issue_number: prNumber,
-    });
-
-    // 이미 이 코멘트에 응답했는지 확인
-    const alreadyResponded = commentsResponse.data.some(
-      (existingComment) =>
-        (existingComment.user?.login === botUsername ||
-          existingComment.user?.login === "github-actions[bot]") &&
-        existingComment.body?.includes(`라인 코멘트 ID: ${commentId}`),
-    );
-
-    if (alreadyResponded) {
-      log.debug(`이미 라인 코멘트 ID ${commentId}에 응답했습니다.`);
-      return;
-    }
-
-    // 해당 PR의 모든 리뷰 코멘트 가져오기
-    const reviewCommentsResponse = await octokit.pulls.listReviewComments({
-      owner,
-      repo,
-      pull_number: prNumber,
-    });
-
-    // 대화 히스토리 구성
-    const conversationHistory = reviewCommentsResponse.data
-      .filter((c) => c.id <= commentId) // 현재 코멘트까지만 포함
-      .map((c) => ({
-        author: c.user?.login || "unknown",
-        content: c.body || "",
-        timestamp: c.created_at,
-      }));
-
-    // 코드 컨텍스트 정보 가져오기
-    let codeContext = "";
-    try {
-      // 해당 파일의 내용 가져오기
-      const fileContentResponse = await octokit.repos.getContent({
-        owner,
-        repo,
-        path: comment.path,
-        ref: pull_request.head.sha,
-      });
-
-      if ("content" in fileContentResponse.data) {
-        const fileContent = Buffer.from(
-          fileContentResponse.data.content,
-          "base64",
-        ).toString("utf-8");
-
-        // 코멘트가 달린 라인 주변 코드 추출 (5줄 전후)
-        const lines = fileContent.split("\n");
-        const startLine = Math.max(0, comment.line - 5);
-        const endLine = Math.min(lines.length, comment.line + 5);
-
-        codeContext = `File: ${comment.path}, Line ${comment.line}\n\`\`\`\n${lines
-          .slice(startLine, endLine)
-          .join("\n")}\n\`\`\``;
-      }
-    } catch (error) {
-      log.debug(`코드 컨텍스트를 가져오는데 실패했습니다: ${error}`);
-    }
-
-    // AI를 사용하여 코멘트 응답 생성
-    const ai = new AIFeatures();
-    await ai.initialize();
-
-    const response = await ai.generateCommentResponse({
-      prNumber,
-      commentId,
-      commentBody: comment.body,
-      author: comment.user.login,
-      replyTo: comment.user.login,
-      codeContext,
-      conversationHistory,
-    });
-
-    // 원본 코멘트의 정보 추가
-    let replyPrefix = `**${comment.user.login}님의 코드 리뷰 코멘트에 대한 응답:**\n\n`;
-
-    // 코멘트 URL이 있으면 링크 추가
-    if (comment.html_url) {
-      replyPrefix = `**${comment.user.login}님의 [코드 리뷰 코멘트](${comment.html_url})에 대한 응답:**\n\n`;
-    }
-
-    replyPrefix += `> ${comment.body}\n\n`;
-    const fullResponse =
-      replyPrefix + response + `\n\n<!-- 라인 코멘트 ID: ${commentId} -->`;
-
-    // PR 리뷰 코멘트에 대한 응답을 일반 PR 코멘트로 작성
-    await octokit.issues.createComment({
-      owner,
-      repo,
-      issue_number: prNumber,
-      body: fullResponse,
-    });
-
-    log.info(
-      t("commands.review_bot.success.review_comment_response_created", {
-        id: commentId,
-      }),
-    );
-  } catch (error) {
-    log.error(
-      t("commands.review_bot.error.review_comment_response_failed"),
-      error,
-    );
-  }
-}
-
-/**
- * PR 리뷰 이벤트를 처리합니다. 이는 PR 전체에 대한 리뷰를 담당합니다.
- */
-async function handlePRReviewEvent(
-  event: PRReviewEvent,
-  octokit: Octokit,
-): Promise<void> {
-  try {
-    const { review, pull_request, repository } = event;
-    const prNumber = pull_request.number;
-    const owner = repository.owner.login;
-    const repo = repository.name;
-
-    // 리뷰 상태가 submitted가 아니면 무시
-    if (event.action !== "submitted") {
-      log.debug(
-        `리뷰 이벤트 action이 submitted가 아니므로 무시합니다: ${event.action}`,
-      );
-      return;
-    }
-
-    log.info(`PR #${prNumber}에 대한 리뷰 이벤트를 처리합니다.`);
-
-    // 봇 사용자 정보 확인
-    const botUsername = await getBotUsername(octokit);
-
-    // 자신의 리뷰는 무시
-    if (isBot(review.user.login, botUsername)) {
-      log.debug("봇의 리뷰는 무시합니다.");
-      return;
-    }
-
-    // 이미 코드 리뷰 봇이 응답했는지 확인
-    const commentsResponse = await octokit.issues.listComments({
-      owner,
-      repo,
-      issue_number: prNumber,
-    });
-
-    // 봇이 이미 응답한 코멘트 확인
-    const alreadyResponded = commentsResponse.data.some(
-      (comment) =>
-        (comment.user?.login === botUsername ||
-          comment.user?.login === "github-actions[bot]") &&
-        comment.body?.includes(`리뷰 ID: ${review.id}`),
-    );
-
-    if (alreadyResponded) {
-      log.debug(`이미 리뷰 ID ${review.id}에 응답했습니다.`);
-      return;
-    }
-
-    // AI를 사용하여 리뷰에 대한 응답 생성
-    const ai = new AIFeatures();
-    await ai.initialize();
-
-    const response = await ai.generateCommentResponse({
-      prNumber,
-      commentId: review.id,
-      commentBody: review.body || "",
-      author: review.user.login,
-      replyTo: review.user.login,
-      conversationHistory: [
-        {
-          author: review.user.login,
-          content: review.body || "",
-          timestamp: new Date().toISOString(),
-        },
-      ],
-    });
-
-    // 응답 코멘트 추가 (리뷰 ID 포함)
-    await octokit.issues.createComment({
-      owner,
-      repo,
-      issue_number: prNumber,
-      body: `@${review.user.login}님의 리뷰에 대한 응답입니다.\n\n${response}\n\n<!-- 리뷰 ID: ${review.id} -->`,
-    });
-
-    log.info(
-      `PR #${prNumber}의 리뷰 ID ${review.id}에 대한 응답을 생성했습니다.`,
-    );
-  } catch (error) {
-    log.error(`PR 리뷰 이벤트 처리 중 오류가 발생했습니다:`, error);
-  }
-}
-
-/**
- * GitHub Actions에서 실행되는 PR 리뷰 봇 명령어
- */
+// 중요: 이 명령어 핸들러는 이제 PR 이벤트만 처리합니다.
+// 다른 이벤트 타입(코멘트, 리뷰 등)은 GitHub Actions에서 직접 처리합니다.
 export async function reviewBotCommand(options: {
   event?: string;
   payload?: string;
@@ -830,43 +449,32 @@ export async function reviewBotCommand(options: {
       process.exit(1);
     }
 
-    // 이벤트 유형에 따라 적절한 핸들러 호출
-    switch (event) {
-      case "pull_request":
-        await handlePREvent(payload as PREvent, octokit);
-        break;
-      case "issue_comment":
-        // issue_comment 이벤트가 PR 관련 댓글인지 확인
-        if (payload.issue && payload.issue.pull_request) {
-          // PR 관련 댓글인 경우에만 처리
-          // CommentEvent 인터페이스와 맞지 않을 수 있으므로 필요한 필드 매핑
-          const commentEvent: CommentEvent = {
-            action: payload.action,
-            comment: payload.comment,
-            pull_request: {
-              number: payload.issue.number,
-              title: payload.issue.title,
-              body: payload.issue.body || "",
-            },
-            repository: payload.repository,
-          };
-          await handleCommentEvent(commentEvent, octokit);
-        } else {
-          log.debug("PR 관련 댓글이 아니므로 무시합니다.");
-        }
-        break;
-      case "pull_request_review_comment":
-        await handlePRReviewCommentEvent(
-          payload as PRReviewCommentEvent,
-          octokit,
+    // 이제 명령어 핸들러는 오직 PR 이벤트만 처리합니다.
+    // 다른 이벤트 타입은 GitHub Actions 워크플로우에서 직접 처리합니다.
+    if (event === "pull_request") {
+      await handlePREvent(payload as PREvent, octokit);
+    } else {
+      // 디버깅 목적으로 이벤트 타입 로깅
+      log.debug(
+        `이벤트 타입: ${event} - GitHub Actions 워크플로우에서 처리됩니다.`,
+      );
+
+      // stdout으로 출력 (GitHub Actions에서 사용 가능)
+      if (
+        event === "issue_comment" &&
+        payload.issue &&
+        payload.issue.pull_request
+      ) {
+        console.log(`이슈 코멘트(#${payload.comment.id})에 대한 응답입니다.`);
+      } else if (event === "pull_request_review_comment") {
+        console.log(
+          `PR 리뷰 코멘트(#${payload.comment.id})에 대한 응답입니다.`,
         );
-        break;
-      case "pull_request_review":
-        await handlePRReviewEvent(payload as PRReviewEvent, octokit);
-        break;
-      default:
+      } else if (event === "pull_request_review") {
+        console.log(`PR 리뷰(#${payload.review.id})에 대한 응답입니다.`);
+      } else {
         log.warn(t("commands.review_bot.warning.unsupported_event", { event }));
-        break;
+      }
     }
   } catch (error) {
     log.error(t("commands.review_bot.error.execution_failed"), error);

@@ -54,13 +54,99 @@ jobs:
           fi
 
       # 봇이 작성한 코멘트에는 응답하지 않음
-      - name: Run PR Review Bot
+      # PR 리뷰 봇 실행 및 결과 저장
+      - name: Run PR Review Bot and Store Output
         if: |
           !((github.event_name == 'issue_comment' && 
             (contains(github.event.comment.user.login, 'bot') || 
              github.event.comment.user.login == 'github-actions[bot]')) ||
            (github.event_name == 'pull_request_review_comment' && 
             github.event.pull_request_review != null))
+        id: pr-review-bot
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          AI_PROVIDER: "openrouter"
+        run: |
+          # 봇 실행 결과를 파일로 저장
+          output=$(npx autopr review-bot)
+          echo "$output" > review_output.txt
+          echo "::set-output name=review_output::$(cat review_output.txt)"
+
+      # issue_comment 이벤트인 경우 - 찾아서 업데이트 또는 새로 생성
+      - name: Find Existing Comment for issue_comment
+        if: github.event_name == 'issue_comment' && github.event.issue.pull_request
+        uses: peter-evans/find-comment@v2
+        id: find-comment-issue
+        with:
+          issue-number: ${{ github.event.issue.number }}
+          comment-author: "github-actions[bot]"
+          body-includes: "원본 코멘트 ID: ${{ github.event.comment.id }}"
+
+      - name: Create or Update Comment for issue_comment
+        if: github.event_name == 'issue_comment' && github.event.issue.pull_request
+        uses: peter-evans/create-or-update-comment@v3
+        with:
+          comment-id: ${{ steps.find-comment-issue.outputs.comment-id }}
+          issue-number: ${{ github.event.issue.number }}
+          body: |
+            @${{ github.event.comment.user.login }} ${{ steps.pr-review-bot.outputs.review_output }}
+
+            <!-- 원본 코멘트 ID: ${{ github.event.comment.id }} -->
+          edit-mode: replace
+
+      # pull_request_review_comment 이벤트인 경우 - 찾아서 업데이트 또는 새로 생성
+      - name: Find Existing Comment for review_comment
+        if: github.event_name == 'pull_request_review_comment' && github.event.pull_request_review == null
+        uses: peter-evans/find-comment@v2
+        id: find-comment-review
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: "github-actions[bot]"
+          body-includes: "라인 코멘트 ID: ${{ github.event.comment.id }}"
+
+      - name: Create or Update Comment for review_comment
+        if: github.event_name == 'pull_request_review_comment' && github.event.pull_request_review == null
+        uses: peter-evans/create-or-update-comment@v3
+        with:
+          comment-id: ${{ steps.find-comment-review.outputs.comment-id }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            **${{ github.event.comment.user.login }}님의 코드 리뷰 코멘트에 대한 응답:**
+
+            > ${{ github.event.comment.body }}
+
+            ${{ steps.pr-review-bot.outputs.review_output }}
+
+            <!-- 라인 코멘트 ID: ${{ github.event.comment.id }} -->
+          edit-mode: replace
+
+      # pull_request_review 이벤트인 경우 - 찾아서 업데이트 또는 새로 생성
+      - name: Find Existing Comment for review
+        if: github.event_name == 'pull_request_review'
+        uses: peter-evans/find-comment@v2
+        id: find-comment-pr-review
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: "github-actions[bot]"
+          body-includes: "리뷰 ID: ${{ github.event.review.id }}"
+
+      - name: Create or Update Comment for review
+        if: github.event_name == 'pull_request_review'
+        uses: peter-evans/create-or-update-comment@v3
+        with:
+          comment-id: ${{ steps.find-comment-pr-review.outputs.comment-id }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            @${{ github.event.review.user.login }}님의 리뷰에 대한 응답입니다.
+
+            ${{ steps.pr-review-bot.outputs.review_output }}
+
+            <!-- 리뷰 ID: ${{ github.event.review.id }} -->
+          edit-mode: replace
+
+      # pull_request 이벤트인 경우 - 그냥 실행
+      - name: Run PR Review Bot Directly for pull_request events
+        if: github.event_name == 'pull_request'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           AI_PROVIDER: "openrouter"
