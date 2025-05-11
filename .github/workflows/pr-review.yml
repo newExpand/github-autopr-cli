@@ -22,6 +22,7 @@ jobs:
   review:
     runs-on: ubuntu-latest
     # issue_comment 이벤트가 PR 관련 댓글인 경우에만 실행
+    # pull_request_review_comment 이벤트에서는 리뷰의 일부가 아닐 때만 실행
     if: |
       (github.event_name != 'issue_comment') ||
       (github.event_name == 'issue_comment' && github.event.issue.pull_request)
@@ -48,13 +49,18 @@ jobs:
             echo "Comment author: ${{ github.event.comment.user.login }}"
             echo "Is bot comment: ${{ contains(github.event.comment.user.login, 'bot') || github.event.comment.user.login == 'github-actions[bot]' }}"
           fi
+          if [[ "${{ github.event_name }}" == "pull_request_review_comment" ]]; then
+            echo "Is part of review: ${{ github.event.pull_request_review != null }}"
+          fi
 
       # 봇이 작성한 코멘트에는 응답하지 않음
       - name: Run PR Review Bot
         if: |
-          !(github.event_name == 'issue_comment' && 
+          !((github.event_name == 'issue_comment' && 
             (contains(github.event.comment.user.login, 'bot') || 
-             github.event.comment.user.login == 'github-actions[bot]'))
+             github.event.comment.user.login == 'github-actions[bot]')) ||
+           (github.event_name == 'pull_request_review_comment' && 
+            github.event.pull_request_review != null))
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           AI_PROVIDER: "openrouter"

@@ -87,6 +87,10 @@ interface PRReviewCommentEvent {
     };
     name: string;
   };
+  pull_request_review?: {
+    // 리뷰의 일부인 코멘트인 경우 존재
+    id: number;
+  };
 }
 
 // PR 리뷰 이벤트를 위한 인터페이스 추가
@@ -337,6 +341,11 @@ async function handleCommentEvent(
       t("commands.review_bot.info.processing_comment", { id: commentId }),
     );
 
+    // Conversation 탭의 코멘트임을 로깅
+    log.debug(
+      `"Conversation" 탭에서 작성된 코멘트 ID ${commentId}를 처리합니다.`,
+    );
+
     // 봇 사용자 계정명 가져오기 (권한 문제를 방지하기 위해 try-catch로 감싸기)
     let botUsername = "github-actions[bot]"; // 기본값 설정
     try {
@@ -428,16 +437,30 @@ async function handlePRReviewCommentEvent(
   octokit: Octokit,
 ): Promise<void> {
   try {
-    const { comment, pull_request, repository } = event;
+    const { comment, pull_request, repository, pull_request_review } = event;
     const prNumber = pull_request.number;
     const owner = repository.owner.login;
     const repo = repository.name;
     const commentId = comment.id;
 
+    // 리뷰의 일부인 코멘트인지 확인
+    // "Start a review" 기능으로 코멘트를 남긴 경우 pull_request_review 필드가 존재함
+    if (pull_request_review) {
+      log.debug(
+        `리뷰 ID: ${pull_request_review.id}의 일부인 코멘트입니다. 이 코멘트는 리뷰가 제출될 때 처리됩니다.`,
+      );
+      return;
+    }
+
     log.info(
       t("commands.review_bot.info.processing_review_comment", {
         id: commentId,
       }),
+    );
+
+    // "Files changed" 탭의 개별 코멘트임을 로깅
+    log.debug(
+      `"Files changed" 탭에서 작성된 단일 코멘트 ID ${commentId}를 처리합니다.`,
     );
 
     // 봇 사용자 계정명 가져오기 (권한 문제를 방지하기 위해 try-catch로 감싸기)
