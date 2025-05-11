@@ -743,16 +743,10 @@
         "payload": "이벤트 페이로드 (JSON 문자열)"
       },
       "info": {
-        "processing_pr": "PR #{{number}}를 처리 중입니다",
-        "processing_comment": "코멘트 ID {{id}}를 처리 중입니다",
-        "processing_review_comment": "리뷰 코멘트 ID {{id}}를 처리 중입니다",
-        "processing_review": "PR 리뷰를 처리 중입니다"
+        "processing_pr": "PR #{{number}}를 처리 중입니다"
       },
       "success": {
-        "review_created": "PR #{{number}}에 대한 리뷰가 생성되었습니다",
-        "comment_response_created": "코멘트 ID {{id}}에 대한 응답이 생성되었습니다",
-        "review_comment_response_created": "리뷰 코멘트 ID {{id}}에 대한 응답이 생성되었습니다",
-        "review_response_created": "PR 리뷰에 대한 응답이 생성되었습니다"
+        "review_created": "PR #{{number}}에 대한 리뷰가 생성되었습니다"
       },
       "error": {
         "no_github_token": "GitHub 토큰을 찾을 수 없습니다",
@@ -761,25 +755,17 @@
         "missing_event_or_payload": "이벤트 또는 페이로드가 없습니다",
         "execution_failed": "PR 리뷰 봇 실행 중 오류가 발생했습니다",
         "review_failed": "PR 리뷰 생성에 실패했습니다",
-        "comment_response_failed": "코멘트 응답 생성에 실패했습니다",
-        "review_comment_response_failed": "리뷰 코멘트 응답 생성 중 오류가 발생했습니다",
         "unauthorized": "GitHub API 접근 권한이 없습니다",
         "auth_error": "인증 정보를 가져오는 중 오류가 발생했습니다"
       },
       "warning": {
         "unsupported_event": "지원하지 않는 이벤트 타입입니다: {{event}}",
-        "bot_comment": "봇의 코멘트는 무시합니다",
-        "already_responded": "이미 응답한 코멘트입니다",
         "access_denied": "리소스에 접근할 수 없습니다"
       },
       "debug": {
         "auth_user": "인증된 사용자: {{username}}",
         "auth_failed": "인증된 사용자 정보를 가져올 수 없습니다: {{error}}",
-        "default_bot": "기본 봇 사용자 이름을 사용합니다: {{username}}",
-        "ignore_own_comment": "자신의 코멘트는 무시합니다",
-        "ignore_bot_comment": "봇의 코멘트는 무시합니다",
-        "already_responded_to": "이미 {{id}}에 응답했습니다",
-        "not_pr_comment": "PR 관련 댓글이 아니므로 무시합니다"
+        "default_bot": "기본 봇 사용자 이름을 사용합니다: {{username}}"
       }
     }
   },
@@ -799,8 +785,7 @@
       "commit_message_failed": "커밋 메시지 개선 중 오류가 발생했습니다",
       "pr_title_failed": "PR 제목 생성 중 오류가 발생했습니다",
       "daily_report_failed": "일일 보고서 요약 생성 중 오류가 발생했습니다",
-      "pr_review_failed": "PR 리뷰 생성 중 오류가 발생했습니다",
-      "comment_response_failed": "코멘트 응답 생성 중 오류가 발생했습니다"
+      "pr_review_failed": "PR 리뷰 생성 중 오류가 발생했습니다"
     },
     "format": {
       "file": {

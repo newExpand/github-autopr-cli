@@ -744,16 +744,10 @@
         "payload": "Event payload as JSON string"
       },
       "info": {
-        "processing_pr": "Processing PR #{{number}}",
-        "processing_comment": "Processing comment #{{id}}",
-        "processing_review_comment": "Processing review comment #{{id}}",
-        "processing_review": "Processing PR review"
+        "processing_pr": "Processing PR #{{number}}"
       },
       "success": {
-        "review_created": "Review created for PR #{{number}}",
-        "comment_response_created": "Response created for comment #{{id}}",
-        "review_comment_response_created": "Response created for review comment #{{id}}",
-        "review_response_created": "Response created for PR review"
+        "review_created": "Review created for PR #{{number}}"
       },
       "error": {
         "no_github_token": "GITHUB_TOKEN not found in environment variables",
@@ -762,25 +756,17 @@
         "missing_event_or_payload": "Missing event type or payload",
         "execution_failed": "PR review bot execution failed",
         "review_failed": "Failed to create PR review",
-        "comment_response_failed": "Failed to create comment response",
-        "review_comment_response_failed": "Failed to create review comment response",
         "unauthorized": "Unauthorized access to GitHub API",
         "auth_error": "Error retrieving authentication information"
       },
       "warning": {
         "unsupported_event": "Unsupported event type: {{event}}",
-        "bot_comment": "Ignoring bot's comment",
-        "already_responded": "Already responded to this comment",
         "access_denied": "Access denied to resource"
       },
       "debug": {
         "auth_user": "Authenticated user: {{username}}",
         "auth_failed": "Failed to get authenticated user: {{error}}",
-        "default_bot": "Using default bot username: {{username}}",
-        "ignore_own_comment": "Ignoring own comment",
-        "ignore_bot_comment": "Ignoring bot's comment",
-        "already_responded_to": "Already responded to {{id}}",
-        "not_pr_comment": "Not a PR related comment, ignoring"
+        "default_bot": "Using default bot username: {{username}}"
       }
     }
   },
@@ -800,8 +786,7 @@
       "daily_report_failed": "Failed to generate daily report summary",
       "invalid_key": "Invalid API key",
       "invalid_provider": "Unsupported AI provider",
-      "pr_review_failed": "Failed to generate PR review",
-      "comment_response_failed": "Failed to generate comment response"
+      "pr_review_failed": "Failed to generate PR review"
     },
     "format": {
       "file": {

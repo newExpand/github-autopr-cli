@@ -32,21 +32,6 @@ interface PRReviewContext {
   }>;
 }
 
-// 코멘트 응답을 위한 인터페이스 추가
-interface CommentResponseContext {
-  prNumber: number;
-  commentId: number;
-  commentBody: string;
-  author: string;
-  replyTo?: string;
-  codeContext?: string;
-  conversationHistory: Array<{
-    author: string;
-    content: string;
-    timestamp: string;
-  }>;
-}
-
 // PR 리뷰 결과를 위한 인터페이스 추가
 export interface PRReviewResult {
   summary: string;
@@ -1211,64 +1196,6 @@ IMPORTANT: Return ONLY a valid JSON array without any markdown formatting or exp
     } catch (error) {
       log.error("라인 코멘트 생성 중 오류가 발생했습니다:", error);
       return [];
-    }
-  }
-
-  /**
-   * PR 코멘트에 대한 응답을 생성합니다.
-   * @param context 코멘트 응답 컨텍스트
-   * @returns 생성된 응답 코멘트
-   */
-  async generateCommentResponse(
-    context: CommentResponseContext,
-  ): Promise<string> {
-    try {
-      const systemPrompt = `You are a helpful code review assistant who:
-1. Responds to user questions and comments thoughtfully
-2. Maintains context of the conversation
-3. Provides technical explanations when needed
-4. Suggests solutions to problems
-5. Keeps responses professional and constructive
-6. Mentions relevant users when appropriate
-7. Always responds in the user's current language setting
-
-IMPORTANT: Generate the response in the user's current language setting. If the user is using Korean locale, the response must be in Korean.`;
-
-      // 대화 히스토리 포맷팅
-      const conversationHistory = context.conversationHistory
-        .map((msg) => `${msg.author} (${msg.timestamp}): ${msg.content}`)
-        .join("\n\n");
-
-      const prompt = `Please respond to the following comment on PR #${context.prNumber} and write the response in the user's current language setting (if Korean locale is used, respond in Korean):
-
-Comment by ${context.author}:
-${context.commentBody}
-
-${context.codeContext ? `Related code context:\n${context.codeContext}\n` : ""}
-
-Conversation history:
-${conversationHistory}
-
-${context.replyTo ? `You should mention @${context.replyTo} in your response.` : ""}
-
-Please provide a helpful, technical, and constructive response. Be concise but thorough.
-IMPORTANT: Your response must be in the user's current language setting. If the user is using Korean locale, write the entire response in Korean.`;
-
-      const response = await this.processWithAI(
-        prompt,
-        this.getMaxTokens("chunk"),
-        {
-          temperature: 0.7, // 약간 더 창의적인 응답을 위해
-          presence_penalty: 0.2,
-          frequency_penalty: 0.2,
-          systemPrompt,
-        },
-      );
-
-      return response;
-    } catch (error) {
-      log.error("코멘트 응답 생성 중 오류가 발생했습니다:", error);
-      throw new Error(t("ai.error.comment_response_failed"));
     }
   }
 }
