@@ -493,7 +493,15 @@ async function generateAIResponse(
     // AIFeatures 동적 import
     const { AIFeatures } = await import("../../core/ai-features.js");
     const ai = new AIFeatures();
-    await ai.initialize();
+
+    // 초기화를 조용히 수행
+    try {
+      await ai.initialize();
+    } catch (initError) {
+      // 초기화 실패 시 간단한 응답으로 대체
+      console.log("AI 응답을 생성할 수 없습니다. 다시 시도해 주세요.");
+      return;
+    }
 
     // 응답 컨텍스트 준비
     let prNumber = 0;
@@ -507,76 +515,97 @@ async function generateAIResponse(
       commentBody = payload.comment.body;
       author = payload.comment.user.login;
 
-      // AI 응답 생성
-      const response = await ai.generateCommentResponse({
-        prNumber,
-        commentId,
-        commentBody,
-        author,
-        conversationHistory: [
-          {
-            author,
-            content: commentBody,
-            timestamp: new Date(payload.comment.created_at).toLocaleString(),
-          },
-        ],
-      });
+      try {
+        // AI 응답 생성
+        const response = await ai.generateCommentResponse({
+          prNumber,
+          commentId,
+          commentBody,
+          author,
+          conversationHistory: [
+            {
+              author,
+              content: commentBody,
+              timestamp: new Date(payload.comment.created_at).toLocaleString(),
+            },
+          ],
+        });
 
-      // 응답 출력 (디버그 로그 없이)
-      console.log(`@${author}님의 질문에 대한 답변입니다:\n\n${response}`);
+        // 디버그 로그 없이 순수 응답만 출력
+        console.log(`${response}`);
+      } catch (responseError) {
+        // 오류 발생 시 간단한 응답
+        console.log(
+          "질문에 대한 응답을 생성할 수 없습니다. 다시 시도해 주세요.",
+        );
+      }
     } else if (eventType === "pull_request_review_comment") {
       prNumber = payload.pull_request.number;
       commentId = payload.comment.id;
       commentBody = payload.comment.body;
       author = payload.comment.user.login;
 
-      // 코드 컨텍스트 추가
-      const codeContext = `파일: ${payload.comment.path}\n라인: ${payload.comment.line}`;
+      try {
+        // 코드 컨텍스트 추가
+        const codeContext = `파일: ${payload.comment.path}\n라인: ${payload.comment.line}`;
 
-      // AI 응답 생성
-      const response = await ai.generateCommentResponse({
-        prNumber,
-        commentId,
-        commentBody,
-        author,
-        codeContext,
-        conversationHistory: [
-          {
-            author,
-            content: commentBody,
-            timestamp: new Date(payload.comment.created_at).toLocaleString(),
-          },
-        ],
-      });
+        // AI 응답 생성
+        const response = await ai.generateCommentResponse({
+          prNumber,
+          commentId,
+          commentBody,
+          author,
+          codeContext,
+          conversationHistory: [
+            {
+              author,
+              content: commentBody,
+              timestamp: new Date(payload.comment.created_at).toLocaleString(),
+            },
+          ],
+        });
 
-      // 응답 출력 (디버그 로그 없이)
-      console.log(`${response}`);
+        // 디버그 로그 없이 순수 응답만 출력
+        console.log(`${response}`);
+      } catch (responseError) {
+        // 오류 발생 시 간단한 응답
+        console.log(
+          "코드 리뷰 코멘트에 대한 응답을 생성할 수 없습니다. 다시 시도해 주세요.",
+        );
+      }
     } else if (eventType === "pull_request_review") {
       prNumber = payload.pull_request.number;
       commentId = payload.review.id;
       commentBody = payload.review.body || "";
       author = payload.review.user.login;
 
-      // AI 응답 생성
-      const response = await ai.generateCommentResponse({
-        prNumber,
-        commentId,
-        commentBody,
-        author,
-        conversationHistory: [
-          {
-            author,
-            content: commentBody,
-            timestamp: new Date().toLocaleString(),
-          },
-        ],
-      });
+      try {
+        // AI 응답 생성
+        const response = await ai.generateCommentResponse({
+          prNumber,
+          commentId,
+          commentBody,
+          author,
+          conversationHistory: [
+            {
+              author,
+              content: commentBody,
+              timestamp: new Date().toLocaleString(),
+            },
+          ],
+        });
 
-      // 응답 출력 (디버그 로그 없이)
-      console.log(`${response}`);
+        // 디버그 로그 없이 순수 응답만 출력
+        console.log(`${response}`);
+      } catch (responseError) {
+        // 오류 발생 시 간단한 응답
+        console.log(
+          "리뷰에 대한 응답을 생성할 수 없습니다. 다시 시도해 주세요.",
+        );
+      }
     }
   } catch (error) {
-    // 오류 시에도 로그만 남기고 응답에는 디버그 정보 제외
+    // 오류 시 로그는 남기지만 사용자에게는 간단한 메시지만 표시
     log.error("AI 응답 생성 중 오류 발생:", error);
     console.log("AI 응답을 생성할 수 없습니다. 다시 시도해 주세요.");
   }

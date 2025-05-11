@@ -105,17 +105,32 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           AI_PROVIDER: "openrouter"
         run: |
-          # 봇 실행 결과를 저장 (마지막 줄에 AI 응답 출력됨)
-          output=$(npx autopr review-bot)
+          # 봇 실행하여 응답 생성 - 임시 파일에 저장
+          npx autopr review-bot > bot_output.txt
 
-          # 디버그 메시지 완전히 제거하고 실제 AI 응답만 추출
-          # 줄바꿈 문자 유지를 위해 개행 문자를 특수 문자로 변환 후 처리
-          clean_output=$(echo "$output" | grep -v -E "^\[[^]]+\]" | tr '\n' '#' | sed -e 's/[#]\{3,\}/#/g' | tr '#' '\n')
+          # 출력 파일이 있는지 확인
+          if [ -f bot_output.txt ]; then
+            # 디버그 로그가 아닌 마지막 출력 부분만 사용하기
+            # AI 응답은 항상 마지막 부분에 출력됩니다
+            clean_output=$(cat bot_output.txt | grep -v -E "^\[.*\]" | grep -v "debug" | grep -v "AI 응답을 생성할 수 없습니다" | grep -v -E "^[[:space:]]*$" | tail -5)
+            
+            # 출력에 내용이 있는지 확인
+            if [ -z "$clean_output" ]; then
+              # 응답이 없으면 기본 메시지 사용
+              clean_output="죄송합니다. 응답을 생성할 수 없습니다. 다시 시도해 주세요."
+            fi
+            
+            # GitHub 출력 변수에 저장
+            echo "review_output<<EOF" >> $GITHUB_OUTPUT
+            echo "$clean_output" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          else
+            echo "review_output=응답을 생성할 수 없습니다." >> $GITHUB_OUTPUT
+          fi
 
-          # GITHUB_OUTPUT에 저장
-          echo "review_output<<EOF" >> $GITHUB_OUTPUT
-          echo "$clean_output" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          # 디버깅을 위한 출력
+          echo "생성된 응답:"
+          echo "$clean_output"
 
       # issue_comment 이벤트인 경우 - 찾아서 업데이트 또는 새로 생성
       - name: Find Existing Comment for issue_comment
