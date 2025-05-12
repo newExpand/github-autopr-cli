@@ -909,6 +909,9 @@ IMPORTANT: Your response must be in the user's current language setting. If the 
 
     let currentFile = "";
     let lineNumber = 0;
+    let inHunk = false;
+    let currentHunk = "";
+    let hunkStartPosition = 0;
 
     try {
       // 전체 diff 라인을 배열로 변환
@@ -920,6 +923,8 @@ IMPORTANT: Your response must be in the user's current language setting. If the 
 
         // 새로운 파일 diff 시작
         if (line.startsWith("diff --git")) {
+          inHunk = false;
+          currentHunk = "";
           const match = line.match(/diff --git a\/(.+) b\/(.+)/);
           if (match) {
             currentFile = match[2]; // b/의 파일명 사용
@@ -932,6 +937,9 @@ IMPORTANT: Your response must be in the user's current language setting. If the 
 
         // 새로운 청크 시작
         if (line.startsWith("@@")) {
+          inHunk = true;
+          currentHunk = line;
+          hunkStartPosition = position;
           const match = line.match(/@@ -\d+(?:,\d+)? \+(\d+)(?:,\d+)? @@/);
           if (match) {
             lineNumber = parseInt(match[1]) - 1; // 다음 라인부터 시작하므로 1을 빼줌
@@ -940,20 +948,20 @@ IMPORTANT: Your response must be in the user's current language setting. If the 
         }
 
         // 추가된 라인 (+ 로 시작)
-        if (line.startsWith("+") && !line.startsWith("+++")) {
+        if (inHunk && line.startsWith("+") && !line.startsWith("+++")) {
           lineNumber++;
           result[currentFile]?.push({
             lineNumber,
-            position,
+            position, // 정확한 diff 라인 위치
             content: line.substring(1), // '+' 제거
           });
         }
         // 삭제된 라인 (- 로 시작)
-        else if (line.startsWith("-") && !line.startsWith("---")) {
+        else if (inHunk && line.startsWith("-") && !line.startsWith("---")) {
           // 삭제된 라인은 새 파일에 없으므로 무시
         }
         // 변경 없는 라인 (공백으로 시작)
-        else if (line.startsWith(" ")) {
+        else if (inHunk && line.startsWith(" ")) {
           lineNumber++;
         }
       }

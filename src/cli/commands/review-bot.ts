@@ -52,6 +52,28 @@ async function addLineComments(
   let successCount = 0;
   for (const comment of comments) {
     try {
+      // diff_hunk 정보를 얻기 위해 전체 diff를 가져옵니다
+      const diffResponse = await octokit.pulls.get({
+        owner,
+        repo,
+        pull_number: prNumber,
+        mediaType: {
+          format: "diff",
+        },
+      });
+
+      const diffContent = String(diffResponse.data);
+      const diffLines = diffContent.split("\n");
+
+      // 포지션 주변의 라인을 찾아서 diff_hunk를 생성합니다
+      const pos = comment.position;
+      const startPos = Math.max(0, pos - 4);
+      const endPos = Math.min(diffLines.length - 1, pos + 3);
+      const diff_hunk = diffLines.slice(startPos, endPos + 1).join("\n");
+
+      log.debug(`코멘트 추가 시도: ${comment.path}:${comment.position}`);
+      log.debug(`생성된 diff_hunk 길이: ${diff_hunk.length} 문자`);
+
       await octokit.pulls.createReviewComment({
         owner,
         repo,
@@ -60,13 +82,16 @@ async function addLineComments(
         path: comment.path,
         position: comment.position,
         body: comment.body,
+        diff_hunk: diff_hunk,
       });
+
       successCount++;
       log.debug(
         `성공적으로 추가된 라인 코멘트: ${comment.path}:${comment.position}`,
       );
     } catch (commentError) {
       log.debug(`개별 코멘트 추가 실패: ${commentError}`);
+      log.debug(`실패 상세 정보: ${JSON.stringify(commentError)}`);
     }
   }
 
