@@ -184,12 +184,6 @@ name: PR Review Bot
 on:
   pull_request:
     types: [opened, synchronize]
-  pull_request_review_comment:
-    types: [created]
-  pull_request_review:
-    types: [submitted]
-  issue_comment:
-    types: [created]
 
 # 명시적으로 권한 설정 추가
 permissions:
@@ -390,7 +384,7 @@ export async function initCommand(): Promise<void> {
         type: "confirm",
         name: "setupGitHubAction",
         message: t("commands.init.prompts.setup_github_action"),
-        default: true,
+        default: false,
       },
     ]);
 

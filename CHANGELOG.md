@@ -1,5 +1,19 @@
 # Change Log
 
+## 0.1.24
+
+- Added GitHub PR Automatic Review Feature (Experimental)
+  - Integrated with GitHub Actions via new `review-bot` command
+  - Provides automatic code reviews on PR creation and updates
+  - Generates comprehensive code review summaries for entire PRs
+  - Offers inline comments on specific code lines
+  - Suggests improvements and best practices
+  - Automatically detects code quality issues, bugs, and security concerns
+  - Supports multiple languages with comments matching user locale
+  - Sets up GitHub Actions workflow automatically during initialization
+  - Optimized AI functionality for analyzing PR changes
+  - Implemented precise diff position mapping algorithm for review results
+
 ## 0.1.23
 
 - Updated OpenRouter Free AI Model

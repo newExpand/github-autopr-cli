@@ -108,7 +108,7 @@
         "customize_release_pr": "Would you like to customize the Release PR template?",
         "release_pr_title": "Enter Release PR title template (use {development} and {production} as placeholders)",
         "release_pr_body": "Enter Release PR body template (use {development} and {production} as placeholders)",
-        "setup_github_action": "Would you like to set up GitHub Actions for PR review bot?"
+        "setup_github_action": "Would you like to set up GitHub Actions for PR review bot?(Experimental feature)"
       },
       "error": {
         "git_hooks": "Error occurred while setting up Git hooks: {{error}}",

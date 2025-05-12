@@ -24,6 +24,11 @@ A powerful CLI tool for GitHub PR automation. Streamlines PR creation, review, a
   - Intuitive message formatting
 - 🤝 Collaborator management
 - 🪝 Git hooks automation
+- 🔎 GitHub PR automatic review (Experimental)
+  - GitHub Actions-based automated code reviews
+  - Code quality analysis on PR creation/updates
+  - Line-by-line inline comments
+  - Multilingual support matching user locale
 
 ## Branch Management Workflow
 
@@ -60,6 +65,7 @@ autopr init
    - AI features setup (optional)
    - Git hooks setup (optional)
    - Release PR template customization (optional)
+   - GitHub Actions workflow setup (for automatic PR reviews, optional)
 
 ## Main Commands
 
@@ -98,6 +104,12 @@ autopr merge <pr-number>
 
 # Reopen closed PR
 autopr reopen <pr-number>
+
+# Run GitHub PR automatic review (for CI environments)
+autopr review-bot
+# Options:
+# -e, --event <event>     GitHub event type
+# -p, --payload <payload> GitHub event payload
 ```
 
 ### Daily Report Management

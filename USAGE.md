@@ -30,6 +30,18 @@ To use the AutoPR tool, follow these steps for installation and setup:
    ```
    Running this command will display an interactive prompt where you can configure the default branches (main, dev, etc.) and branch patterns for your project.
 
+   During the initial setup, you can also choose the following options:
+   - GitHub authentication (OAuth or manual token entry)
+   - Default branch and development branch configuration
+   - AI features setup (OpenAI or OpenRouter)
+     - OpenAI: Requires an API key and is a paid service.
+     - OpenRouter: Free to use without requiring additional key setup.
+   - Automatic GitHub Actions workflow setup (for PR automatic review)
+     - Automatically reviews code when PRs are created or updated
+     - Analyzes code quality, potential bugs, security vulnerabilities
+     - Provides inline comments on specific code lines
+     - Delivers reviews in multiple languages matching the user's locale
+
    ### Initial Setup (init) Example
    
    Below are step-by-step screen examples when running the `autopr init` command:
@@ -173,58 +185,6 @@ autopr commit -a  # Commit and push to origin for the current branch
 autopr commit  # Commit locally without pushing to origin
 ```
 
-### autopr commit Command Options
-
-The `autopr commit` command provides various options that can be used as needed:
-
-```bash
-autopr commit        # Stage and commit all changes (without push)
-autopr commit -a     # Stage and commit all changes, then push to remote repository
-autopr commit -s     # Selectively stage and commit changed files (without push)
-autopr commit -sp    # Selectively stage and commit changed files, then push to remote repository
-```
-
-> 💡 **Note**: The `-s` option allows you to select which files to include in the commit, useful when working on multiple features simultaneously. The `-p` suffix automatically executes `git push` after committing.
-
-## Branch Cleanup and Management
-
-As development progresses actively, various branches are created, potentially complicating the repository. Cleaning up integrated branches offers these benefits:
-
-- Maintains clarity of repository structure
-- Improves visibility of ongoing work
-- Enhances Git performance
-- Prevents accidental work on outdated branches
-
-### How to Delete Integrated Branches
-
-1. Delete local branch:
-   ```bash
-   git branch -d <branch-name>  # Delete only merged branches (-d)
-   git branch -D <branch-name>  # Force delete (regardless of merge status)
-   ```
-
-2. Delete remote branch:
-   ```bash
-   git push origin --delete <branch-name>
-   ```
-
-3. Automatic cleanup when using `autopr merge`:
-   ```bash
-   autopr merge <PR-number>
-   ```
-   > 💡 **Note**: The `autopr merge` command automatically deletes the branch locally after PR merge and checks out to the target branch (dev or main).
-
-4. Periodic branch cleanup:
-   ```bash
-   # Delete all already merged local branches
-   git fetch -p && git branch --merged | grep -v '\*\|master\|main\|dev' | xargs git branch -d
-   
-   # Clean up local references to deleted remote branches
-   git fetch --prune
-   ```
-
-> 💡 **Note**: It's good practice to schedule periodic (e.g., bi-weekly) cleanup of unused branches with team members.
-
 ## Real Usage Examples
 
 Below are the results of executing commands in an actual terminal.
@@ -265,6 +225,17 @@ Below are the results of executing commands in an actual terminal.
    ![PR Merge](docs/docs-4.png)
    *Figure 4: PR merge result - PR information confirmed, conflict check performed, successfully merged, and local branch cleaned up.*
 
+### GitHub PR Automatic Review
+
+If you selected the GitHub Actions workflow setup during initialization, code reviews will be automatically performed when PRs are created or updated. This experimental feature provides the following benefits:
+
+- Delivers comprehensive code review summaries for the entire PR
+- Automatically adds inline comments on specific code lines
+- Detects code quality issues, bugs, security concerns automatically
+- Provides reviews in the user's locale language
+
+The GitHub Actions workflow is automatically created in the `.github/workflows/pr-review.yml` file and works immediately without additional configuration.
+
 ### Creating and Merging Release Branch
 
 5. Create release branch:
@@ -274,33 +245,3 @@ Below are the results of executing commands in an actual terminal.
    
    ![Release Branch Creation](docs/docs-5.png)
    *Figure 5: Release branch creation result - New release branch is created and guidance for PR creation is displayed.*
-
-6. Create release PR:
-   ```bash
-   autopr new
-   ```
-   
-   ![Release PR Creation](docs/docs-6.png)
-   *Figure 6: Release PR creation result - release/* pattern is matched and a release PR is created.*
-
-7. Merge release PR:
-   ```bash
-   autopr merge 18  # 18 is the release PR number created above
-   ```
-   
-   ![Release PR Merge](docs/docs-7.png)
-   *Figure 7: Release PR merge result - Release PR is successfully merged into the main branch and local branch is cleaned up.*
-
-> 💡 **Note**: The `autopr` commands display detailed work progress with user-friendly messages. They provide features such as automatic commit message generation, branch pattern matching, PR creation and merging, enhancing work efficiency.
-
-## Real PR Example
-
-You can check out a real PR example created using AutoPR at the following link:
-[https://github.com/newExpand/github-autopr-cli/pull/56](https://github.com/newExpand/github-autopr-cli/pull/56)
-
-This PR includes the following major feature improvements and additions to the `autopr` CLI tool:
-- Daily commit report feature
-- Enhanced PR list functionality
-- Improved commit process
-- Enhanced conflict resolution guide
-- Improved user interface

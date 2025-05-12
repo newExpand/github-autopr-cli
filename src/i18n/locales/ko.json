@@ -110,7 +110,7 @@
         "select_ai_provider": "AI 제공자를 선택하세요:",
         "enter_api_key": "{{provider}} API 키를 입력하세요:",
         "select_model": "사용할 모델을 선택하세요:",
-        "setup_github_action": "PR 리뷰 봇을 위한 GitHub Actions를 설정하시겠습니까?"
+        "setup_github_action": "PR 리뷰 봇을 위한 GitHub Actions를 설정하시겠습니까?(실험적 기능)"
       },
       "info": {
         "creating_env": "새로운 .env 파일을 생성합니다",

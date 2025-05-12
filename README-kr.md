@@ -21,6 +21,11 @@ GitHub PR 자동화를 위한 강력한 CLI 도구입니다. PR 생성, 리뷰, 
   - 직관적인 메시지 포맷팅
 - 🤝 Collaborator 관리
 - 🪝 Git 훅 자동화
+- 🔎 GitHub PR 자동 리뷰 (실험적)
+  - GitHub Actions 기반 자동 코드 리뷰
+  - PR 생성/업데이트 시 코드 품질 분석
+  - 라인별 인라인 코멘트 제공
+  - 다국어 지원으로 로케일에 맞는 리뷰 생성
 
 ## 브랜치 관리 워크플로우
 
@@ -56,6 +61,7 @@ autopr init
    - AI 기능 설정 (선택사항)
    - Git 훅 설정 (선택사항)
    - 릴리스 PR 템플릿 커스터마이징 (선택사항)
+   - GitHub Actions 워크플로우 설정 (PR 자동 리뷰용, 선택사항)
 
 ## 주요 명령어
 
@@ -94,6 +100,12 @@ autopr merge <pr-번호>
 
 # 닫힌 PR 다시 열기
 autopr reopen <pr-번호>
+
+# GitHub PR 자동 리뷰 실행 (CI 환경에서 사용)
+autopr review-bot
+# 옵션:
+# -e, --event <event>     GitHub 이벤트 유형
+# -p, --payload <payload> GitHub 이벤트 페이로드
 ```
 
 ### 일일 보고서 관리
