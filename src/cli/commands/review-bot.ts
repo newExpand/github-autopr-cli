@@ -49,50 +49,73 @@ async function addLineComments(
   // 개별 라인 코멘트로 분리하여 추가
   log.debug("라인별 개별 코멘트로 추가하는 방식으로 전환합니다.");
 
+  // diff에서 각 파일별 패치 정보 추출을 위한 변수들
   let successCount = 0;
-  for (const comment of comments) {
-    try {
-      // diff_hunk 정보를 얻기 위해 전체 diff를 가져옵니다
-      const diffResponse = await octokit.pulls.get({
-        owner,
-        repo,
-        pull_number: prNumber,
-        mediaType: {
-          format: "diff",
-        },
-      });
 
-      const diffContent = String(diffResponse.data);
-      const diffLines = diffContent.split("\n");
+  try {
+    // 전체 PR diff를 한 번만 가져옵니다
+    const diffResponse = await octokit.pulls.get({
+      owner,
+      repo,
+      pull_number: prNumber,
+      mediaType: {
+        format: "diff",
+      },
+    });
 
-      // 포지션 주변의 라인을 찾아서 diff_hunk를 생성합니다
-      const pos = comment.position;
-      const startPos = Math.max(0, pos - 4);
-      const endPos = Math.min(diffLines.length - 1, pos + 3);
-      const diff_hunk = diffLines.slice(startPos, endPos + 1).join("\n");
+    const diffContent = String(diffResponse.data);
+    log.debug(`가져온 diff 길이: ${diffContent.length} 문자`);
 
-      log.debug(`코멘트 추가 시도: ${comment.path}:${comment.position}`);
-      log.debug(`생성된 diff_hunk 길이: ${diff_hunk.length} 문자`);
+    // diff 내용을 파일별로 분리하고 position 정보 매핑
+    const filePatches = parseDiff(diffContent);
 
-      await octokit.pulls.createReviewComment({
-        owner,
-        repo,
-        pull_number: prNumber,
-        commit_id: commitSha,
-        path: comment.path,
-        position: comment.position,
-        body: comment.body,
-        diff_hunk: diff_hunk,
-      });
+    for (const comment of comments) {
+      try {
+        // 해당 파일의 diff 구간 찾기
+        const filePatch = filePatches[comment.path];
+        if (!filePatch) {
+          log.debug(
+            `파일 ${comment.path}의 diff 패치 정보를 찾을 수 없습니다.`,
+          );
+          continue;
+        }
 
-      successCount++;
-      log.debug(
-        `성공적으로 추가된 라인 코멘트: ${comment.path}:${comment.position}`,
-      );
-    } catch (commentError) {
-      log.debug(`개별 코멘트 추가 실패: ${commentError}`);
-      log.debug(`실패 상세 정보: ${JSON.stringify(commentError)}`);
+        // 해당 파일에서 올바른 위치 (relative position) 찾기
+        const patchPosition = findPatchPosition(filePatch, comment.position);
+
+        if (!patchPosition) {
+          log.debug(
+            `파일 ${comment.path}의 position ${comment.position}에 해당하는 patch 위치를 찾을 수 없습니다.`,
+          );
+          continue;
+        }
+
+        log.debug(
+          `코멘트 추가 시도: ${comment.path}:${comment.line}, patch position: ${patchPosition.position}`,
+        );
+
+        // GitHub API 호출하여 코멘트 추가
+        await octokit.pulls.createReviewComment({
+          owner,
+          repo,
+          pull_number: prNumber,
+          commit_id: commitSha,
+          path: comment.path,
+          position: patchPosition.position,
+          body: comment.body,
+        });
+
+        successCount++;
+        log.debug(
+          `성공적으로 추가된 라인 코멘트: ${comment.path}:${comment.line}`,
+        );
+      } catch (commentError) {
+        log.debug(`개별 코멘트 추가 실패: ${commentError}`);
+        log.debug(`실패 상세 정보: ${JSON.stringify(commentError)}`);
+      }
     }
+  } catch (error) {
+    log.error(`PR diff 가져오기 실패: ${error}`);
   }
 
   log.info(
@@ -100,6 +123,123 @@ async function addLineComments(
   );
 
   return successCount;
+}
+
+/**
+ * diff 내용을 파일별로 파싱하여 패치 정보를 추출합니다.
+ */
+function parseDiff(diffContent: string): Record<
+  string,
+  {
+    content: string;
+    positions: Array<{
+      globalPos: number;
+      patchPos: number;
+      lineNumber?: number;
+    }>;
+  }
+> {
+  const result: Record<
+    string,
+    {
+      content: string;
+      positions: Array<{
+        globalPos: number;
+        patchPos: number;
+        lineNumber?: number;
+      }>;
+    }
+  > = {};
+
+  if (!diffContent) return result;
+
+  const lines = diffContent.split("\n");
+  let currentFile = "";
+  let fileStartIndex = -1;
+  let patchPos = 0;
+  let inHunk = false;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+
+    // 새 파일 시작
+    if (line.startsWith("diff --git")) {
+      // 이전 파일 정보 저장
+      if (currentFile && fileStartIndex >= 0) {
+        const fileContent = lines.slice(fileStartIndex, i).join("\n");
+        result[currentFile].content = fileContent;
+      }
+
+      // 새 파일 정보 초기화
+      const match = line.match(/diff --git a\/(.+) b\/(.+)/);
+      if (match) {
+        currentFile = match[2]; // b/의 파일명 사용
+        result[currentFile] = { content: "", positions: [] };
+        fileStartIndex = i;
+        patchPos = 0; // 새 파일 시작 시 patch position 리셋
+        inHunk = false;
+      }
+    }
+    // hunk 시작
+    else if (line.startsWith("@@")) {
+      inHunk = true;
+      // 새로운 청크가 시작될 때마다 patchPos를 증가시키지 않음
+    }
+    // 청크 내에서만 position 계산
+    else if (inHunk) {
+      patchPos++; // hunk 내 모든 라인에 대해 patchPos 증가
+
+      // 추가된 라인인 경우 ('+' 로 시작하고, '+++' 아님)
+      if (line.startsWith("+") && !line.startsWith("+++")) {
+        const lineMatch = line.match(/^\+(.*)$/);
+        if (lineMatch) {
+          // 전역 position과 패치 내 position 매핑
+          result[currentFile].positions.push({
+            globalPos: i,
+            patchPos: patchPos,
+          });
+        }
+      }
+    }
+  }
+
+  // 마지막 파일 처리
+  if (currentFile && fileStartIndex >= 0) {
+    const fileContent = lines.slice(fileStartIndex).join("\n");
+    result[currentFile].content = fileContent;
+  }
+
+  return result;
+}
+
+/**
+ * 글로벌 position에 해당하는 패치 내 position 찾기
+ */
+function findPatchPosition(
+  filePatch: {
+    content: string;
+    positions: Array<{ globalPos: number; patchPos: number }>;
+  },
+  globalPosition: number,
+): { position: number } | null {
+  // 가장 가까운 position 찾기
+  let closestPos = null;
+  let minDistance = Number.MAX_SAFE_INTEGER;
+
+  for (const pos of filePatch.positions) {
+    const distance = Math.abs(pos.globalPos - globalPosition);
+    if (distance < minDistance) {
+      minDistance = distance;
+      closestPos = pos;
+    }
+  }
+
+  if (closestPos && minDistance <= 5) {
+    // 5라인 이내의 오차 허용
+    return { position: closestPos.patchPos };
+  }
+
+  return null;
 }
 
 /**
