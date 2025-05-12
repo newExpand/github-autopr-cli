@@ -69,6 +69,50 @@ async function addLineComments(
     // diff 내용을 파일별로 분리하고 position 정보 매핑
     const filePatches = parseDiff(diffContent);
 
+    // 각 파일별 헤더와 청크 정보 추출
+    const diffHunks: Record<string, Record<number, string>> = {};
+    const lines = diffContent.split("\n");
+    let currentFile = "";
+    let currentHunk = "";
+    let hunkStartPosition = 0;
+    let inHunk = false;
+    let patchPos = 0;
+
+    // 파일별 hunk 정보 추출
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+
+      if (line.startsWith("diff --git")) {
+        const match = line.match(/diff --git a\/(.+) b\/(.+)/);
+        if (match) {
+          currentFile = match[2];
+          if (!diffHunks[currentFile]) {
+            diffHunks[currentFile] = {};
+          }
+          inHunk = false;
+          patchPos = 0;
+        }
+      } else if (line.startsWith("@@")) {
+        inHunk = true;
+        currentHunk = line;
+        hunkStartPosition = i;
+        // 새 hunk 시작 시 patchPos 유지 (GitHub API는 전체 diff에서의 상대적 위치를 사용)
+      } else if (inHunk) {
+        patchPos++;
+
+        // 각 라인의 위치에 해당 hunk 정보 저장
+        // diff_hunk는 시작 라인(@@...)부터 최소 3줄 이상을 포함해야 함
+        const hunkEndLine = Math.min(i + 3, lines.length);
+        const hunkLines = lines
+          .slice(hunkStartPosition, hunkEndLine)
+          .join("\n");
+
+        if (!diffHunks[currentFile][patchPos]) {
+          diffHunks[currentFile][patchPos] = hunkLines;
+        }
+      }
+    }
+
     for (const comment of comments) {
       try {
         // 해당 파일의 diff 구간 찾기
@@ -90,8 +134,16 @@ async function addLineComments(
           continue;
         }
 
+        // diff_hunk 정보 가져오기
+        const diffHunk = diffHunks[comment.path]?.[patchPosition.position];
+        if (!diffHunk) {
+          log.debug(
+            `파일 ${comment.path}의 position ${patchPosition.position}에 해당하는 diff_hunk를 찾을 수 없습니다.`,
+          );
+        }
+
         log.debug(
-          `코멘트 추가 시도: ${comment.path}:${comment.line}, patch position: ${patchPosition.position}`,
+          `코멘트 추가 시도: ${comment.path}:${comment.line || patchPosition.lineNumber}, patch position: ${patchPosition.position}`,
         );
 
         // GitHub API 호출하여 코멘트 추가
@@ -103,11 +155,13 @@ async function addLineComments(
           path: comment.path,
           position: patchPosition.position,
           body: comment.body,
+          line: comment.line || patchPosition.lineNumber, // 정확한 라인 번호 사용
+          ...(diffHunk ? { diff_hunk: diffHunk } : {}), // diff_hunk가 있는 경우에만 추가
         });
 
         successCount++;
         log.debug(
-          `성공적으로 추가된 라인 코멘트: ${comment.path}:${comment.line}`,
+          `성공적으로 추가된 라인 코멘트: ${comment.path}:${comment.line || patchPosition.lineNumber}`,
         );
       } catch (commentError) {
         log.debug(`개별 코멘트 추가 실패: ${commentError}`);
@@ -158,6 +212,8 @@ function parseDiff(diffContent: string): Record<
   let fileStartIndex = -1;
   let patchPos = 0;
   let inHunk = false;
+  let currentLineNumber = 0;
+  let hunkStartLine = 0;
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
@@ -178,12 +234,19 @@ function parseDiff(diffContent: string): Record<
         fileStartIndex = i;
         patchPos = 0; // 새 파일 시작 시 patch position 리셋
         inHunk = false;
+        currentLineNumber = 0;
       }
     }
     // hunk 시작
     else if (line.startsWith("@@")) {
       inHunk = true;
-      // 새로운 청크가 시작될 때마다 patchPos를 증가시키지 않음
+
+      // 라인 번호 추출 (예: @@ -1,5 +2,8 @@)
+      const hunkMatch = line.match(/@@ -\d+(?:,\d+)? \+(\d+)(?:,\d+)? @@/);
+      if (hunkMatch) {
+        currentLineNumber = parseInt(hunkMatch[1], 10) - 1; // 다음 라인부터 시작하므로 -1
+        hunkStartLine = currentLineNumber;
+      }
     }
     // 청크 내에서만 position 계산
     else if (inHunk) {
@@ -191,15 +254,19 @@ function parseDiff(diffContent: string): Record<
 
       // 추가된 라인인 경우 ('+' 로 시작하고, '+++' 아님)
       if (line.startsWith("+") && !line.startsWith("+++")) {
-        const lineMatch = line.match(/^\+(.*)$/);
-        if (lineMatch) {
-          // 전역 position과 패치 내 position 매핑
-          result[currentFile].positions.push({
-            globalPos: i,
-            patchPos: patchPos,
-          });
-        }
+        currentLineNumber++;
+        // 전역 position과 패치 내 position 매핑 및 정확한 라인 번호 저장
+        result[currentFile].positions.push({
+          globalPos: i,
+          patchPos: patchPos,
+          lineNumber: currentLineNumber, // 정확한 라인 번호 추적
+        });
       }
+      // 유지된 라인인 경우 (' ' 로 시작)
+      else if (line.startsWith(" ")) {
+        currentLineNumber++;
+      }
+      // 삭제된 라인('-'로 시작하지만 '---'는 아님)은 카운트하지 않음
     }
   }
 
@@ -207,6 +274,18 @@ function parseDiff(diffContent: string): Record<
   if (currentFile && fileStartIndex >= 0) {
     const fileContent = lines.slice(fileStartIndex).join("\n");
     result[currentFile].content = fileContent;
+  }
+
+  // 디버깅용 로그
+  for (const file in result) {
+    log.debug(
+      `파일 ${file}의 패치 정보: ${result[file].positions.length}개 위치`,
+    );
+    if (result[file].positions.length > 0) {
+      log.debug(
+        `첫 번째 위치: 라인 ${result[file].positions[0].lineNumber}, 패치 위치 ${result[file].positions[0].patchPos}`,
+      );
+    }
   }
 
   return result;
@@ -218,11 +297,26 @@ function parseDiff(diffContent: string): Record<
 function findPatchPosition(
   filePatch: {
     content: string;
-    positions: Array<{ globalPos: number; patchPos: number }>;
+    positions: Array<{
+      globalPos: number;
+      patchPos: number;
+      lineNumber?: number;
+    }>;
   },
   globalPosition: number,
-): { position: number } | null {
-  // 가장 가까운 position 찾기
+): { position: number; lineNumber?: number } | null {
+  // 정확한 매칭 시도
+  const exactMatch = filePatch.positions.find(
+    (pos) => pos.globalPos === globalPosition,
+  );
+  if (exactMatch) {
+    return {
+      position: exactMatch.patchPos,
+      lineNumber: exactMatch.lineNumber,
+    };
+  }
+
+  // 정확한 매칭이 없는 경우, 가장 가까운 position 찾기
   let closestPos = null;
   let minDistance = Number.MAX_SAFE_INTEGER;
 
@@ -234,9 +328,12 @@ function findPatchPosition(
     }
   }
 
+  // 5라인 이내의 오차 허용 (GitHub API는 약간의 오차를 용인함)
   if (closestPos && minDistance <= 5) {
-    // 5라인 이내의 오차 허용
-    return { position: closestPos.patchPos };
+    return {
+      position: closestPos.patchPos,
+      lineNumber: closestPos.lineNumber,
+    };
   }
 
   return null;
