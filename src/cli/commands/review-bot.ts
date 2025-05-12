@@ -54,6 +54,7 @@ async function addLineComments(
 
   try {
     // 전체 PR diff를 한 번만 가져옵니다
+    log.debug("전체 PR diff 가져오기 시작");
     const diffResponse = await octokit.pulls.get({
       owner,
       repo,
@@ -66,8 +67,26 @@ async function addLineComments(
     const diffContent = String(diffResponse.data);
     log.debug(`가져온 diff 길이: ${diffContent.length} 문자`);
 
+    if (!diffContent || diffContent.length === 0) {
+      log.error(
+        "가져온 diff 내용이 비어있습니다. PR에 변경사항이 없거나 diff 포맷이 올바르지 않을 수 있습니다.",
+      );
+      return 0;
+    }
+
     // diff 내용을 파일별로 분리하고 position 정보 매핑
+    log.debug("diff 파싱 시작");
     const filePatches = parseDiff(diffContent);
+
+    // 파싱된 패치 결과 확인
+    const filesFound = Object.keys(filePatches);
+    log.debug(`파싱된 파일 패치 수: ${filesFound.length}`);
+    if (filesFound.length === 0) {
+      log.error(
+        "파싱된 파일 패치가 없습니다. diff 내용이 예상 형식과 다를 수 있습니다.",
+      );
+      return 0;
+    }
 
     // 각 파일별 헤더와 청크 정보 추출
     const diffHunks: Record<string, Record<number, string>> = {};
@@ -79,6 +98,7 @@ async function addLineComments(
     let patchPos = 0;
 
     // 파일별 hunk 정보 추출
+    log.debug("파일별 hunk 정보 추출 시작");
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
 
@@ -113,8 +133,23 @@ async function addLineComments(
       }
     }
 
+    // Hunk 정보 확인
+    let totalHunks = 0;
+    for (const file in diffHunks) {
+      totalHunks += Object.keys(diffHunks[file]).length;
+    }
+    log.debug(`추출된 총 hunk 수: ${totalHunks}`);
+    if (totalHunks === 0) {
+      log.error("추출된 hunk가 없습니다. diff 파싱에 문제가 있을 수 있습니다.");
+    }
+
     for (const comment of comments) {
       try {
+        // 디버깅: 각 코멘트 정보 출력
+        log.debug(
+          `처리 중인 코멘트: path=${comment.path}, position=${comment.position}, line=${comment.line || "N/A"}`,
+        );
+
         // 해당 파일의 diff 구간 찾기
         const filePatch = filePatches[comment.path];
         if (!filePatch) {
@@ -122,6 +157,14 @@ async function addLineComments(
             `파일 ${comment.path}의 diff 패치 정보를 찾을 수 없습니다.`,
           );
           continue;
+        }
+
+        // 디버깅: 파일 패치 정보 출력
+        log.debug(`파일 패치 정보: positions=${filePatch.positions.length}`);
+        if (filePatch.positions.length > 0) {
+          log.debug(
+            `패치 첫 번째 위치: globalPos=${filePatch.positions[0].globalPos}, patchPos=${filePatch.positions[0].patchPos}, lineNumber=${filePatch.positions[0].lineNumber}`,
+          );
         }
 
         // 해당 파일에서 올바른 위치 (relative position) 찾기
@@ -134,11 +177,20 @@ async function addLineComments(
           continue;
         }
 
+        // 디버깅: 찾은 패치 위치 정보 출력
+        log.debug(
+          `찾은 패치 위치: position=${patchPosition.position}, lineNumber=${patchPosition.lineNumber || "N/A"}`,
+        );
+
         // diff_hunk 정보 가져오기
         const diffHunk = diffHunks[comment.path]?.[patchPosition.position];
         if (!diffHunk) {
           log.debug(
             `파일 ${comment.path}의 position ${patchPosition.position}에 해당하는 diff_hunk를 찾을 수 없습니다.`,
+          );
+        } else {
+          log.debug(
+            `diff_hunk 시작 부분: ${diffHunk.substring(0, Math.min(30, diffHunk.length))}...`,
           );
         }
 
@@ -146,8 +198,8 @@ async function addLineComments(
           `코멘트 추가 시도: ${comment.path}:${comment.line || patchPosition.lineNumber}, patch position: ${patchPosition.position}`,
         );
 
-        // GitHub API 호출하여 코멘트 추가
-        await octokit.pulls.createReviewComment({
+        // API 호출 파라미터 구성
+        const params = {
           owner,
           repo,
           pull_number: prNumber,
@@ -157,7 +209,15 @@ async function addLineComments(
           body: comment.body,
           line: comment.line || patchPosition.lineNumber, // 정확한 라인 번호 사용
           ...(diffHunk ? { diff_hunk: diffHunk } : {}), // diff_hunk가 있는 경우에만 추가
-        });
+        };
+
+        // 디버깅: API 호출 파라미터 출력 (중요 부분만)
+        log.debug(
+          `API 호출 파라미터: path=${params.path}, position=${params.position}, line=${params.line}, diff_hunk=${params.diff_hunk ? "있음" : "없음"}`,
+        );
+
+        // GitHub API 호출하여 코멘트 추가
+        await octokit.pulls.createReviewComment(params);
 
         successCount++;
         log.debug(
@@ -165,11 +225,19 @@ async function addLineComments(
         );
       } catch (commentError) {
         log.debug(`개별 코멘트 추가 실패: ${commentError}`);
+        // 자세한 오류 정보 출력
+        if (commentError instanceof Error) {
+          log.debug(`오류 메시지: ${commentError.message}`);
+          log.debug(`오류 스택: ${commentError.stack}`);
+        }
         log.debug(`실패 상세 정보: ${JSON.stringify(commentError)}`);
       }
     }
   } catch (error) {
     log.error(`PR diff 가져오기 실패: ${error}`);
+    if (error instanceof Error) {
+      log.debug(`오류 스택: ${error.stack}`);
+    }
   }
 
   log.info(

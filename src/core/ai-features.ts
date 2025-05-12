@@ -785,6 +785,25 @@ IMPORTANT: Generate your response in the user's current language setting. If the
    */
   async reviewPR(context: PRReviewContext): Promise<PRReviewResult> {
     try {
+      // 컨텍스트 데이터 유효성 검증 (디버깅)
+      log.debug(`PR 리뷰 시작 - PR #${context.prNumber}`);
+      log.debug(
+        `컨텍스트 데이터 확인: title=${!!context.title}, description=${!!context.description}, author=${!!context.author}`,
+      );
+      log.debug(`변경된 파일 수: ${context.changedFiles.length}`);
+      log.debug(
+        `Diff 내용 길이: ${context.diffContent ? context.diffContent.length : "undefined"}`,
+      );
+
+      // diffContent가 없을 경우 오류 처리
+      if (!context.diffContent || context.diffContent.trim().length === 0) {
+        log.error("PR diff 내용이 비어 있습니다. 리뷰를 생성할 수 없습니다.");
+        return {
+          summary: "PR diff를 불러올 수 없어 리뷰를 생성할 수 없습니다.",
+          lineComments: [],
+        };
+      }
+
       // 기존 리뷰 요약 생성
       const systemPrompt = `You are an expert code reviewer who specializes in identifying:
 1. Code quality issues
@@ -808,6 +827,15 @@ IMPORTANT: Generate the review in the user's current language setting. If the us
       // 파일 내용들을 포맷팅
       const filesContent = context.changedFiles
         .map((file) => {
+          // 파일 내용 유효성 검증 (디버깅)
+          if (!file) {
+            log.debug("파일 객체가 undefined입니다.");
+            return null;
+          }
+          log.debug(
+            `파일 ${file.path} 내용 길이: ${file.content ? file.content.length : "undefined"}`,
+          );
+
           if (!file.content) return null;
           return `File: ${file.path} (+${file.additions}/-${file.deletions})
 \`\`\`
@@ -864,6 +892,7 @@ Your review should include the following sections:
 Format your review with clear sections and use proper Markdown formatting.
 IMPORTANT: Your response must be in the user's current language setting. If the user is using Korean locale, write the entire review in Korean.`;
 
+      log.debug("PR 요약 생성 중...");
       const reviewSummary = await this.processWithAI(
         prompt,
         this.getMaxTokens("chunk"),
@@ -875,8 +904,12 @@ IMPORTANT: Your response must be in the user's current language setting. If the 
         },
       );
 
+      log.debug(`리뷰 요약 생성 완료 (길이: ${reviewSummary.length})`);
+
       // 특정 코드 라인에 대한 코멘트 생성
+      log.debug("라인별 코멘트 생성 시작...");
       const lineComments = await this.generateLineComments(context);
+      log.debug(`라인별 코멘트 생성 완료 (${lineComments.length}개)`);
 
       return {
         summary: reviewSummary,
@@ -884,6 +917,10 @@ IMPORTANT: Your response must be in the user's current language setting. If the 
       };
     } catch (error) {
       log.error("PR 리뷰 생성 중 오류가 발생했습니다:", error);
+      // 스택 트레이스 추가 (디버깅)
+      if (error instanceof Error) {
+        log.debug(`오류 스택: ${error.stack}`);
+      }
       throw new Error(t("ai.error.pr_review_failed"));
     }
   }
@@ -905,7 +942,13 @@ IMPORTANT: Your response must be in the user's current language setting. If the 
     > = {};
 
     // diff 콘텐츠가 없으면 빈 객체 반환
-    if (!diffContent) return result;
+    if (!diffContent) {
+      log.error("diff 콘텐츠가 비어있습니다.");
+      return result;
+    }
+
+    // 디버깅 - diff 콘텐츠 길이
+    log.debug(`diff 콘텐츠 길이: ${diffContent.length} 문자`);
 
     let currentFile = "";
     let lineNumber = 0;
@@ -916,6 +959,7 @@ IMPORTANT: Your response must be in the user's current language setting. If the 
     try {
       // 전체 diff 라인을 배열로 변환
       const allLines = diffContent.split("\n");
+      log.debug(`diff 총 라인 수: ${allLines.length}`);
 
       // 각 라인을 순회하면서 파일별 변경 정보 추출
       for (let position = 0; position < allLines.length; position++) {
@@ -928,9 +972,12 @@ IMPORTANT: Your response must be in the user's current language setting. If the 
           const match = line.match(/diff --git a\/(.+) b\/(.+)/);
           if (match) {
             currentFile = match[2]; // b/의 파일명 사용
+            log.debug(`새 파일 시작: ${currentFile}`);
             if (!result[currentFile]) {
               result[currentFile] = [];
             }
+          } else {
+            log.debug(`파일명 패턴 일치 실패: ${line}`);
           }
           continue;
         }
@@ -943,6 +990,11 @@ IMPORTANT: Your response must be in the user's current language setting. If the 
           const match = line.match(/@@ -\d+(?:,\d+)? \+(\d+)(?:,\d+)? @@/);
           if (match) {
             lineNumber = parseInt(match[1]) - 1; // 다음 라인부터 시작하므로 1을 빼줌
+            log.debug(
+              `새 청크 시작: ${currentFile}, 라인 ${lineNumber + 1}부터`,
+            );
+          } else {
+            log.debug(`청크 패턴 일치 실패: ${line}`);
           }
           continue;
         }
@@ -950,11 +1002,24 @@ IMPORTANT: Your response must be in the user's current language setting. If the 
         // 추가된 라인 (+ 로 시작)
         if (inHunk && line.startsWith("+") && !line.startsWith("+++")) {
           lineNumber++;
-          result[currentFile]?.push({
+          // 현재 파일이 없거나 result에 해당 파일 엔트리가 없는 경우 체크
+          if (!currentFile || !result[currentFile]) {
+            log.debug(`현재 파일 정보 없음: ${currentFile || "undefined"}`);
+            continue;
+          }
+
+          result[currentFile].push({
             lineNumber,
             position, // 정확한 diff 라인 위치
             content: line.substring(1), // '+' 제거
           });
+
+          // 로그는 100개마다 한 번씩만 출력해 로그 과부하 방지
+          if (result[currentFile].length % 100 === 0) {
+            log.debug(
+              `${currentFile}에 ${result[currentFile].length}개 라인 추가됨`,
+            );
+          }
         }
         // 삭제된 라인 (- 로 시작)
         else if (inHunk && line.startsWith("-") && !line.startsWith("---")) {
@@ -971,20 +1036,48 @@ IMPORTANT: Your response must be in the user's current language setting. If the 
         log.debug(
           `파일 ${file}에서 ${result[file].length}개의 변경된 라인 정보를 추출했습니다.`,
         );
+
+        // result[file] 배열이 비어있을 수 있으므로 체크
         if (result[file].length > 0) {
+          // 첫 번째 라인 정보 로깅
+          const first = result[file][0];
           log.debug(
-            `첫 번째 라인: ${result[file][0].lineNumber}, position: ${result[file][0].position}`,
+            `첫 번째 라인: ${first.lineNumber}, position: ${first.position}, 내용: ${first.content.substring(0, Math.min(30, first.content.length))}...`,
           );
+
           // 마지막 5개 라인 위치 정보 로깅
-          const lastEntries = result[file].slice(-5);
+          const lastEntries = result[file].slice(
+            -Math.min(5, result[file].length),
+          );
           log.debug(`마지막 ${lastEntries.length}개 라인 정보:`);
           lastEntries.forEach((entry) => {
             log.debug(`라인 ${entry.lineNumber}, position: ${entry.position}`);
           });
+        } else {
+          log.debug(`파일 ${file}에 추출된 라인 정보가 없습니다.`);
         }
       }
     } catch (error) {
       log.error(`diff 파싱 중 오류 발생: ${error}`);
+      if (error instanceof Error) {
+        log.debug(`오류 스택: ${error.stack}`);
+      }
+    }
+
+    // 결과가 비어있는지 체크
+    const fileCount = Object.keys(result).length;
+    let totalLines = 0;
+    for (const file in result) {
+      totalLines += result[file].length;
+    }
+
+    log.debug(
+      `파싱 결과: ${fileCount}개 파일, 총 ${totalLines}개 라인 정보 추출`,
+    );
+    if (fileCount === 0 || totalLines === 0) {
+      log.warn(
+        "파싱된 라인 정보가 없습니다. diff 파싱에 문제가 있거나 변경된 라인이 없을 수 있습니다.",
+      );
     }
 
     return result;
