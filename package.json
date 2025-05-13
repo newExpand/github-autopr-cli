@@ -1,6 +1,6 @@
 {
   "name": "newexpand-autopr",
-  "version": "0.1.23",
+  "version": "1.0.0",
   "description": "GitHub PR Automation CLI Tool with AI",
   "type": "module",
   "main": "dist/index.js",
@@ -55,8 +55,8 @@
     "inquirer": "^12.4.2",
     "lodash": "^4.17.21",
     "minimatch": "^10.0.1",
+    "next-type-fetch": "^1.0.1",
     "octokit": "^4.1.2",
-    "openai": "^4.86.2",
     "winston": "^3.17.0",
     "zod": "^3.22.4"
   },

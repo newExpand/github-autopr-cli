@@ -9,6 +9,7 @@ import {
 } from "../types/github.js";
 import { t } from "../i18n/index.js";
 import { log } from "../utils/logger.js";
+import { getInstallationToken } from "./github-app.js";
 
 let octokit: Octokit | null = null;
 const prStatusCache = new Map<
@@ -33,18 +34,41 @@ const collaboratorsCache = new Map<
 >();
 
 export async function getOctokit(token?: string): Promise<Octokit> {
+  // 명시적으로 토큰이 제공된 경우
   if (token) {
-    // 새로운 토큰으로 인스턴스 생성
     octokit = new Octokit({ auth: token });
-  } else if (!octokit) {
-    // 기존 설정에서 토큰 가져오기
-    const config = await loadConfig();
-    if (!config?.githubToken) {
-      throw new Error(t("common.error.github_token"));
-    }
-    octokit = new Octokit({ auth: config.githubToken });
+    return octokit;
   }
-  return octokit;
+
+  // 캐시된 Octokit 인스턴스가 있으면 반환
+  if (octokit) return octokit;
+
+  try {
+    // 설정 로드
+    const config = await loadConfig();
+
+    // GitHub App 설정이 있으면 시도
+    if (config.githubApp && config.githubApp.installationId) {
+      try {
+        // 설치 토큰 얻기
+        const installationToken = await getInstallationToken(
+          config.githubApp.installationId,
+        );
+        octokit = new Octokit({ auth: installationToken });
+        return octokit;
+      } catch (appError) {
+        // GitHub App 인증 실패 시 로그 기록 후 계속 진행
+        log.warn("GitHub App 인증 실패, 다른 인증 방식 시도:", appError);
+      }
+    }
+
+    // 어떤 인증 방식도 사용할 수 없는 경우
+    throw new Error(t("common.error.github_token"));
+  } catch (error) {
+    // 인증 정보가 없거나 유효하지 않은 경우
+    log.error("GitHub 인증 실패:", error);
+    throw error;
+  }
 }
 
 export async function validateGitHubToken(token: string): Promise<boolean> {
@@ -861,8 +885,9 @@ export async function checkDraftPRAvailability(params: {
     // 일단 private 여부로만 판단
     return !repository.private;
   } catch (error) {
-    // 에러 발생 시 false를 반환하여 안전하게 처리
-    log.error("Failed to check draft PR availability:", error);
+    // 인증 오류가 발생하거나 다른 이유로 확인할 수 없는 경우
+    // false를 반환하여 일반 PR로 진행하도록 함
+    log.warn("Draft PR 기능 확인 실패, 일반 PR로 진행합니다:", error);
     return false;
   }
 }

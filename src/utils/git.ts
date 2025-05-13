@@ -25,6 +25,8 @@ export async function getCurrentRepoInfo(): Promise<RepoInfo | null> {
 
     // GitHub URL 파싱
     const match = url.match(/github\.com[:/]([^/]+)\/([^.]+)(?:\.git)?$/);
+
+    process.stdout.write(JSON.stringify(match, null, 2));
     if (!match) {
       return null;
     }

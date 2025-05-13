@@ -290,26 +290,17 @@ export async function commitCommand(
       process.exit(1);
     }
 
-    let aiEnabled = false;
-    // AI 인스턴스를 한 번만 생성하고 재사용
+    // AI 인스턴스 생성
     let ai: AIFeatures | null = null;
 
-    // AI 기능이 설정되어 있는 경우에만 AI 관련 기능 활성화
-    if (config.aiConfig?.enabled) {
-      try {
-        ai = new AIFeatures();
-        await ai.initialize();
-        aiEnabled = ai.isEnabled();
-        if (aiEnabled) {
-          log.info(t("ai.initialization.success"));
-        }
-      } catch (error) {
-        aiEnabled = false;
-        ai = null;
-      }
+    try {
+      ai = new AIFeatures();
+      log.info(t("ai.initialization.success"));
+    } catch (error) {
+      ai = null;
     }
 
-    if (!aiEnabled && subcommand === "improve") {
+    if (!ai && subcommand === "improve") {
       log.error(t("ai.error.not_initialized"));
       process.exit(1);
     }
@@ -364,7 +355,6 @@ export async function commitCommand(
       // AI 인스턴스가 없으면 새로 생성
       if (!ai) {
         ai = new AIFeatures();
-        await ai.initialize();
       }
 
       commitMessage = await ai.improveCommitMessage(
@@ -376,8 +366,8 @@ export async function commitCommand(
       // 알 수 없는 서브커맨드
       log.error(t("commands.commit.error.invalid_subcommand"));
       process.exit(1);
-    } else if (aiEnabled && ai) {
-      // AI 기능이 활성화된 경우: 새로운 메시지 제안
+    } else if (ai) {
+      // AI가 초기화된 경우: 새로운 메시지 제안
       log.info(t("commands.commit.info.analyzing_changes"));
 
       commitMessage = await ai.improveCommitMessage(
@@ -387,7 +377,7 @@ export async function commitCommand(
       );
     }
 
-    if (aiEnabled && commitMessage) {
+    if (ai && commitMessage) {
       // 제안된 메시지 표시
       log.section(t("commands.commit.info.suggested_message"));
       log.section("-------------------");
@@ -433,7 +423,7 @@ export async function commitCommand(
         process.exit(0);
       }
     } else {
-      // AI가 비활성화되어 있거나 메시지 생성에 실패한 경우: 직접 입력
+      // AI 초기화에 실패했거나 메시지 생성에 실패한 경우: 직접 입력
       try {
         const { editedMessage } = await inquirer.prompt([
           {

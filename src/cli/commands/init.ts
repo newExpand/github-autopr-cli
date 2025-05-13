@@ -4,144 +4,15 @@ import {
   updateConfig,
   loadGlobalConfig,
   loadProjectConfig,
-  updateProjectConfig,
+  loadConfig,
 } from "../../core/config.js";
-import { validateGitHubToken } from "../../core/github.js";
-import { setupOAuthCredentials } from "../../core/oauth.js";
-import { writeFile, mkdir, readFile, access } from "fs/promises";
+import { setupGitHubAppCredentials } from "../../core/github-app.js";
+import { writeFile, mkdir, readFile } from "fs/promises";
+import { existsSync } from "fs";
 import { join } from "path";
 import { log } from "../../utils/logger.js";
-import dotenv from "dotenv";
-import { constants } from "fs";
-import OpenAI from "openai";
-import { AIManager } from "../../core/ai-manager.js";
+
 import { Config } from "../../types/config.js";
-import { OPENROUTER_CONFIG } from "../../config/openrouter.js";
-
-const AI_PROVIDERS = ["openai", "openrouter"] as const;
-
-async function validateOpenAIKey(apiKey: string): Promise<boolean> {
-  try {
-    const openai = new OpenAI({ apiKey });
-    await openai.models.list();
-    return true;
-  } catch (error) {
-    log.warn(t("commands.init.error.model_fetch_failed"));
-    return false;
-  }
-}
-
-async function getAvailableModels(
-  provider: (typeof AI_PROVIDERS)[number],
-  apiKey: string,
-): Promise<string[]> {
-  switch (provider) {
-    case "openai":
-      // API 키 유효성만 검사하고 모델 목록은 AIManager에서 가져옴
-      await validateOpenAIKey(apiKey);
-      return AIManager.getDefaultModels(provider);
-    default:
-      return AIManager.getDefaultModels(provider);
-  }
-}
-
-async function setupAIConfig(): Promise<{
-  provider: (typeof AI_PROVIDERS)[number];
-  apiKey: string;
-  model: string;
-}> {
-  const { provider } = await inquirer.prompt([
-    {
-      type: "list",
-      name: "provider",
-      message: t("commands.init.prompts.select_ai_provider"),
-      choices: [
-        {
-          name: "OpenRouter (Free AI Model)",
-          value: "openrouter",
-        },
-        {
-          name: "OpenAI",
-          value: "openai",
-        },
-      ],
-    },
-  ]);
-
-  // OpenRouter 선택 시 즉시 반환
-  if (provider === "openrouter") {
-    log.info(t("commands.init.info.openrouter_selected"));
-    return {
-      provider: "openrouter",
-      apiKey: OPENROUTER_CONFIG.API_KEY,
-      model: OPENROUTER_CONFIG.DEFAULT_MODEL,
-    };
-  }
-
-  // OpenAI 설정
-  const apiKeyResponse = await inquirer.prompt([
-    {
-      type: "password",
-      name: "apiKey",
-      message: t("commands.init.prompts.enter_api_key", {
-        provider: provider.toUpperCase(),
-      }),
-      validate: (value: string) => value.length > 0,
-    },
-  ]);
-  const apiKey = apiKeyResponse.apiKey;
-
-  const models = await getAvailableModels(provider, apiKey);
-  const modelResponse = await inquirer.prompt([
-    {
-      type: "list",
-      name: "model",
-      message: t("commands.init.prompts.select_model"),
-      choices: models,
-    },
-  ]);
-  const model = modelResponse.model;
-
-  return { provider, apiKey, model };
-}
-
-async function updateEnvFile(aiConfig: {
-  provider: string;
-  apiKey: string;
-  model: string;
-}): Promise<void> {
-  try {
-    // OpenRouter의 경우 .env 파일에 저장하지 않음
-    if (aiConfig.provider === "openrouter") {
-      log.info(t("commands.init.info.openrouter_config_skipped"));
-      return;
-    }
-
-    let envContent = "";
-    try {
-      await access(".env", constants.F_OK);
-      envContent = await readFile(".env", "utf-8");
-    } catch (error) {
-      log.info(t("commands.init.info.creating_env"));
-    }
-
-    const envConfig = dotenv.parse(envContent);
-
-    envConfig.AI_PROVIDER = aiConfig.provider;
-    envConfig.AI_API_KEY = aiConfig.apiKey;
-    envConfig.AI_MODEL = aiConfig.model;
-
-    const newEnvContent = Object.entries(envConfig)
-      .map(([key, value]) => `${key}=${value}`)
-      .join("\n");
-
-    await writeFile(".env", newEnvContent);
-    log.info(t("commands.init.info.ai_config_saved"));
-  } catch (error) {
-    log.error(t("commands.init.error.ai_config_save_failed", { error }));
-    throw error;
-  }
-}
 
 async function setupGitHooks(): Promise<void> {
   try {
@@ -170,102 +41,76 @@ export async function initCommand(): Promise<void> {
 
     const answers: Partial<Config> = {};
 
-    // GitHub 토큰 설정
-    if (globalConfig.githubToken) {
-      const { updateToken } = await inquirer.prompt([
-        {
-          type: "confirm",
-          name: "updateToken",
-          message: t("commands.init.prompts.update_token"),
-          default: false,
-        },
-      ]);
+    // GitHub App 설정
+    log.info(t("commands.github_app.setup.info"));
 
-      if (updateToken) {
-        const { authMethod } = await inquirer.prompt([
-          {
-            type: "list",
-            name: "authMethod",
-            message: t("commands.init.prompts.auth_method"),
-            choices: [
-              {
-                name: t("commands.init.prompts.auth_choices.oauth"),
-                value: "oauth",
-              },
-              {
-                name: t("commands.init.prompts.auth_choices.manual"),
-                value: "manual",
-              },
-            ],
+    try {
+      // 디바이스 플로우로 GitHub App 인증 진행
+      await setupGitHubAppCredentials();
+
+      // 개인 키 설정 안내
+      log.section("🔑 GitHub App 개인 키 설정");
+      log.info("GitHub App API 호출을 위해 개인 키가 필요합니다.");
+      log.info(
+        "GitHub 개발자 설정에서 다운로드한 .pem 파일의 경로를 입력하세요.",
+      );
+      log.info("개인 키가 없으면 GitHub 개발자 설정에서 생성할 수 있습니다.");
+      log.info(
+        "(https://github.com/settings/apps > 앱 선택 > Private Keys > Generate a private key)",
+      );
+
+      const { privateKeyPath } = await inquirer.prompt([
+        {
+          type: "input",
+          name: "privateKeyPath",
+          message: t("commands.github_app.private_key.prompt"),
+          validate: (value: string) => {
+            if (!value.trim()) {
+              return "개인 키는 필수입니다. GitHub App API를 사용하려면 개인 키가 필요합니다.";
+            }
+
+            // 파일 존재 여부 확인
+            if (!existsSync(value)) {
+              return "해당 경로에 파일이 존재하지 않습니다.";
+            }
+
+            return true;
           },
-        ]);
-
-        if (authMethod === "oauth") {
-          try {
-            await setupOAuthCredentials();
-          } catch (error) {
-            log.error(t("oauth.auth.failed", { error }));
-            process.exit(1);
-          }
-        } else {
-          const { githubToken } = await inquirer.prompt([
-            {
-              type: "password",
-              name: "githubToken",
-              message: t("commands.init.prompts.token"),
-              validate: async (value: string) => {
-                if (!value) return false;
-                const isValid = await validateGitHubToken(value);
-                return isValid ? true : t("commands.init.error.invalid_token");
-              },
-            },
-          ]);
-          answers.githubToken = githubToken;
-        }
-      } else {
-        answers.githubToken = globalConfig.githubToken;
-      }
-    } else {
-      const { authMethod } = await inquirer.prompt([
-        {
-          type: "list",
-          name: "authMethod",
-          message: t("commands.init.prompts.auth_method"),
-          choices: [
-            {
-              name: t("commands.init.prompts.auth_choices.oauth"),
-              value: "oauth",
-            },
-            {
-              name: t("commands.init.prompts.auth_choices.manual"),
-              value: "manual",
-            },
-          ],
         },
       ]);
 
-      if (authMethod === "oauth") {
+      if (privateKeyPath) {
         try {
-          await setupOAuthCredentials();
+          // 개인 키 파일 읽기
+          const privateKey = await readFile(privateKeyPath, "utf8");
+
+          // 현재 설정 불러오기
+          const currentConfig = await loadConfig();
+
+          // githubApp 설정이 존재하는지 확인
+          if (!currentConfig.githubApp || !currentConfig.githubApp.appId) {
+            throw new Error(
+              "GitHub App 설정이 불완전합니다. 'autopr init' 명령어를 다시 실행하세요.",
+            );
+          }
+
+          // 설정에 개인 키 저장
+          await updateConfig({
+            githubApp: {
+              ...currentConfig.githubApp, // 기존 GitHub App 설정 유지
+              privateKey, // 개인 키 업데이트
+            },
+          });
+
+          log.info(t("commands.github_app.private_key.success"));
         } catch (error) {
-          log.error(t("oauth.auth.failed", { error }));
+          log.error(t("commands.github_app.private_key.failed", { error }));
           process.exit(1);
         }
-      } else {
-        const { githubToken } = await inquirer.prompt([
-          {
-            type: "password",
-            name: "githubToken",
-            message: t("commands.init.prompts.token"),
-            validate: async (value: string) => {
-              if (!value) return false;
-              const isValid = await validateGitHubToken(value);
-              return isValid ? true : t("commands.init.error.invalid_token");
-            },
-          },
-        ]);
-        answers.githubToken = githubToken;
       }
+    } catch (error) {
+      log.error(t("commands.github_app.auth.failed", { error }));
+      process.exit(1);
     }
 
     // 언어 설정
@@ -306,35 +151,6 @@ export async function initCommand(): Promise<void> {
         },
       ]);
       answers.language = language;
-    }
-
-    // AI 설정
-    const { setupAI } = await inquirer.prompt([
-      {
-        type: "confirm",
-        name: "setupAI",
-        message: t("commands.init.prompts.setup_ai"),
-        default: true,
-      },
-    ]);
-
-    if (setupAI) {
-      const aiConfig = await setupAIConfig();
-      await updateEnvFile(aiConfig);
-
-      // AI 설정을 프로젝트 설정에 저장
-      const projectAIConfig = {
-        enabled: true,
-        provider: aiConfig.provider,
-        options: {
-          model: aiConfig.model,
-        },
-      };
-
-      // 프로젝트 설정 업데이트
-      await updateProjectConfig({
-        aiConfig: projectAIConfig,
-      });
     }
 
     // 프로젝트 설정

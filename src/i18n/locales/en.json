@@ -1,475 +1,184 @@
 {
-  "common": {
-    "error": {
-      "unknown": "An unknown error occurred",
-      "github_token": "GitHub token is not set. Please run 'autopr init' first",
-      "not_git_repo": "Current directory is not a git repository",
-      "no_commits": "Cannot create PR as there are no commits in the branch. Please commit and push your changes first.",
-      "pr_exists": "A pull request already exists for this branch.",
-      "base_modified": "Base branch has been modified. Please merge the latest changes from the base branch.",
-      "get_invitation_status": "Failed to get invitation status: {{error}}",
-      "get_invitation_statuses": "Failed to get invitation statuses: {{error}}",
-      "get_conflicts": "Failed to get conflict information: {{error}}",
-      "protected_branch": "Cannot create PR from protected branch '{{branch}}'. Please create a new branch from '{{development}}' or '{{production}}'."
-    },
-    "warning": {
-      "merge_conflict": "⚠️ This PR has merge conflicts that need to be resolved",
-      "merge_status_unknown": "⚠️ GitHub is still calculating merge status",
-      "invalid_reviewers": "⚠️ The following reviewers are not repository collaborators and will be skipped: {{reviewers}}"
-    },
-    "success": {
-      "init": "Successfully initialized autopr",
-      "pr_created": "Pull request created successfully",
-      "review_submitted": "Review submitted successfully"
-    },
-    "cli": {
-      "description": "GitHub PR Automation CLI Tool"
-    },
-    "branch_pattern": {
-      "no_config": "⚠️ Configuration not found.",
-      "matching_start": "\n🔍 Starting branch pattern matching",
-      "current_branch": "📁 Current branch: {{branch}}",
-      "available_patterns": "📋 Available patterns:",
-      "pattern_item": "  - {{pattern}} ({{type}})",
-      "match_success": "✓ Branch '{{branch}}' matches pattern '{{pattern}}'",
-      "match_fail": "✗ Branch '{{branch}}' does not match pattern '{{pattern}}'",
-      "matched_pattern": "\n✅ Matched pattern:",
-      "pattern_info": "  - Pattern: {{pattern}}\n  - Type: {{type}}\n  - Draft: {{draft}}\n  - Labels: {{labels}}\n  - Template: {{template}}",
-      "no_match": "\n❌ No matching pattern found.",
-      "yes": "Yes",
-      "no": "No",
-      "none": "None",
-      "default": "Default"
-    },
-    "template": {
-      "default": {
-        "changes": "## Changes",
-        "changes_placeholder": "- ",
-        "tests": "## Tests",
-        "unit_test": "- [ ] Unit Tests",
-        "integration_test": "- [ ] Integration Tests",
-        "reviewer_checklist": "## Reviewer Checklist",
-        "code_clarity": "- [ ] Is the code clear and easy to understand?",
-        "test_coverage": "- [ ] Are the changes well tested?",
-        "performance": "- [ ] Are there any performance concerns?"
-      }
-    }
-  },
-  "oauth": {
-    "device_flow": {
-      "initializing": "Initializing Device Flow...",
-      "client_id": "Client ID: {{clientId}}",
-      "request_data": "Request data:",
-      "response_status": "Response status:",
-      "response_headers": "Response headers:",
-      "error_response": "Error response content:",
-      "response_data": "Response data:",
-      "init_failed": "Device Flow initialization failed: {{status}} - {{error}}"
-    },
-    "token": {
-      "request_failed": "Token request failed: {{status}}",
-      "expired": "Authentication time expired. Please try again.",
-      "error": "Token request error: {{error}}",
-      "missing": "Failed to receive access token"
-    },
-    "auth": {
-      "starting": "Starting GitHub authentication...",
-      "instructions": "Please follow these steps to complete GitHub authentication:",
-      "open_url": "1. Open this URL in your browser: {{url}}",
-      "enter_code": "2. Enter this code: {{code}}",
-      "waiting": "Waiting for browser authentication to complete...",
-      "time_limit": "(Time limit: {{minutes}} minutes)",
-      "success": "GitHub authentication completed successfully!",
-      "failed": "GitHub authentication failed: {{error}}",
-      "browser_open_failed": "Failed to open browser automatically, please open the URL manually."
-    }
-  },
   "commands": {
-    "init": {
-      "description": "Initialize autopr configuration",
-      "prompts": {
-        "token": "Enter your GitHub token",
-        "default_branch": "Enter your production branch name (e.g., main, master)",
-        "reviewers": "Enter default reviewers (comma separated)",
-        "language": "Select your preferred language",
-        "update_token": "GitHub token is already set. Would you like to update it?",
-        "auth_method": "Select GitHub authentication method:",
-        "auth_choices": {
-          "oauth": "Authenticate with browser",
-          "manual": "Enter token manually"
-        },
-        "update_language": "Current language is set to {{language}}. Would you like to update it?",
-        "setup_hooks": "Would you like to set up Git hooks for automatic PR creation?",
-        "setup_ai": "Would you like to set up AI features?",
-        "select_ai_provider": "Select AI provider:",
-        "enter_api_key": "Enter {{provider}} API key:",
-        "select_model": "Select model to use:",
-        "development_branch": "Enter your development branch name (e.g., dev, develop, staging)",
-        "customize_release_pr": "Would you like to customize the Release PR template?",
-        "release_pr_title": "Enter Release PR title template (use {development} and {production} as placeholders)",
-        "release_pr_body": "Enter Release PR body template (use {development} and {production} as placeholders)"
-      },
-      "error": {
-        "git_hooks": "Error occurred while setting up Git hooks: {{error}}",
-        "invalid_token": "Invalid GitHub token",
-        "model_fetch_failed": "Failed to fetch models. Using default models.",
-        "ai_config_save_failed": "Failed to save AI configuration: {{error}}"
-      },
-      "info": {
-        "creating_env": "Creating new .env file",
-        "ai_config_saved": "AI configuration saved to .env file",
-        "branch_strategy": "\nBranch Strategy Configuration:",
-        "development_branch_set": "Development branch set to: {{branch}}",
-        "production_branch_set": "Production branch set to: {{branch}}",
-        "release_template_set": "Release PR template customized",
-        "release_template_set_automatically": "Release PR template automatically set",
-        "openrouter_selected": "OpenRouter selected. Using free AI model.",
-        "openrouter_config_skipped": "Skipping .env file configuration for OpenRouter as it uses default settings.",
-        "hooks_setup_automatically": "Git hooks automatically set up for PR creation"
-      }
-    },
-    "new": {
-      "description": "Create a new pull request",
-      "error": {
-        "create_failed": "Failed to create PR: {{error}}",
-        "diff_failed": "Failed to get diff content",
-        "files_failed": "Failed to get changed files",
-        "protected_branch": "Cannot create PR from protected branch '{{branch}}'. Please create a new branch from '{{development}}' or '{{production}}'.",
-        "push_failed": "Failed to push to remote repository: {{error}}"
-      },
-      "info": {
-        "pr_exists": "PR #{{number}} already exists.",
-        "generating_title": "Generating PR title using AI...",
-        "generated_title": "AI generated title:",
-        "generating_description": "Generating PR description using AI...",
-        "generated_description": "AI generated description:",
-        "creating": "Creating Pull Request...",
-        "adding_reviewers": "Adding reviewers...",
-        "reviewers_added": "Reviewers added: {{reviewers}}"
-      },
-      "warning": {
-        "ai_description_failed": "Failed to generate AI description, falling back to manual input",
-        "ai_title_failed": "Failed to generate AI title, using default title",
-        "draft_not_available": "Draft PR feature is not available in this repository. Creating a regular PR instead."
-      },
-      "prompts": {
-        "update_existing": "Would you like to update the existing PR?",
-        "title": "Enter PR title",
-        "body": "Enter PR description",
-        "reviewers": "Enter reviewers (press enter to skip)",
-        "use_ai_description": "Use AI-generated description?",
-        "edit_ai_description": "Would you like to edit the AI-generated description?",
-        "create_as_draft": "Create as draft PR?"
-      },
-      "success": {
-        "pr_updated": "PR #{{number}} has been successfully updated.",
-        "cancelled": "Operation cancelled.",
-        "pr_created": "Pull Request has been successfully created.",
-        "branch_pushed": "Branch {{branch}} has been pushed to remote repository."
-      }
-    },
-    "list": {
-      "description": "List pull requests",
-      "no_prs": "No pull requests found",
-      "no_more_prs": "No more PRs found.",
-      "open_prs": "\nOpen Pull Requests:\n",
-      "closed_prs": "\nClosed Pull Requests:\n",
-      "all_prs": "\nAll Pull Requests:\n",
-      "pr_number_title": "#{{number}} {{title}}",
-      "author": "Author: {{login}}",
-      "status": "Status: {{status}}",
-      "merge_status": "Merge status: {{status}}",
-      "state": "Status: {{state}}",
-      "url": "URL: {{url}}",
-      "merged_info": "※ This PR is merged and cannot be reopened",
-      "loading_more": "Loading page {{page}}...",
-      "max_pages_reached": "Maximum number of pages reached (10). Please refine your search if needed.",
-      "prompts": {
-        "want_to_select": "Would you like to select a PR for an action?",
-        "select_pr": "Select a PR:",
-        "action": "What would you like to do with this PR?",
-        "select_state": "Select PR state to display:",
-        "try_another_state": "No PRs found with this state. Would you like to try another state?",
-        "select_count": "Select the number of PRs to view:",
-        "load_more": "There might be more PRs. Load more?",
-        "load_more_again": "Load more PRs?",
-        "try_another_state": "There are no PRs with this state. Try another state?"
-      },
-      "actions": {
-        "review": "Review",
-        "merge": "Merge",
-        "update": "Update",
-        "reopen": "Reopen",
-        "open": "Open in Browser",
-        "cancel": "Cancel"
-      },
-      "states": {
-        "open": "Open",
-        "closed": "Closed",
-        "merged": "Merged",
-        "all": "All"
-      },
-      "success": {
-        "cancelled": "Operation cancelled"
-      }
-    },
-    "review": {
-      "description": "Review a pull request",
-      "not_found": "Pull request not found",
-      "info": {
-        "title": "Pull Request Information:",
-        "author": "Author: {{author}}",
-        "status": "Status: {{status}}",
-        "merge_status": "Merge Status: {{status}}",
-        "url": "URL: {{url}}",
-        "ai_review_start": "Starting AI code review...",
-        "file_stats": "Changed files: {{total}} (processed: {{processed}}, +{{additions}}/-{{deletions}}, total changes: {{changes}}) from {{base_branch}} to {{head_branch}}"
-      },
-      "prompts": {
-        "action": "What would you like to do?",
-        "review_type": "Select review type:",
-        "comment": {
-          "approve": "Enter approval comment:",
-          "request_changes": "Please describe the required changes in detail:",
-          "comment": "Enter general comment:"
-        }
-      },
-      "actions": {
-        "view": "View PR content",
-        "review": "Write a review",
-        "checkout": "Checkout branch",
-        "open": "Open in GitHub",
-        "cancel": "Cancel",
-        "ai_review": "AI Code Review"
-      },
-      "content": {
-        "title": "PR Content:",
-        "empty": "(No content)",
-        "ai_review_title": "AI Code Review Results:"
-      },
-      "review_types": {
-        "approve": "Approve",
-        "request_changes": "Request changes",
-        "comment": "Comment"
-      },
-      "success": {
-        "checkout": "Branch checked out successfully",
-        "opened": "GitHub PR page opened in browser",
-        "cancelled": "Operation cancelled"
-      },
-      "status": {
-        "draft": "Draft",
-        "ready": "Ready for review",
-        "checking": "Checking",
-        "conflicting": "Has conflicts",
-        "mergeable": "Clean",
-        "unknown": "Unknown"
-      },
-      "error": {
-        "file_content_failed": "Failed to get content for file: {{file}}",
-        "files_failed": "Failed to get changed files",
-        "read_file_failed": "Failed to read file: {{file}}",
-        "checkout_failed": "Error occurred while checking out branch: {{error}}",
-        "browser_open_failed": "Error occurred while opening PR in browser: {{error}}",
-        "submit_failed": "Failed to submit review: {{error}}",
-        "comment_required": "Review comment is required",
-        "pr_closed": "Cannot review a closed or merged PR"
-      },
-      "warning": {
-        "no_changes": "No changed files found to review",
-        "file_too_large": "File {{file}} is too large or binary, skipping"
-      }
-    },
-    "update": {
-      "description": "Update PR information",
-      "info": {
-        "title": "PR Information",
-        "current_status": "Current status: {{status}}"
-      },
-      "prompts": {
-        "action": "Select items to update (use spacebar to select)",
-        "new_title": "Enter new title",
-        "new_body": "Enter new body",
-        "new_status": "Select new status"
-      },
-      "actions": {
-        "title": "Update title",
-        "body": "Update body",
-        "status": "Update status"
-      },
-      "success": {
-        "all": "All selected items have been updated",
-        "cancelled": "Operation cancelled"
-      },
-      "status": {
-        "draft": "Draft",
-        "ready": "Ready for review"
-      }
-    },
-    "merge": {
-      "description": "Merge a pull request",
-      "info": {
-        "title": "PR Information",
-        "branch_info": "Branch Information",
-        "pr_branch": "PR Branch: {{branch}}",
-        "target_branch": "Target Branch: {{branch}}",
-        "author": "PR Author: {{author}}",
-        "checking_conflicts": "Checking for conflicts...",
-        "cancelled": "Merge cancelled"
-      },
-      "prompts": {
-        "merge_method": "Select merge method",
-        "commit_title": "Enter commit title",
-        "commit_message": "Enter commit message",
-        "delete_branch": "Delete branch after merge?",
-        "confirm": "Are you sure you want to merge this PR?",
-        "change_base": "Current target branch is '{{branch}}'. Do you want to change the target branch?",
-        "select_base": "Select target branch",
-        "confirm_base_change": "Change target branch from {{from}} to {{to}}?",
-        "confirm_many_files": "Do you really want to open all files to resolve conflicts?",
-        "start_resolution": "Start conflict resolution? (Files with conflicts will be opened in editor)"
-      },
-      "methods": {
-        "merge": "Merge commit",
-        "squash": "Squash and merge",
-        "rebase": "Rebase and merge"
-      },
-      "success": {
-        "merged": "PR has been successfully merged",
-        "cancelled": "Operation cancelled",
-        "base_changed": "Target branch changed to {{branch}}"
-      },
-      "error": {
-        "pr_closed": "This PR is already closed",
-        "not_mergeable": "This PR is not mergeable",
-        "base_change_failed": "Failed to change target branch. There might be conflicts.",
-        "branch_switch_failed": "Failed to switch branch",
-        "manual_switch": "Please switch branch manually: git checkout {{branch}}",
-        "file_not_found": "File does not exist: {{file}}",
-        "cannot_open_file": "Cannot open file {{file}}: {{error}}",
-        "cleanup_failed": "Error occurred while cleaning up local branches: {{error}}",
-        "manual_cleanup": "Please clean up branches manually"
-      },
-      "warning": {
-        "branch_delete_failed": "Failed to delete branch",
-        "base_branch_not_found": "Base branch {{branch}} not found locally",
-        "many_files": "\nWarning: {{count}} files need to be opened."
-      },
-      "conflict": {
-        "found": "⚠️ Conflicts found:",
-        "file_info": "- {{file}} (changes: {{changes}} lines)",
-        "blocks": "Number of conflict blocks: {{count}}",
-        "block_info": "Conflict location: lines {{start}}~{{end}}",
-        "base_content": "Existing code:",
-        "head_content": "Changed code:",
-        "resolve_guide": "\nHow to resolve conflicts:\n1. Open the file with conflicts and locate the conflict sections.\n2. Look for conflict markers: <<<<<<< HEAD, =======, >>>>>>>\n3. Choose the desired code and remove the conflict markers.\n4. Commit the changes and update the PR.\n",
-        "continue_prompt": "There are conflicts. Do you want to continue?",
-        "none": "✓ No conflicts found.",
-        "no_actual_conflicts": "No actual conflicts found in files. GitHub API status might not be updated.",
-        "actual_files": "\nFiles with actual conflicts ({{count}}):",
-        "branch_mismatch": "\nCurrent branch ({{current}}) is different from the conflicting branch ({{target}}).",
-        "switching_branch": "Switching to the conflicting branch...",
-        "branch_switched": "Switched to branch {{branch}}",
-        "help_message": "\nI'll help you resolve the conflicts.",
-        "files_with_conflicts": "Files with conflicts ({{count}}):",
-        "git_commands": "Git commands to resolve conflicts:",
-        "resolution_steps": "Follow these steps to resolve conflicts:",
-        "marker_explanation": "Conflict markers explanation:",
-        "your_changes": "Your changes (current branch)",
-        "divider": "Conflict divider",
-        "incoming_changes": "Incoming changes (branch being merged)",
-        "after_resolving": "After resolving conflicts, run these commands:",
-        "stage_changes": "Stage the modified files",
-        "commit_resolution": "Commit the conflict resolution",
-        "push_changes": "Push changes to remote",
-        "retry_merge": "Retry PR merge",
-        "help_resources": "Additional resources:",
-        "detected_editor": "📝 Detected editor: {{editor}}",
-        "files_to_open": "📂 Files to open: {{count}}",
-        "steps": {
-          "checkout": "1. Checking out files with conflicts",
-          "open": "2. Opening files with conflicts",
-          "resolve": "3. Resolve conflicts and commit changes",
-          "update": "4. Update the PR"
-        },
-        "checking_out_files": "\nChecking out files with conflicts...",
-        "opening_files": "\nOpening files with conflicts...",
-        "trying_to_open": "Trying to open file: {{file}}",
-        "file_opened": "File opened: {{file}}",
-        "next_steps": "\nAfter resolving conflicts, run these commands:",
-        "run_again": "Then run '{{command}}' again.",
-        "ai_suggestion_start": "Starting AI conflict resolution suggestion...",
-        "ai_suggestions": "AI Suggestions for Conflict Resolution:",
-        "use_ai_suggestions": "Would you like to use AI suggestions for resolving conflicts?",
-        "manual_resolution": "Proceeding with manual conflict resolution",
-        "ai_suggestion_failed": "Failed to get AI suggestions for conflict resolution"
-      },
-      "editor": {
-        "default": "Default Program"
-      },
-      "cleanup": {
-        "start": "\nCleaning up local branches...",
-        "switching_branch": "Switching to {{branch}} branch...",
-        "pulling_changes": "Pulling remote changes...",
-        "deleting_branch": "Deleting local branch {{branch}}...",
-        "deleting_remote_branch": "Deleting remote branch...",
-        "branch_deleted": "Local branch has been deleted.",
-        "branch_already_deleted": "Local branch was already deleted.",
-        "updating_base_branch": "Updating base branch {{branch}}...",
-        "switching_to_base": "Switching to base branch {{branch}}...",
-        "syncing_with_remote": "Syncing with remote repository...",
-        "complete": "Cleanup completed successfully."
-      }
-    },
     "collaborator": {
-      "description": "Manage repository collaborators",
+      "description": "Manage collaborators for the repository",
       "invite": {
-        "description": "Invite a new collaborator"
+        "description": "Invite a collaborator to the repository"
       },
       "list": {
-        "description": "List collaborators",
-        "title": "\nCurrent Collaborators:\n",
-        "item": "- {{username}} ({{permission}})"
+        "description": "List all collaborators of the repository",
+        "title": "Collaborators:",
+        "item": "- @{{username}} ({{permission}})"
       },
       "remove": {
-        "description": "Remove a collaborator"
+        "description": "Remove collaborators from the repository"
       },
       "status": {
-        "description": "Check collaborator invitation status",
+        "description": "Check invitation status for a collaborator",
+        "no_invitation": "No invitation found for @{{username}}",
+        "no_invitations": "No pending invitations found",
+        "info": "@{{username}}: {{status}} (invited: {{invitedAt}}, expires: {{expiresAt}})",
+        "all_title": "Invitation statuses:",
         "pending": "Pending",
         "accepted": "Accepted",
-        "expired": "Expired",
-        "no_invitation": "No invitation found for {{username}}",
-        "no_invitations": "No collaborators have been invited",
-        "all_title": "\nAll Collaborator Invitation Statuses:\n",
-        "info": "Invitation status for {{username}}:\n- Status: {{status}}\n- Invited at: {{invitedAt}}\n- Expires at: {{expiresAt}}"
+        "expired": "Expired"
       },
       "status_all": {
-        "description": "Check all collaborator invitation statuses"
+        "description": "Check all invitation statuses"
       },
+      "no_collaborators": "No collaborators found for this repository",
       "prompts": {
-        "permission": "Select permission level",
-        "confirm_remove": "Are you sure you want to remove {{username}} as a collaborator?",
-        "select_to_remove": "Select collaborators to remove (use spacebar to select)",
-        "confirm_remove_multiple": "Are you sure you want to remove {{count}} collaborators?"
+        "permission": "Select permission level:",
+        "select_to_remove": "Select collaborators to remove:",
+        "confirm_remove_multiple": "Remove {{count}} selected collaborator(s)?"
       },
       "permissions": {
-        "pull": "Read (Pull)",
-        "push": "Write (Push)",
+        "pull": "Read",
+        "push": "Write",
         "admin": "Admin"
       },
       "success": {
-        "invited": "Invitation sent to {{username}}",
-        "removed": "{{username}} has been removed as a collaborator",
-        "cancelled": "Operation cancelled",
-        "all_removed": "All selected collaborators have been removed"
+        "invited": "Successfully invited @{{username}} as a collaborator",
+        "removed": "Successfully removed @{{username}} as a collaborator",
+        "all_removed": "Successfully removed all selected collaborators",
+        "cancelled": "Operation cancelled"
+      }
+    },
+    "commit": {
+      "description": "Create a commit with AI assistance",
+      "args": {
+        "subcommand": "Subcommand to execute (improve)",
+        "message": "Commit message or message to improve"
       },
-      "no_collaborators": "No collaborators found"
+      "options": {
+        "all_with_push": "Stage all changes and push after commit",
+        "patch": "Use patch mode for staging",
+        "select": "Select files to stage",
+        "select_with_push": "Select files to stage and push after commit"
+      },
+      "help": {
+        "examples": "Examples",
+        "default": "Interactive commit",
+        "all_with_push": "Stage all changes and push",
+        "select": "Select files to stage",
+        "select_with_push": "Select files, commit, and push",
+        "improve_last": "Improve last commit message",
+        "improve_message": "Improve provided commit message",
+        "improve_all_with_push": "Improve message, stage all, and push",
+        "improve_select_with_push": "Improve message, select files, and push"
+      },
+      "error": {
+        "staging_failed": "Failed to stage changes",
+        "files_failed": "Failed to get changed files",
+        "file_selection_failed": "Failed to select files",
+        "diff_failed": "Failed to get staged diff",
+        "get_branch_failed": "Failed to get current branch",
+        "no_staged_changes": "No staged changes found",
+        "no_commit_message": "No commit message found",
+        "invalid_subcommand": "Invalid subcommand",
+        "push_failed": "Push failed: {{error}}",
+        "commit_failed": "Failed to commit changes"
+      },
+      "info": {
+        "patch_mode": "Running in patch mode. Please run 'git add -p' manually",
+        "no_unstaged_files": "No unstaged files found",
+        "no_files_selected": "No files selected",
+        "run_patch_mode": "Please run 'git add -p' manually to stage changes",
+        "improving_message": "Improving commit message...",
+        "analyzing_changes": "Analyzing changes...",
+        "suggested_message": "Suggested commit message:",
+        "operation_cancelled": "Operation cancelled",
+        "pr_creation_guide": "To create a pull request for your changes:",
+        "run_new_command": "Run 'autopr new' to create a new pull request"
+      },
+      "success": {
+        "files_staged": "{{count}} files staged",
+        "pushed": "Successfully pushed to {{branch}}",
+        "committed": "Changes committed successfully"
+      },
+      "warning": {
+        "pr_check_failed": "Failed to check for existing PR"
+      },
+      "prompts": {
+        "select_files": "Select files to stage:",
+        "use_message": "Use this commit message?",
+        "edit_message": "Edit commit message:"
+      }
+    },
+    "daily_report": {
+      "description": "Generate a daily commit report",
+      "title": "Daily Commit Report",
+      "date_single": "Date: {{date}}",
+      "date_range": "Date Range: {{from}} to {{to}}",
+      "user": "User: {{username}}",
+      "ai_summary": "AI Summary",
+      "summary": "Summary",
+      "total_commits": "Total Commits: {{count}}",
+      "files_changed": "Files Changed: {{count}}",
+      "lines_added": "Lines Added: {{count}}",
+      "lines_deleted": "Lines Deleted: {{count}}",
+      "hourly_distribution": "Hourly Distribution",
+      "branch_distribution": "Branch Distribution",
+      "file_types": "File Types",
+      "fetching_commit_dates": "Fetching commit dates...",
+      "no_commit_dates": "No commit dates found",
+      "select_date": "Select date:",
+      "fetching": "Fetching commits for {{username}} on {{date}}...",
+      "report_saved": "Report saved to: {{path}}",
+      "options": {
+        "username": "Specify GitHub username",
+        "format": "Output format (console, json, markdown)",
+        "date": "Specify date (YYYY-MM-DD)",
+        "output": "Save report to file"
+      },
+      "error": {
+        "commit_dates_failed": "Failed to get commit dates",
+        "user_not_found": "User not found",
+        "local_commits_failed": "Failed to get local commits",
+        "ai_generation_failed": "Failed to generate AI summary",
+        "ai_fallback": "AI summary generation failed. Check logs for details.",
+        "ai_init_failed": "Failed to initialize AI",
+        "ai_required": "AI is required for this feature"
+      },
+      "debug": {
+        "using_github_user": "Using GitHub username: {{username}}",
+        "github_user_failed": "Failed to get GitHub username",
+        "using_git_user": "Using Git username: {{username}}"
+      }
+    },
+    "init": {
+      "description": "Initialize autopr configuration",
+      "info": {
+        "branch_strategy": "Branch strategy set up successfully",
+        "production_branch_set": "Production branch set to: {{branch}}",
+        "development_branch_set": "Development branch set to: {{branch}}",
+        "release_template_set_automatically": "Release PR template set automatically",
+        "hooks_setup_automatically": "Git hooks set up automatically"
+      },
+      "error": {
+        "git_hooks": "Failed to set up Git hooks: {{error}}",
+        "invalid_token": "Invalid GitHub token"
+      },
+      "prompts": {
+        "update_token": "A GitHub token is already configured. Update it?",
+        "auth_method": "How would you like to authenticate with GitHub?",
+        "auth_choices": {
+          "oauth": "Use OAuth (browser-based authentication)",
+          "manual": "Enter token manually"
+        },
+        "token": "Enter your GitHub token:",
+        "update_language": "Current language is {{language}}. Update it?",
+        "language": "Select language:",
+        "setup_ai": "Set up AI features?",
+        "default_branch": "Default (production) branch:",
+        "development_branch": "Development branch:",
+        "reviewers": "Default reviewers (comma-separated):"
+      }
     },
     "lang": {
-      "description": "Language settings management",
+      "description": "Set or view the language settings",
       "argument": {
-        "language_code": "Language code (en/ko)"
+        "language_code": "Language code (e.g. en, ko)"
       },
       "error": {
         "unsupported": "Unsupported language: {{language}}",
@@ -480,104 +189,241 @@
         "current": "Current language: {{language}}"
       }
     },
-    "hook": {
-      "description": "Process Git hook events",
-      "post_checkout": {
-        "description": "Process after branch checkout",
-        "argument": {
-          "branch": "Branch name"
-        },
-        "info": {
-          "new_branch": "A new branch has been created.",
-          "push_instruction": "After completing your work, run 'git push -u origin {{branch}}'",
-          "auto_pr": "A Draft PR will be created automatically.",
-          "draft_created": "Draft PR has been created. Please change it to 'Ready for Review' when your work is complete.",
-          "regular_pr": "A regular PR will be created.",
-          "manual_pr_required": "Draft PR feature is not available. Please create PR manually."
-        }
-      }
-    },
-    "commit": {
-      "description": "Improve or suggest commit messages using AI",
-      "options": {
-        "all_with_push": "Stage all changes, commit and automatically push",
-        "patch": "Interactively select changes to stage",
-        "select": "Select specific files to stage for commit",
-        "select_with_push": "Select specific files to stage, commit and automatically push"
+    "list": {
+      "description": "List pull requests",
+      "open_prs": "Open Pull Requests:",
+      "closed_prs": "Closed Pull Requests:",
+      "all_prs": "All Pull Requests:",
+      "no_prs": "No pull requests found",
+      "author": "Author: @{{login}}",
+      "status": "Status: {{status}}",
+      "merge_status": "Merge status: {{status}}",
+      "state": "State: {{state}}",
+      "merged_info": "This PR was merged",
+      "url": "URL: {{url}}",
+      "loading_more": "Loading more PRs (page {{page}})...",
+      "max_pages_reached": "Maximum page limit reached (10 pages)",
+      "no_more_prs": "No more pull requests found",
+      "states": {
+        "open": "Open",
+        "closed": "Closed",
+        "all": "All",
+        "merged": "Merged"
       },
-      "branch": {
-        "current": "current branch",
-        "remote": "remote",
-        "local": "local",
-        "local_only": "local only",
-        "create_new": "Create new branch..."
-      },
-      "args": {
-        "subcommand": "improve - Improve existing commit message",
-        "message": "Commit message to improve (used with improve subcommand)"
-      },
-      "help": {
-        "examples": "Examples",
-        "default": "Analyze staged changes and generate a new commit message",
-        "all": "Stage all changes and generate a new commit message",
-        "select": "Select specific files to stage and commit",
-        "select_with_push": "Select specific files to stage, commit and automatically push",
-        "improve_last": "Improve the most recent commit message",
-        "improve_message": "Improve the given message",
-        "improve_all": "Stage all changes and improve the recent commit message",
-        "all_with_push": "Stage all changes, commit and automatically push",
-        "improve_all_with_push": "Stage all changes, improve recent commit message and automatically push",
-        "improve_select_with_push": "Select specific files to stage, improve recent commit message and automatically push"
-      },
-      "info": {
-        "patch_mode": "To use interactive patch mode, run 'git add -p' directly",
-        "run_patch_mode": "Run interactive patch mode: git add -p",
-        "no_unstaged_files": "No unstaged files",
-        "no_files_selected": "No files selected",
-        "improving_message": "Improving commit message...",
-        "analyzing_changes": "Analyzing changes to suggest commit message...",
-        "suggested_message": "Suggested commit message:",
-        "pr_creation_guide": "To create a PR, run:",
-        "run_new_command": "autopr new",
-        "branch_not_on_remote": "Current branch '{{branch}}' doesn't exist on remote. Push will create it automatically.",
-        "push_cancelled": "Push cancelled",
-        "creating_remote_branch": "Creating remote branch '{{branch}}'...",
-        "using_default_message": "Using default commit message.",
-        "operation_cancelled": "Operation cancelled. Aborting commit process."
-      },
-      "error": {
-        "staging_failed": "Failed to stage changes",
-        "files_failed": "Failed to get changed files",
-        "diff_failed": "Failed to get diff content",
-        "no_staged_changes": "No staged changes",
-        "no_commit_message": "No commit message",
-        "commit_failed": "Failed to commit",
-        "push_failed": "Failed to push: {{error}}",
-        "get_branch_failed": "Failed to get current branch",
-        "invalid_subcommand": "Invalid subcommand",
-        "file_selection_failed": "Error selecting files",
-        "branch_name_empty": "Branch name cannot be empty",
-        "branch_exists": "Branch already exists",
-        "message_input_failed": "Error inputting commit message. Please try again."
+      "actions": {
+        "review": "Review",
+        "merge": "Merge",
+        "update": "Update",
+        "reopen": "Reopen",
+        "open": "Open in Browser",
+        "cancel": "Cancel"
       },
       "prompts": {
-        "use_message": "Would you like to use this commit message?",
-        "edit_message": "Edit commit message:",
-        "select_files": "Select files to commit (use spacebar to select/deselect):",
-        "select_push_branch": "Select branch to push to:",
-        "enter_new_branch_name": "Enter new branch name:",
-        "checkout_new_branch": "Checkout to new branch '{{branch}}'?",
-        "confirm_push_different_branch": "Push to branch '{{target}}'? (No will cancel the push)"
+        "select_state": "Select PR state to display:",
+        "select_count": "How many PRs do you want to see?",
+        "try_another_state": "No PRs found with this state. Would you like to try another state?",
+        "load_more": "There might be more PRs. Load more?",
+        "load_more_again": "Would you like to load more PRs?",
+        "want_to_select": "Would you like to select a PR for an action?",
+        "select_pr": "Select a PR:",
+        "action": "What would you like to do with this PR?"
       },
       "success": {
-        "committed": "Successfully created commit with improved message",
-        "pushed": "Branch {{branch}} pushed to remote",
-        "files_staged": "{{count}} files staged for commit",
-        "branch_created": "New branch '{{branch}}' created",
-        "branch_checked_out": "Checked out to branch '{{branch}}'"
+        "cancelled": "Operation cancelled"
+      }
+    },
+    "review": {
+      "description": "Review a pull request",
+      "error": {
+        "browser_open_failed": "Failed to open browser: {{error}}",
+        "pr_closed": "This PR is closed or merged",
+        "files_failed": "Failed to get changed files",
+        "file_content_failed": "Failed to get content for file: {{file}}",
+        "comment_required": "Comment is required",
+        "submit_failed": "Failed to submit review",
+        "checkout_failed": "Failed to checkout PR: {{error}}"
       },
-      "commit_message": {
-        "analyze": "Please analyze the following changes and generate a commit message.\n\n[Required]\n- Format: type(scope): title\n- Include all changed files\n- Do not use markdown code blocks (```)\n\n[Message Structure]\n1. Title\n- Concise description of core changes\n- Keep under 50 characters\n\n2. Body\n- 1-2 sentences explaining main changes\n- Use concise descriptive style\n\n3. Detailed Changes\n1) File Changes\n- [filename] change description\n  Examples:\n  - [src/cli/commands/init.ts] OpenRouter selection feature\n  - [src/core/ai-manager.ts] API key input process\n  - [src/types/config.ts] OpenRouter token limits\n- If no changes: \"No file changes\"\n- Include all changed files\n\n2) Functional Changes\n- User-facing actual changes\n- New or modified features\n- IMPORTANT: If changes are only in documentation files (.md) without actual code changes, write \"No functional changes\"\n- If no changes: \"No functional changes\"\n\n3) Performance/Structural Changes\n- Measurable performance improvements\n- Code structure changes\n- IMPORTANT: If changes are only in documentation files (.md) without actual code changes, write \"No performance/structural changes\"\n- If no changes: \"No performance/structural changes\"\n\n[Writing Rules]\n1. No markdown code blocks\n2. Clear and concise descriptions\n3. Focus on actual changes\n4. Remove redundant explanations\n5. Include all changed files\n6. Keep file changes simple and focused\n7. Distinguish between actual code changes and documentation-only changes\n8. For documentation-only changes (.md files), do not include functional or performance changes unless explicitly mentioned in the documentation\n\nExample format:\nfeat(init): Add new initialization feature\n\nImplemented automatic initialization for better user experience.\n\n1) File Changes\n- [src/cli/commands/file.ts] Specific change description\n\nChanged Files: {{files}}\n\nDiff Content:\n{{diff}}\n\nCurrent message: {{message}}"
+      "warning": {
+        "file_too_large": "File {{file}} is too large to process",
+        "no_changes": "No changes found in this pull request"
+      },
+      "info": {
+        "title": "Pull Request Information:",
+        "author": "Author: {{author}}",
+        "status": "Status: {{status}}",
+        "merge_status": "Merge status: {{status}}",
+        "url": "URL: {{url}}",
+        "file_stats": "Files: {{total}} total, {{processed}} processed | Changes: +{{additions}} -{{deletions}} ({{changes}} total) | Branches: {{base_branch}} ← {{head_branch}}",
+        "ai_review_start": "Starting AI code review..."
+      },
+      "status": {
+        "draft": "Draft",
+        "ready": "Ready for review",
+        "checking": "Checking",
+        "conflicting": "Conflicts",
+        "mergeable": "Ready to merge",
+        "unknown": "Unknown"
+      },
+      "prompts": {
+        "action": "What would you like to do?",
+        "review_type": "Select review type:",
+        "comment": {
+          "approve": "Add approval comment:",
+          "request_changes": "Describe requested changes:",
+          "comment": "Add review comment:"
+        }
+      },
+      "actions": {
+        "view": "View PR description",
+        "ai_review": "AI code review",
+        "review": "Submit review",
+        "checkout": "Checkout PR branch",
+        "open": "Open in browser",
+        "cancel": "Cancel"
+      },
+      "content": {
+        "title": "Pull Request Description:",
+        "empty": "(No description provided)",
+        "ai_review_title": "AI Code Review:"
+      },
+      "review_types": {
+        "approve": "Approve",
+        "request_changes": "Request Changes",
+        "comment": "Comment"
+      },
+      "success": {
+        "opened": "Pull request opened in browser",
+        "checkout": "Successfully checked out PR branch",
+        "cancelled": "Operation cancelled"
+      }
+    },
+    "reopen": {
+      "description": "Reopen a closed pull request",
+      "error": {
+        "merged": "Cannot reopen a merged pull request",
+        "already_open": "This pull request is already open",
+        "cannot_reopen": "Cannot reopen this pull request"
+      },
+      "success": {
+        "reopened": "Pull request #{{number}} reopened successfully"
+      }
+    },
+    "merge": {
+      "description": "Merge a pull request",
+      "info": {
+        "title": "Pull Request Information",
+        "branch_info": "Branch Information",
+        "pr_branch": "PR Branch: {{branch}}",
+        "target_branch": "Target Branch: {{branch}}",
+        "author": "Author: {{author}}",
+        "checking_conflicts": "Checking for conflicts..."
+      },
+      "conflict": {
+        "found": "Conflicts detected in this pull request",
+        "none": "No conflicts detected",
+        "resolve_guide": "Conflict Resolution Guide",
+        "files_with_conflicts": "Files with conflicts ({{count}})",
+        "git_commands": "Git Commands for Conflict Resolution",
+        "resolution_steps": "Follow these steps to resolve the conflicts:\n1. Edit each conflicting file to resolve the conflicts\n2. After resolving all conflicts, stage the changes with 'git add'\n3. Commit the resolution with 'git commit'\n4. Push the changes with 'git push'\n5. Run 'autopr merge' command again",
+        "marker_explanation": "Understanding conflict markers:",
+        "your_changes": "Your changes (current branch)",
+        "divider": "Divider between versions",
+        "incoming_changes": "Incoming changes (target branch)",
+        "after_resolving": "After resolving all conflicts, run these commands:",
+        "stage_changes": "Stage all resolved files",
+        "commit_resolution": "Commit the resolution",
+        "push_changes": "Push the changes",
+        "retry_merge": "Retry the merge operation",
+        "help_resources": "Additional resources for resolving conflicts:",
+        "no_actual_conflicts": "No actual conflicts found, proceeding with merge",
+        "ai_suggestion_start": "Analyzing conflicts with AI to provide resolution suggestions...",
+        "ai_suggestions": "AI Suggestions for Conflict Resolution:",
+        "use_ai_suggestions": "Would you like to follow these AI suggestions?",
+        "manual_resolution": "Proceeding with manual conflict resolution",
+        "ai_suggestion_failed": "Failed to generate AI suggestions for conflicts"
+      },
+      "error": {
+        "branch_checkout_failed": "Failed to checkout PR branch",
+        "conflict_check_failed": "Failed to check conflict in {{file}}: {{error}}",
+        "base_change_failed": "Failed to change base branch",
+        "cleanup_failed": "Failed to clean up after merge: {{error}}",
+        "manual_cleanup": "Please clean up branches manually",
+        "pr_closed": "This pull request is closed or merged",
+        "not_mergeable": "This pull request cannot be merged",
+        "merge_conflict": "Merge conflict detected"
+      },
+      "prompts": {
+        "change_base": "Current target branch is {{branch}}. Would you like to change it?",
+        "select_base": "Select new target branch:",
+        "confirm_base_change": "Change target branch from {{from}} to {{to}}?",
+        "merge_method": "Select merge method:",
+        "commit_title": "Enter squash commit title:",
+        "commit_message": "Enter squash commit message:",
+        "delete_branch": "Delete branch after merging?",
+        "confirm": "Confirm merge?"
+      },
+      "methods": {
+        "merge": "Merge (preserve all commits)",
+        "squash": "Squash (combine all commits)",
+        "rebase": "Rebase (replay commits on target)"
+      },
+      "success": {
+        "cancelled": "Operation cancelled",
+        "base_changed": "Target branch changed to {{branch}}",
+        "merged": "Pull request successfully merged"
+      },
+      "cleanup": {
+        "start": "Cleaning up after merge...",
+        "updating_base_branch": "Updating base branch {{branch}}",
+        "switching_to_base": "Switching to base branch {{branch}}",
+        "deleting_branch": "Deleting local branch {{branch}}",
+        "branch_deleted": "Local branch deleted",
+        "branch_already_deleted": "Branch already deleted",
+        "deleting_remote_branch": "Deleting remote branch",
+        "syncing_with_remote": "Syncing with remote",
+        "complete": "Cleanup complete"
+      },
+      "warning": {
+        "base_branch_not_found": "Base branch {{branch}} not found locally"
+      }
+    },
+    "new": {
+      "description": "Create a new pull request",
+      "success": {
+        "branch_pushed": "Branch {{branch}} pushed to remote",
+        "pr_updated": "Pull request #{{number}} updated successfully",
+        "cancelled": "Operation cancelled"
+      },
+      "error": {
+        "push_failed": "Failed to push branch: {{error}}",
+        "diff_failed": "Failed to get diff content",
+        "files_failed": "Failed to get changed files",
+        "protected_branch": "Cannot create PR from {{branch}} branch. Please checkout from {{development}} or {{production}} first.",
+        "create_failed": "Failed to create PR: {{error}}"
+      },
+      "info": {
+        "generating_title": "Generating PR title using AI...",
+        "generated_title": "Generated PR title:",
+        "generating_description": "Generating PR description using AI...",
+        "generated_description": "Generated PR description:",
+        "creating": "Creating pull request...",
+        "pr_exists": "A pull request already exists (#{{number}})",
+        "adding_reviewers": "Adding reviewers...",
+        "reviewers_added": "Reviewers added: {{reviewers}}"
+      },
+      "warning": {
+        "ai_title_failed": "Failed to generate PR title with AI",
+        "ai_description_failed": "Failed to generate PR description with AI",
+        "draft_not_available": "Draft PR is not available in this repository. Creating a regular PR instead."
+      },
+      "prompts": {
+        "title": "Pull request title:",
+        "use_ai_description": "Use AI-generated description?",
+        "edit_ai_description": "Edit the AI-generated description?",
+        "body": "Pull request description:",
+        "reviewers": "Reviewers (comma-separated):",
+        "create_as_draft": "Create as draft PR?",
+        "update_existing": "Update existing PR?"
       }
     },
     "reviewer_group": {
@@ -588,271 +434,241 @@
           "name": "Name of the reviewer group"
         },
         "option": {
-          "members": "Comma-separated list of GitHub usernames",
-          "strategy": "Rotation strategy (round-robin, random, least-busy)"
+          "members": "Comma-separated list of group members",
+          "strategy": "Rotation strategy (default: round-robin)"
         },
-        "success": "Reviewer group '{{name}}' has been added successfully"
+        "error": {
+          "duplicate_name": "A reviewer group with the name '{{name}}' already exists"
+        },
+        "success": "Successfully added reviewer group '{{name}}'"
       },
       "remove": {
         "description": "Remove a reviewer group",
         "argument": {
           "name": "Name of the reviewer group to remove"
         },
-        "success": "Reviewer group '{{name}}' has been removed successfully",
         "error": {
           "not_found": "Reviewer group '{{name}}' not found"
-        }
+        },
+        "success": "Successfully removed reviewer group '{{name}}'"
       },
       "update": {
-        "description": "Update a reviewer group",
+        "description": "Update an existing reviewer group",
         "argument": {
           "name": "Name of the reviewer group to update"
         },
         "option": {
-          "members": "Comma-separated list of GitHub usernames",
-          "strategy": "Rotation strategy (round-robin, random, least-busy)"
+          "members": "Comma-separated list of group members",
+          "strategy": "Rotation strategy"
         },
-        "success": "Reviewer group '{{name}}' has been updated successfully",
         "error": {
           "not_found": "Reviewer group '{{name}}' not found"
-        }
+        },
+        "success": "Successfully updated reviewer group '{{name}}'"
       },
       "list": {
         "description": "List all reviewer groups",
         "no_groups": "No reviewer groups found",
-        "group_info": "Group: {{name}}\n  Members: {{members}}\n  Strategy: {{strategy}}"
+        "group_info": "Group: {{name}} | Members: {{members}} | Strategy: {{strategy}}"
       }
     },
-    "reopen": {
-      "description": "Reopen a closed pull request",
-      "error": {
-        "already_open": "This PR is already open",
-        "merged": "This PR has been merged and cannot be reopened",
-        "cannot_reopen": "This PR cannot be reopened in its current state"
+    "update": {
+      "description": "Update a pull request",
+      "info": {
+        "title": "Pull Request Information",
+        "current_status": "Current Status: {{status}}"
       },
-      "success": {
-        "reopened": "PR #{{number}} has been reopened"
-      }
-    },
-    "openrouter": {
-      "description": "Manage OpenRouter API keys",
-      "get": {
-        "description": "Get API key information"
+      "prompts": {
+        "action": "What would you like to update?",
+        "new_title": "Enter new title:",
+        "new_body": "Enter new description:",
+        "new_status": "Select new status:"
       },
-      "list": {
-        "description": "List API keys",
-        "options": {
-          "offset": "Pagination offset (default: 0)"
-        }
+      "actions": {
+        "title": "Title",
+        "body": "Description",
+        "status": "Status"
       },
       "status": {
-        "description": "Check and update API key status",
-        "options": {
-          "enable": "Enable API key",
-          "disable": "Disable API key"
-        }
-      },
-      "ensure": {
-        "description": "Check API key activation status and auto-activate if needed"
-      },
-      "schedule": {
-        "description": "Run API key auto-activation scheduler",
-        "options": {
-          "interval": "Check interval in minutes (default: 60)"
-        }
-      },
-      "info": {
-        "key_info": "API key information:",
-        "key_list": "API key list:",
-        "key_status": "API key status: {{status}}",
-        "checking_key_status": "Checking API key status...",
-        "key_already_active": "API key is already active.",
-        "scheduler_started": "API key auto-activation scheduler started (interval: {{interval}} minutes)",
-        "scheduler_running": "Scheduler is running (interval: {{interval}} minutes)",
-        "scheduler_stopped": "Scheduler stopped.",
-        "scheduler_stop_instruction": "Press Ctrl+C to stop."
-      },
-      "error": {
-        "get_key_failed": "Failed to get API key information",
-        "list_keys_failed": "Failed to list API keys",
-        "update_key_status_failed": "Failed to update API key status",
-        "conflicting_options": "Cannot use both enable and disable options",
-        "key_activation_failed": "Failed to check API key activation",
-        "scheduler_failed": "Error occurred while running scheduler"
+        "draft": "Draft",
+        "ready": "Ready for review"
       },
       "success": {
-        "key_status_updated": "API key status has been {{status}}d",
-        "key_activated": "API key has been successfully activated"
+        "cancelled": "Update cancelled",
+        "all": "Pull request updated successfully"
       }
     },
-    "daily_report": {
-      "description": "Generate daily commit report using AI",
-      "options": {
-        "username": "GitHub or Git username",
-        "format": "Output format (console, json, markdown)",
-        "date": "Specific date (YYYY-MM-DD format)",
-        "output": "Output file path"
+    "hook": {
+      "description": "Git hook management",
+      "post_checkout": {
+        "description": "Post-checkout hook handler",
+        "argument": {
+          "branch": "Branch name"
+        },
+        "info": {
+          "new_branch": "You've checked out to a new branch",
+          "push_instruction": "After making changes, push your branch with 'git push -u origin {{branch}}'",
+          "regular_pr": "Then create a regular pull request using 'autopr new'",
+          "auto_pr": "A draft pull request will be created automatically when you push",
+          "manual_pr_required": "This repository doesn't support draft PRs. Please create a PR manually with 'autopr new'",
+          "draft_created": "A draft pull request was created successfully"
+        }
+      }
+    },
+    "github_app": {
+      "description": "Manage GitHub App settings",
+      "auth": {
+        "description": "Manage GitHub App authentication",
+        "initializing": "Initializing GitHub App device flow",
+        "instructions": "Follow these steps to complete GitHub App authentication:",
+        "open_url": "Open this URL in your browser: {{url}}",
+        "enter_code": "Enter this code: {{code}}",
+        "waiting": "Waiting for browser authentication to complete...",
+        "time_limit": "(Time limit: {{minutes}} minutes)",
+        "browser_open_failed": "Failed to open browser automatically. Please open the URL manually.",
+        "starting": "Starting GitHub App authentication process",
+        "success": "GitHub App authentication successful!",
+        "failed": "GitHub App authentication failed: {{error}}"
       },
-      "title": "Daily Commit Report",
-      "date_single": "Date: {{date}}",
-      "date_range": "Period: {{from}} to {{to}}",
-      "user": "User: {{username}}",
-      "summary": "Summary",
-      "total_commits": "Total Commits: {{count}}",
-      "files_changed": "Files Changed: {{count}}",
-      "lines_added": "Lines Added: {{count}}",
-      "lines_deleted": "Lines Deleted: {{count}}",
-      "hourly_distribution": "Hourly Commit Distribution",
-      "branch_distribution": "Branch Distribution",
-      "file_types": "File Type Distribution",
-      "ai_summary": "AI Commit Summary",
-      "fetching": "Fetching commits for user '{{username}}' on '{{date}}'...",
-      "fetching_commit_dates": "Fetching commit dates from the last 3 months...",
-      "no_commit_dates": "No commits found in the last 3 months.",
-      "select_date": "Select one of the following dates:",
-      "date_prompt": "Enter a number (default: 1): ",
-      "report_saved": "Report saved to: {{path}}",
-      "debug": {
-        "using_github_user": "Using GitHub user '{{username}}' for commits",
-        "github_user_failed": "Failed to get GitHub user. Using Git user instead.",
-        "using_git_user": "Using Git user '{{username}}' for commits"
+      "setup": {
+        "description": "Set up GitHub App authentication",
+        "private_key_prompt": "Enter the path to your private key file (or press enter to skip)",
+        "starting": "Setting up GitHub App",
+        "info": "Setting up GitHub App authentication",
+        "multiple_installations": "Multiple GitHub App installations found.",
+        "success": "GitHub App configuration saved successfully"
+      },
+      "info": {
+        "description": "Show GitHub App configuration information",
+        "title": "GitHub App Configuration",
+        "app_id": "App ID: {{id}}",
+        "installation_id": "Installation ID: {{id}}",
+        "has_private_key": "Has private key: {{hasKey}}",
+        "not_configured": "GitHub App is not yet configured. Please run 'autopr github-app setup' first",
+        "success": "Successfully fetched GitHub App information",
+        "failed": "Failed to fetch GitHub App information: {{error}}"
+      },
+      "reset": {
+        "description": "Reset GitHub App configuration",
+        "confirm": "Are you sure you want to reset the GitHub App configuration? This will remove all GitHub App settings.",
+        "confirm_true": "Yes, reset it",
+        "success": "GitHub App configuration reset successfully",
+        "failed": "Failed to reset GitHub App configuration: {{error}}"
+      },
+      "private_key": {
+        "description": "Import private key file for GitHub App",
+        "prompt": "Enter the path to your private key file:",
+        "success": "Private key successfully registered",
+        "failed": "Failed to register private key: {{error}}",
+        "no_config": "GitHub App is not yet configured. Please run 'autopr github-app setup' first"
+      },
+      "device_flow": {
+        "client_id": "Client ID: {{clientId}}",
+        "request_data": "Request data:",
+        "response_status": "Response status:",
+        "response_headers": "Response headers:",
+        "error_response": "Error response content:",
+        "response_data": "Response data:",
+        "init_failed": "Device flow initialization failed: {{status}} - {{error}}",
+        "initializing": "Initializing GitHub App device flow"
+      },
+      "token": {
+        "error": "Token error: {{error}}",
+        "expired": "Authentication token expired. Please try again.",
+        "missing": "Token not found",
+        "request_failed": "Token request failed: {{status}}"
       },
       "error": {
-        "user_not_found": "Git user not found. Please set 'git config user.name' or use --username option.",
-        "daily_report_failed": "An error occurred while generating daily report",
-        "ai_init_failed": "Failed to initialize AI features.",
-        "ai_required": "Daily report feature requires AI setup. Please run 'autopr init' to set up AI features.",
-        "commit_dates_failed": "Failed to fetch commit dates",
-        "local_commits_failed": "Failed to fetch local commit data.",
-        "ai_generation_failed": "Error occurred while generating AI summary.",
-        "ai_fallback": "Unable to generate AI summary. Please check your settings and try again."
+        "missing_config": "GitHub App configuration is missing",
+        "missing_installation_id": "GitHub App installation ID is missing",
+        "token_request_failed": "Installation token request failed: {{status}}",
+        "token_missing": "No token in installation token response",
+        "list_installations_failed": "Failed to list installations: {{status}}",
+        "no_installations": "No GitHub App installations found",
+        "app_info_failed": "Failed to get GitHub App information: {{status}}",
+        "installation_verification_failed": "Failed to verify GitHub App installation",
+        "installation_cancelled": "GitHub App installation was cancelled",
+        "private_key_required": "GitHub App private key is required for this operation. Please run 'autopr github-app setup' to set up your private key."
       }
+    }
+  },
+  "common": {
+    "error": {
+      "github_token": "GitHub token not found. Please run 'autopr init' first",
+      "not_git_repo": "Not a git repository",
+      "unknown": "An unknown error occurred",
+      "config_load_failed": "Failed to load configuration",
+      "no_commits": "No commits found between branches",
+      "pr_exists": "A pull request already exists for this branch",
+      "base_modified": "Base branch was modified. Please pull the latest changes",
+      "get_invitation_status": "Failed to get invitation status: {{error}}",
+      "get_invitation_statuses": "Failed to get invitation statuses: {{error}}",
+      "get_conflicts": "Failed to get pull request conflicts: {{error}}"
+    },
+    "success": {
+      "init": "Initialization completed successfully",
+      "pr_created": "Pull request created successfully",
+      "review_submitted": "Review submitted successfully"
+    },
+    "cli": {
+      "description": "GitHub PR automation tool with AI assistance"
+    },
+    "branch_pattern": {
+      "match_success": "Branch '{{branch}}' matches pattern '{{pattern}}'",
+      "match_fail": "Branch '{{branch}}' does not match pattern '{{pattern}}'",
+      "no_config": "No configuration found",
+      "matching_start": "Starting to match branch patterns",
+      "current_branch": "Current branch: {{branch}}",
+      "available_patterns": "Available branch patterns:",
+      "pattern_item": "- Pattern: {{pattern}}, Type: {{type}}",
+      "matched_pattern": "Found matching branch pattern",
+      "pattern_info": "Pattern: {{pattern}}, Type: {{type}}, Draft: {{draft}}, Labels: {{labels}}, Template: {{template}}",
+      "no_match": "No matching branch pattern found",
+      "yes": "Yes",
+      "no": "No",
+      "none": "None",
+      "default": "Default"
+    },
+    "template": {
+      "default": {
+        "changes": "## Changes",
+        "changes_placeholder": "- Describe your changes here",
+        "tests": "## Tests",
+        "unit_test": "- [ ] Unit tests",
+        "integration_test": "- [ ] Integration tests",
+        "reviewer_checklist": "## Reviewer Checklist",
+        "code_clarity": "- [ ] Code is clear and understandable",
+        "test_coverage": "- [ ] Tests cover the changes appropriately",
+        "performance": "- [ ] Performance considerations addressed"
+      }
+    },
+    "warning": {
+      "invalid_reviewers": "The following reviewers are invalid: {{reviewers}}",
+      "merge_conflict": "Merge conflicts detected in this pull request",
+      "merge_status_unknown": "Merge status is unknown, please check later",
+      "branch_delete_failed": "Failed to delete the remote branch, you may need to delete it manually"
     }
   },
   "ai": {
     "initialization": {
-      "success": "AI features successfully initialized",
-      "failed": "Failed to initialize AI features"
+      "success": "AI initialized successfully"
     },
     "error": {
-      "not_initialized": "AI features not initialized",
-      "processing_failed": "Error processing with AI",
+      "not_initialized": "AI could not be initialized",
+      "code_review_failed": "Failed to perform AI code review",
       "pr_description_failed": "Failed to generate PR description",
       "pr_title_failed": "Failed to generate PR title",
-      "code_review_failed": "Failed to generate code review",
       "conflict_resolution_failed": "Failed to generate conflict resolution suggestions",
       "commit_message_failed": "Failed to improve commit message",
-      "daily_report_failed": "Failed to generate daily report summary",
-      "invalid_key": "Invalid API key",
-      "invalid_provider": "Unsupported AI provider"
-    },
-    "format": {
-      "file": {
-        "path": "File: {{path}}",
-        "content": "Content: {{content}}"
-      },
-      "conflict": {
-        "file": "File: {{file}}",
-        "content": "Conflict: {{content}}"
-      }
-    },
-    "prompts": {
-      "pr_description": {
-        "analyze": "Please analyze the following changes and generate a PR description.\n\n[Required]\n- File: Include all changed files\n Follow these specific guidelines and write the output IN ENGLISH:\n\n1. Basic Structure\n- Use only the main section structure from the template (## Title format)\n- Create new checklist items based on actual changes\n\n2. Checklist Creation Rules\n- Create checklist items only from actual code changes\n- Each item must be specific and verifiable\n- Do not copy existing checklist items from the template\n- Create items that reflect the actual code changes\n\n3. Section Guidelines:\n\n## Description\n- Clearly explain the purpose and context of changes\n- Include technical context\n\n## Implementation Details\n- List changes in [filename:line_number] format\n- Explain each change and its rationale\n- Describe actual behavior changes in functions/methods\n\n## Testing\nOnly include actually added/modified tests:\n- New test cases\n- Modified test cases\n- Affected existing tests\n\n## Impact Analysis\nOnly include actual impacts:\n- Direct functionality changes\n- Performance impacts\n- Dependency changes\n\nTemplate:\n{{template}}\n\nChanged Files: {{files}}\n\nDiff Content:\n{{diffContent}}\n\nKey Instructions:\n1. Write the ENTIRE output in English\n2. Only reference the template's section structure, create new content based on actual changes\n3. Include only checklist items that can be verified from actual code changes\n4. Each checklist item must be specific and verifiable\n5. Use [V] only for completed work\n6. Use [ ] only for items requiring reviewer verification\n7. Include file names and line numbers for all changes\n8. Be specific about implementation details\n9. Focus on actual changes visible in the diff\n10. Include ALL changed files\n11. Ensure no modified files are omitted from the description",
-        "summarize": "Please summarize the following PR descriptions into a single, clear, and concise description. Write the output IN ENGLISH following these rules:\n\n1. Structure Maintenance\n- Keep main section formats from template\n- Reorganize content based on actual changes\n\n2. Checklist Integration Rules\n- Remove duplicates\n- Group related items\n- Create new checklist items based on actual changes\n- Include only verifiable items\n\n3. Description Integration Method\n- Extract core content from each description\n- Merge technical details\n- Remove duplicate content\n- Group related changes\n\nOriginal Descriptions:\n{{descriptions}}\n\nIntegration Guidelines:\n1. Write the ENTIRE output in English\n2. Keep template section structure but recreate content based on actual changes\n3. Include only verifiable checklist items\n4. Make technical descriptions specific and clear\n5. Remove duplicates and integrate related content\n6. Maintain clear traceability to actual code changes"
-      },
-      "code_review": {
-        "analyze": "Please review the following code files and provide feedback IN ENGLISH:\n\n{{files}}\n\nReview requirements:\n1. Code quality and best practices\n2. Potential bugs or edge cases\n3. Performance considerations\n4. Security vulnerabilities\n5. Test coverage\n\nProvide specific, actionable feedback for each issue found. Write EVERYTHING in English."
-      },
-      "conflict_resolution": {
-        "analyze": "Please analyze the following merge conflicts and suggest resolutions:\n\n{{conflicts}}\n\nPR Context:{{context}}\n\nFor each conflict:\n1. Explain the nature of the conflict\n2. Suggest the best resolution approach\n3. Provide specific guidance on which changes to keep\n4. Consider the context and impact of the changes\n\nWrite EVERYTHING in English."
-      },
-      "daily_report_summary": {
-        "system": "You are a software development report writing expert. Your task is to analyze a developer's daily commits and create a professional and informative daily work report in list format.\n\nWork guidelines:\n1. Analyze the content and patterns of each commit to understand the work the developer has done.\n2. Structure the content as clear, organized lists of items for easy scanning and reading.\n3. Balance technical details and business implications.\n4. Focus on work progress, key achievements, and problems solved.\n5. Interpret statistical data meaningfully and explain it in the context of work.\n6. Write in concise and clear language, while maintaining a professional tone.\n7. If there are no commits, mention this fact while providing a constructive message.\n\nOutput format (use bullet points and numbered lists throughout):\n- Title: \"Daily Development Report: [date]\"\n- Introduction: Brief 1-2 sentence overview of the day's work\n- Key achievements: List of 3-5 bullet points of main completed work items\n- Work details: Numbered list of specific development activities\n  * Each item should be clear and concise\n  * Use sub-bullets for additional details when needed\n- Technical content: Bulleted list showing modified file types, code change stats\n- Next steps: 2-3 bullet points of expected future work\n\nLimit your response to 1000 characters, maintaining a clear list-based format for improved readability.",
-        "prompt": "Please create a daily commit report for developer {{username}} on {{date}}. Write the output IN ENGLISH.\n\n{{commitsInfo}}\n\n{{statsInfo}}\n\nBased on the commit content, please write a professional daily work report explaining what work was done, what features were developed, what problems were solved, etc. Use a list-based format with bullet points and numbered lists for better readability.\n\nIMPORTANT: \n- Write the ENTIRE report in English\n- Use professional business language appropriate for a development work report\n- Format the report as clear lists rather than paragraphs\n- Use bullet points (•) and numbered lists (1., 2., etc.) consistently\n- Make the report easy to scan quickly"
-      },
-      "commit_message": {
-        "analyze": "Please analyze the following changes and generate a commit message.\n\n[Required]\n- Format: type(scope): title\n- Include all changed files\n- Do not use markdown code blocks (```)\n\n[Message Structure]\n1. Title\n- Concise description of core changes\n- Keep under 50 characters\n\n2. Body\n- 1-2 sentences explaining main changes\n- Use concise descriptive style\n\n3. Detailed Changes\n1) File Changes\n- [filename] change description\n  Examples:\n  - [src/cli/commands/init.ts] OpenRouter selection feature\n  - [src/core/ai-manager.ts] API key input process\n  - [src/types/config.ts] OpenRouter token limits\n- If no changes: \"No file changes\"\n- Include all changed files\n\n2) Functional Changes\n- User-facing actual changes\n- New or modified features\n- IMPORTANT: If changes are only in documentation files (.md) without actual code changes, write \"No functional changes\"\n- If no changes: \"No functional changes\"\n\n3) Performance/Structural Changes\n- Measurable performance improvements\n- Code structure changes\n- IMPORTANT: If changes are only in documentation files (.md) without actual code changes, write \"No performance/structural changes\"\n- If no changes: \"No performance/structural changes\"\n\n[Writing Rules]\n1. No markdown code blocks\n2. Clear and concise descriptions\n3. Focus on actual changes\n4. Remove redundant explanations\n5. Include all changed files\n6. Keep file changes simple and focused\n7. Distinguish between actual code changes and documentation-only changes\n8. For documentation-only changes (.md files), do not include functional or performance changes unless explicitly mentioned in the documentation\n\nExample format:\nfeat(init): Add new initialization feature\n\nImplemented automatic initialization for better user experience.\n\n1) File Changes\n- [src/cli/commands/file.ts] Specific change description\n\nChanged Files: {{files}}\n\nDiff Content:\n{{diff}}\n\nCurrent message: {{message}}"
-      },
-      "pr_title": {
-        "analyze": "Please analyze the following changes and generate a concise and descriptive PR title. Write the output IN ENGLISH following these rules:\n\n1. Title Guidelines:\n- Keep it concise but descriptive\n- Focus on the main change or feature\n- Use present tense\n- Do not include the type prefix (it will be added automatically)\n\n2. Content Guidelines:\n- Describe what the changes accomplish\n- Be specific about the main functionality\n- Avoid generic descriptions\n\nExample good titles:\n- Implement login functionality\n- Add user authentication middleware\n- Implement caching for performance\n\nExample bad titles:\n- Fix bug\n- Add feature\n- Update code\n\nChanged Files: {{files}}\n\nDiff Content:\n{{diffContent}}\n\nImportant notes:\n1. Write ONLY the title part in English (without type prefix)\n2. Keep it under 50 characters if possible\n3. Make it easy to understand at a glance\n4. Focus on the actual changes in the diff"
-      }
-    },
-    "models": {
-      "anthropic": {
-        "claude_3_7_sonnet_latest": {
-          "name": "claude-3-7-sonnet-latest",
-          "description": "Latest and most intelligent model"
-        },
-        "claude_3_5_sonnet_latest": {
-          "name": "claude-3-5-sonnet-latest",
-          "description": "Previous most intelligent model"
-        },
-        "claude_3_5_haiku_latest": {
-          "name": "claude-3-5-haiku-latest",
-          "description": "Fastest model"
-        },
-        "claude_3_opus_latest": {
-          "name": "claude-3-opus-latest",
-          "description": "Powerful model for complex tasks"
-        },
-        "claude_3_haiku_20240307": {
-          "name": "claude-3-haiku-20240307",
-          "description": "Fast and compact model"
-        }
-      },
-      "openai": {
-        "gpt_4": {
-          "name": "gpt-4",
-          "description": "Most capable GPT model"
-        },
-        "gpt_3_5_turbo": {
-          "name": "gpt-3.5-turbo",
-          "description": "Fast and efficient model"
-        }
-      },
-      "github_copilot": {
-        "copilot_chat": {
-          "name": "copilot-chat",
-          "description": "GitHub's AI pair programming model"
-        }
-      },
-      "openrouter": {
-        "gemini_flash": {
-          "name": "qwen/qwen3-30b-a3b:free",
-          "description": "Free model with fast response and high quality"
-        }
-      }
+      "daily_report_failed": "Failed to generate daily report summary"
     }
   },
   "config": {
     "error": {
-      "load_global_failed": "Failed to load global config: {{error}}",
-      "load_project_failed": "Failed to load project config: {{error}}",
-      "save_global_failed": "Failed to save global config: {{error}}",
-      "save_project_failed": "Failed to save project config: {{error}}"
-    },
-    "branch_patterns": {
-      "types": {
-        "feat": "Feature",
-        "fix": "Bug Fix",
-        "refactor": "Refactor",
-        "docs": "Documentation",
-        "chore": "Chore",
-        "test": "Test"
-      },
-      "labels": {
-        "feature": "feature",
-        "bug": "bug",
-        "refactor": "refactor",
-        "documentation": "documentation",
-        "chore": "chore",
-        "test": "test"
-      }
+      "load_global_failed": "Failed to load global configuration: {{error}}",
+      "load_project_failed": "Failed to load project configuration: {{error}}",
+      "save_global_failed": "Failed to save global configuration: {{error}}",
+      "save_project_failed": "Failed to save project configuration: {{error}}"
     }
-  },
-  "created": "PR has been created.",
-  "deleted": "PR has been deleted.",
-  "loading_more": "Loading page {{page}}...",
-  "max_pages_reached": "Maximum number of pages reached (10). Please refine your search if needed."
+  }
 } 

@@ -188,19 +188,15 @@ export async function reviewCommand(prNumber: string): Promise<void> {
     );
     log.info("\n");
 
-    let aiEnabled = false;
     let ai: AIFeatures | null = null;
 
-    // AI 기능이 설정되어 있는 경우에만 AI 관련 기능 활성화
-    if (config.aiConfig?.enabled) {
-      try {
-        ai = new AIFeatures();
-        await ai.initialize();
-        aiEnabled = ai.isEnabled();
-      } catch (error) {
-        aiEnabled = false;
-        ai = null;
-      }
+    // AI 인스턴스 생성
+    try {
+      ai = new AIFeatures();
+      log.info(t("ai.initialization.success"));
+    } catch (error) {
+      ai = null;
+      log.error(t("ai.error.not_initialized"));
     }
 
     const { action } = await inquirer.prompt([
@@ -210,7 +206,7 @@ export async function reviewCommand(prNumber: string): Promise<void> {
         message: t("commands.review.prompts.action"),
         choices: [
           { name: t("commands.review.actions.view"), value: "view" },
-          ...(aiEnabled
+          ...(ai
             ? [
                 {
                   name: t("commands.review.actions.ai_review"),
@@ -234,16 +230,15 @@ export async function reviewCommand(prNumber: string): Promise<void> {
         break;
 
       case "ai_review":
-        if (!aiEnabled) {
+        if (!ai) {
           log.error(t("ai.error.not_initialized"));
           break;
         }
 
         log.info(t("commands.review.info.ai_review_start"));
-        // 이미 생성된 AI 인스턴스 사용
+        // AI 인스턴스가 없는 경우 다시 생성
         if (!ai) {
           ai = new AIFeatures();
-          await ai.initialize();
         }
 
         const reviewFiles = await getChangedFiles(

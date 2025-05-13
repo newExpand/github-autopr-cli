@@ -17,8 +17,8 @@ const GLOBAL_CONFIG_FILE = join(CONFIG_DIR, "config.json");
 const PROJECT_CONFIG_FILE = ".autopr.json";
 
 const DEFAULT_GLOBAL_CONFIG: GlobalConfig = {
-  githubToken: "",
   language: "en",
+  authMode: "github-app",
 };
 
 const DEFAULT_PROJECT_CONFIG: ProjectConfig = {
@@ -207,14 +207,15 @@ export async function updateProjectConfig(
   return validatedConfig;
 }
 
-// 기존 updateConfig는 호환성을 위해 유지
+// updateConfig는 유지하되 githubToken 필드는 제거
 export async function updateConfig(updates: Partial<Config>): Promise<Config> {
-  const { githubToken, language, ...projectUpdates } = updates;
+  const { language, githubApp, authMode, ...projectUpdates } = updates;
 
   // 전역 설정과 프로젝트 설정을 분리하여 업데이트
   const globalUpdates: Partial<GlobalConfig> = {
-    ...(githubToken && { githubToken }),
     ...(language && { language }),
+    ...(githubApp !== undefined && { githubApp }),
+    ...(authMode !== undefined && { authMode }),
   };
 
   if (Object.keys(globalUpdates).length > 0) {

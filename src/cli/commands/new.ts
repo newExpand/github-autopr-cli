@@ -68,6 +68,9 @@ export async function newCommand(): Promise<void> {
       process.exit(1);
     }
 
+    process.stdout.write(JSON.stringify(config, null, 2));
+    process.stdout.write(JSON.stringify(repoInfo, null, 2));
+
     // main/master 브랜치 체크
     if (
       repoInfo.currentBranch === config.defaultBranch ||
@@ -119,52 +122,45 @@ export async function newCommand(): Promise<void> {
     const diffContent = await getDiffContent(baseBranch);
 
     let generatedDescription = "";
-    let aiEnabled = false;
     let ai: AIFeatures | null = null;
 
-    // AI 기능이 설정되어 있는 경우에만 AI 관련 기능 실행
-    if (config.aiConfig?.enabled) {
+    // AI 인스턴스 생성
+    try {
+      ai = new AIFeatures();
+      log.info(t("ai.initialization.success"));
+
+      // AI로 PR 제목 생성
       try {
-        ai = new AIFeatures();
-        await ai.initialize();
-        aiEnabled = ai.isEnabled();
-
-        if (aiEnabled) {
-          // AI로 PR 제목 생성
-          try {
-            log.info(t("commands.new.info.generating_title"));
-            generatedTitle = await ai.generatePRTitle(
-              changedFiles,
-              diffContent,
-              pattern,
-            );
-            log.section(t("commands.new.info.generated_title", { title: "" }));
-            log.verbose(generatedTitle);
-            defaultTitle = generatedTitle || defaultTitle;
-          } catch (error) {
-            log.warn(t("commands.new.warning.ai_title_failed"), error);
-            log.debug("AI 제목 생성 에러:", error);
-          }
-
-          log.info(t("commands.new.info.generating_description"));
-          // AI에게 템플릿을 함께 전달
-          generatedDescription = await ai.generatePRDescription(
-            changedFiles,
-            diffContent,
-            pattern ? { template: defaultBody } : undefined,
-          );
-
-          // AI가 생성한 설명 표시
-          log.section(t("commands.new.info.generated_description"));
-          log.section("-------------------");
-          log.verbose(generatedDescription);
-          log.section("-------------------");
-        }
+        log.info(t("commands.new.info.generating_title"));
+        generatedTitle = await ai.generatePRTitle(
+          changedFiles,
+          diffContent,
+          pattern,
+        );
+        log.section(t("commands.new.info.generated_title", { title: "" }));
+        log.verbose(generatedTitle);
+        defaultTitle = generatedTitle || defaultTitle;
       } catch (error) {
-        log.warn(t("commands.new.warning.ai_description_failed"));
-        aiEnabled = false;
-        ai = null;
+        log.warn(t("commands.new.warning.ai_title_failed"), error);
+        log.debug("AI 제목 생성 에러:", error);
       }
+
+      log.info(t("commands.new.info.generating_description"));
+      // AI에게 템플릿을 함께 전달
+      generatedDescription = await ai.generatePRDescription(
+        changedFiles,
+        diffContent,
+        pattern ? { template: defaultBody } : undefined,
+      );
+
+      // AI가 생성한 설명 표시
+      log.section(t("commands.new.info.generated_description"));
+      log.section("-------------------");
+      log.verbose(generatedDescription);
+      log.section("-------------------");
+    } catch (error) {
+      log.warn(t("commands.new.warning.ai_description_failed"));
+      ai = null;
     }
 
     const answers = await inquirer.prompt([
@@ -180,7 +176,7 @@ export async function newCommand(): Promise<void> {
         name: "useAIDescription",
         message: t("commands.new.prompts.use_ai_description"),
         default: true,
-        when: () => aiEnabled && !!generatedDescription,
+        when: () => !!ai && !!generatedDescription,
       },
       {
         type: "confirm",
@@ -188,20 +184,20 @@ export async function newCommand(): Promise<void> {
         message: t("commands.new.prompts.edit_ai_description"),
         default: false,
         when: (answers) =>
-          aiEnabled && !!generatedDescription && answers.useAIDescription,
+          !!ai && !!generatedDescription && answers.useAIDescription,
       },
       {
         type: "editor",
         name: "body",
         message: t("commands.new.prompts.body"),
         default: (answers) => {
-          if (aiEnabled && generatedDescription && answers.useAIDescription) {
+          if (ai && generatedDescription && answers.useAIDescription) {
             return answers.editAIDescription ? generatedDescription : undefined;
           }
           return defaultBody;
         },
         when: (answers) =>
-          !aiEnabled ||
+          !ai ||
           !generatedDescription ||
           !answers.useAIDescription ||
           answers.editAIDescription,

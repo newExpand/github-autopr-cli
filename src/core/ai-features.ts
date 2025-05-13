@@ -1,426 +1,140 @@
-import { AIManager } from "./ai-manager.js";
+import { aiClient } from "./ai-manager.js";
 import { log } from "../utils/logger.js";
 import { t } from "../i18n/index.js";
-import type { AIProvider } from "./ai-manager.js";
-import dotenv from "dotenv";
-import { OPENROUTER_CONFIG } from "../config/openrouter.js";
-import { loadProjectConfig } from "./config.js";
 
-interface PRChunk {
-  files: string[];
-  diff: string;
+// 지원 언어 타입 정의
+export type SupportedLanguage = "ko" | "en";
+
+// API 응답 타입 정의
+interface PRDescriptionResponse {
+  description: string;
 }
 
+interface PRTitleResponse {
+  title: string;
+}
+
+interface CodeReviewResponse {
+  review: string;
+}
+
+interface ConflictResolutionResponse {
+  resolution: string;
+}
+
+interface CommitMessageResponse {
+  message: string;
+}
+
+interface DailyCommitSummaryResponse {
+  summary: string;
+}
+
+/**
+ * API 호출을 통해 AI 기능을 제공하는 클래스
+ */
 export class AIFeatures {
-  private aiManager: AIManager;
-  // OpenAI 기본 토큰 제한
-  private readonly OPENAI_MAX_CHUNK_TOKENS = 1500;
-  private readonly OPENAI_MAX_SUMMARY_TOKENS = 1000;
-  // OpenRouter 토큰 제한 (Gemini Flash 2.0 기준)
-  private readonly OPENROUTER_MAX_CHUNK_TOKENS = 4000;
-  private readonly OPENROUTER_MAX_SUMMARY_TOKENS = 2000;
-  private initialized = false;
-
   constructor() {
-    dotenv.config();
-    this.aiManager = AIManager.getInstance();
+    // 생성자 간소화
   }
 
   /**
-   * AI 설정을 로드합니다.
-   * @returns AI 설정 객체
+   * PR 설명을 생성합니다.
+   * @param files 변경된 파일 목록
+   * @param diffContent diff 내용
+   * @param options 옵션 (템플릿 등)
+   * @param language 응답 언어 (ko 또는 en, 기본값: ko)
+   * @returns 생성된 PR 설명
    */
-  private async loadConfig() {
-    try {
-      // 1. 프로젝트 설정 파일(.autopr.json)에서 먼저 확인
-      const projectConfig = await loadProjectConfig();
-      if (
-        projectConfig.aiConfig?.enabled &&
-        projectConfig.aiConfig.provider &&
-        projectConfig.aiConfig.options?.model
-      ) {
-        log.debug("프로젝트 설정에서 AI 설정을 로드했습니다.");
-        return {
-          provider: projectConfig.aiConfig.provider as AIProvider,
-          apiKey:
-            projectConfig.aiConfig.provider === "openrouter"
-              ? OPENROUTER_CONFIG.API_KEY
-              : process.env.AI_API_KEY || "",
-          model: projectConfig.aiConfig.options.model,
-        };
-      }
-
-      // 2. .env 파일에서 설정 로드
-      dotenv.config();
-      const provider = process.env.AI_PROVIDER as AIProvider;
-      const apiKey = process.env.AI_API_KEY;
-      const model = process.env.AI_MODEL;
-
-      // OpenAI인 경우 .env 파일의 값 사용
-      if (provider === "openai" && apiKey && model) {
-        log.debug(".env 파일에서 OpenAI 설정을 로드했습니다.");
-        return {
-          provider: "openai" as AIProvider,
-          apiKey,
-          model,
-        };
-      }
-
-      // 3. 모든 설정이 없는 경우 OpenRouter 기본값 사용
-      log.debug("기본 OpenRouter 설정을 사용합니다.");
-      return {
-        provider: "openrouter" as AIProvider,
-        apiKey: OPENROUTER_CONFIG.API_KEY,
-        model: OPENROUTER_CONFIG.DEFAULT_MODEL,
-      };
-    } catch (error) {
-      log.error("AI 설정 로드 중 오류 발생:", error);
-      // 오류 발생시 OpenRouter 기본값 반환
-      return {
-        provider: "openrouter" as AIProvider,
-        apiKey: OPENROUTER_CONFIG.API_KEY,
-        model: OPENROUTER_CONFIG.DEFAULT_MODEL,
-      };
-    }
-  }
-
-  /**
-   * AI 기능을 초기화합니다.
-   * @returns 초기화 성공 여부
-   */
-  public async initialize(): Promise<boolean> {
-    try {
-      // 이미 초기화된 경우 중복 초기화 방지
-      if (this.initialized) {
-        log.debug("AI 기능이 이미 초기화되어 있습니다.");
-        return true;
-      }
-
-      // 설정 로드
-      const config = await this.loadConfig();
-      if (!config) {
-        log.debug("AI 설정을 찾을 수 없습니다.");
-        return false;
-      }
-
-      // AI 제공자 설정
-      const { provider, apiKey, model } = config;
-      if (!provider || !apiKey) {
-        log.debug("AI 제공자 또는 API 키가 설정되지 않았습니다.");
-        return false;
-      }
-
-      // AI 매니저 초기화 (AI 매니저 내부에서 OpenRouter API 키 상태를 확인하므로 여기서는 확인하지 않음)
-      await this.aiManager.initialize({
-        provider,
-        apiKey,
-        options: { model },
-      });
-
-      // 초기화 완료
-      this.initialized = true;
-      log.debug("AI 기능이 초기화되었습니다");
-      return true;
-    } catch (error) {
-      log.error("AI 기능 초기화 실패:", error);
-      return false;
-    }
-  }
-
-  isEnabled(): boolean {
-    return this.aiManager.isEnabled();
-  }
-
-  private getMaxTokens(type: "chunk" | "summary"): number {
-    const provider = this.aiManager.getProvider();
-    if (provider === "openrouter") {
-      return type === "chunk"
-        ? this.OPENROUTER_MAX_CHUNK_TOKENS
-        : this.OPENROUTER_MAX_SUMMARY_TOKENS;
-    }
-    return type === "chunk"
-      ? this.OPENAI_MAX_CHUNK_TOKENS
-      : this.OPENAI_MAX_SUMMARY_TOKENS;
-  }
-
-  private async chunkPRContent(
-    files: string[],
-    diffContent: string,
-  ): Promise<PRChunk[]> {
-    const chunks: PRChunk[] = [];
-    let currentFiles: string[] = [];
-    let currentDiff = "";
-    const diffLines = diffContent.split("\n");
-    let currentTokenCount = 0;
-    const maxChunkTokens = this.getMaxTokens("chunk");
-
-    for (const line of diffLines) {
-      if (line.startsWith("diff --git")) {
-        // 새로운 파일의 diff 시작
-        if (currentTokenCount > maxChunkTokens) {
-          // 현재 청크가 토큰 제한을 초과하면 새로운 청크 시작
-          if (currentDiff) {
-            chunks.push({
-              files: [...currentFiles],
-              diff: currentDiff,
-            });
-            currentFiles = [];
-            currentDiff = "";
-            currentTokenCount = 0;
-          }
-        }
-
-        // 파일 경로 추출 및 현재 파일 목록에 추가
-        const filePath = line.split(" ")[2].substring(2); // b/파일경로 에서 파일경로만 추출
-        if (files.includes(filePath)) {
-          currentFiles.push(filePath);
-        }
-      }
-
-      // 현재 라인의 토큰 수 추정
-      const lineTokens = this.getApproximateTokenCount(line);
-
-      // 토큰 제한을 초과하면 새로운 청크 시작
-      if (currentTokenCount + lineTokens > maxChunkTokens) {
-        if (currentDiff) {
-          chunks.push({
-            files: [...currentFiles],
-            diff: currentDiff,
-          });
-          currentFiles = [];
-          currentDiff = "";
-          currentTokenCount = 0;
-        }
-      }
-
-      currentDiff += line + "\n";
-      currentTokenCount += lineTokens;
-    }
-
-    // 마지막 청크 추가
-    if (currentDiff) {
-      chunks.push({
-        files: currentFiles,
-        diff: currentDiff,
-      });
-    }
-
-    return chunks;
-  }
-
-  private getApproximateTokenCount(text: string): number {
-    // 대략적인 토큰 수 계산 (OpenAI의 경우 일반적으로 단어 수의 약 1.3배)
-    return Math.ceil(text.split(/\s+/).length * 1.3);
-  }
-
-  private async processWithAI(
-    prompt: string,
-    maxTokens: number,
-    options: {
-      temperature?: number;
-      top_p?: number;
-      presence_penalty?: number;
-      frequency_penalty?: number;
-      response_format?: { type: "json_object" } | { type: "text" };
-      seed?: number;
-      stream?: boolean;
-      stop?: string[];
-      systemPrompt?: string;
-    } = {},
-  ): Promise<string> {
-    if (!this.aiManager.isEnabled()) {
-      throw new Error(t("ai.error.not_initialized"));
-    }
-
-    const provider = this.aiManager.getProvider();
-    const model = this.aiManager.getModel();
-
-    if (!provider || !model) {
-      throw new Error(t("ai.error.not_initialized"));
-    }
-
-    try {
-      const openai = this.aiManager.getOpenAI();
-
-      const messages = [];
-
-      // 시스템 프롬프트 추가 (있는 경우)
-      if (options.systemPrompt) {
-        messages.push({
-          role: "system" as const,
-          content: options.systemPrompt,
-        });
-      }
-
-      // 사용자 프롬프트 추가
-      messages.push({
-        role: "user" as const,
-        content: prompt,
-      });
-
-      const completion = await openai.chat.completions.create({
-        model: model as any,
-        messages,
-        max_tokens: maxTokens,
-        temperature: options.temperature ?? 0.7,
-        top_p: options.top_p ?? 1,
-        presence_penalty: options.presence_penalty ?? 0,
-        frequency_penalty: options.frequency_penalty ?? 0,
-        response_format: options.response_format ?? { type: "text" },
-        seed: options.seed,
-        stream: false, // 스트림 모드는 비활성화
-        stop: options.stop,
-      });
-
-      return completion.choices[0]?.message?.content || "";
-    } catch (error) {
-      log.error(t("ai.error.processing_failed"), error);
-      throw error;
-    }
-  }
-
   async generatePRDescription(
     files: string[],
     diffContent: string,
     options?: { template?: string },
+    language: SupportedLanguage = "ko",
   ): Promise<string> {
     try {
-      const chunks = await this.chunkPRContent(files, diffContent);
-      const descriptions: string[] = [];
-
-      const systemPrompt = `You are an expert code reviewer and technical writer. Your task is to analyze code changes and generate clear, comprehensive PR descriptions that:
-1. Focus on the actual changes and their impact
-2. Use professional and technical language
-3. Organize information logically
-4. Highlight important implementation details
-5. Consider security and performance implications`;
-
-      // 각 청크에 대한 설명 생성
-      for (const chunk of chunks) {
-        const prompt = t("ai.prompts.pr_description.analyze", {
-          files: chunk.files.join(", "),
-          diffContent: chunk.diff,
+      const result = await aiClient.callAPI<PRDescriptionResponse>(
+        "/ai/google/features/pr-description",
+        {
+          files,
+          diffContent,
           template: options?.template || "",
-        });
+          language,
+        },
+      );
 
-        const chunkDescription = await this.processWithAI(
-          prompt,
-          this.getMaxTokens("chunk"),
-          {
-            temperature: 0.7, // 적당한 창의성
-            presence_penalty: 0.1, // 새로운 주제 언급 장려
-            frequency_penalty: 0.1, // 반복 감소
-            systemPrompt,
-          },
-        );
-        descriptions.push(chunkDescription);
-      }
-
-      // 여러 청크가 있는 경우 최종 요약 생성
-      if (chunks.length > 1) {
-        const summarySystemPrompt = `You are a technical documentation expert. Your task is to:
-1. Combine multiple descriptions into a cohesive summary
-2. Remove redundant information
-3. Maintain technical accuracy
-4. Ensure logical flow
-5. Preserve all important implementation details`;
-
-        const summaryPrompt = t("ai.prompts.pr_description.summarize", {
-          descriptions: descriptions.join("\n\n"),
-        });
-        return await this.processWithAI(
-          summaryPrompt,
-          this.getMaxTokens("summary"),
-          {
-            temperature: 0.5, // 더 집중된 요약
-            presence_penalty: 0.2, // 다양한 관점 포함
-            systemPrompt: summarySystemPrompt,
-          },
-        );
-      }
-
-      return descriptions[0];
+      return result.description || "";
     } catch (error) {
       log.error(t("ai.error.pr_description_failed"), error);
       throw error;
     }
   }
 
+  /**
+   * PR 제목을 생성합니다.
+   * @param files 변경된 파일 목록
+   * @param diffContent diff 내용
+   * @param pattern 제목 패턴 정보
+   * @param language 응답 언어 (ko 또는 en, 기본값: ko)
+   * @returns 생성된 PR 제목
+   */
   async generatePRTitle(
     files: string[],
     diffContent: string,
     pattern: { type: string },
+    language: SupportedLanguage = "ko",
   ): Promise<string> {
     try {
-      const systemPrompt = `You are a PR title generator. Your task is to:
-1. Create concise and descriptive titles under 50 characters
-2. Focus on the main change or feature
-3. Use clear and professional language
-4. Avoid generic descriptions
-5. Follow the conventional commit format`;
-
-      const prompt = t("ai.prompts.pr_title.analyze", {
-        files: files.join(", "),
-        diffContent: diffContent,
-        type: pattern.type,
-      });
-
-      const generatedTitle = await this.processWithAI(
-        prompt,
-        this.getMaxTokens("chunk"),
+      const result = await aiClient.callAPI<PRTitleResponse>(
+        "/ai/google/features/pr-title",
         {
-          temperature: 0.3, // 더 집중적이고 일관된 제목
-          presence_penalty: 0, // 제목은 간단해야 함
-          frequency_penalty: 0.2, // 중복 단어 방지
-          systemPrompt,
+          files,
+          diffContent,
+          type: pattern.type,
+          language,
         },
       );
-      return `[${pattern.type.toUpperCase()}] ${generatedTitle}`;
+
+      return `[${pattern.type.toUpperCase()}] ${result.title || ""}`;
     } catch (error) {
       log.error(t("ai.error.pr_title_failed"), error);
       throw error;
     }
   }
 
+  /**
+   * 코드 리뷰를 수행합니다.
+   * @param files 리뷰할 파일 목록
+   * @param language 응답 언어 (ko 또는 en, 기본값: ko)
+   * @returns 코드 리뷰 결과
+   */
   async reviewCode(
     files: Array<{ path: string; content: string }>,
+    language: SupportedLanguage = "ko",
   ): Promise<string> {
-    const systemPrompt = `You are an expert code reviewer with deep knowledge of software development best practices. Your task is to:
-1. Identify potential bugs and edge cases
-2. Evaluate code quality and readability
-3. Check for security vulnerabilities
-4. Assess performance implications
-5. Verify proper error handling
-6. Suggest specific improvements
-7. Consider test coverage
-8. Look for architectural issues`;
-
-    const filesStr = files
-      .map((file) => {
-        const path = t("ai.format.file.path", { path: file.path });
-        const content = t("ai.format.file.content", { content: file.content });
-        return `${path}\n${content}`;
-      })
-      .join("\n\n");
-
-    const prompt = t("ai.prompts.code_review.analyze", {
-      files: filesStr,
-    });
-
     try {
-      return await this.processWithAI(prompt, this.getMaxTokens("chunk"), {
-        temperature: 0.6, // 균형잡힌 리뷰
-        presence_penalty: 0.1, // 다양한 관점
-        frequency_penalty: 0.1, // 반복 감소
-        stop: ["```"], // 코드 블록 끝에서 중지
-        systemPrompt,
-      });
+      const result = await aiClient.callAPI<CodeReviewResponse>(
+        "/ai/google/features/code-review",
+        {
+          files,
+          language,
+        },
+      );
+
+      return result.review || "";
     } catch (error) {
       log.error(t("ai.error.code_review_failed"), error);
       throw error;
     }
   }
 
+  /**
+   * 병합 충돌 해결 제안을 생성합니다.
+   * @param conflicts 충돌 정보 목록
+   * @param prContext PR 컨텍스트 정보
+   * @param language 응답 언어 (ko 또는 en, 기본값: ko)
+   * @returns 충돌 해결 제안
+   */
   async suggestConflictResolution(
     conflicts: Array<{ file: string; conflict: string }>,
     prContext?: {
@@ -433,90 +147,51 @@ export class AIFeatures {
         changes: number;
       }>;
     },
+    language: SupportedLanguage = "ko",
   ): Promise<string> {
-    const systemPrompt = `You are a merge conflict resolution expert. Your task is to:
-1. Analyze conflicts carefully
-2. Consider the context and purpose of changes
-3. Suggest the most appropriate resolution
-4. Explain the reasoning behind suggestions
-5. Highlight potential risks
-6. Consider code functionality and integrity
-7. Maintain consistent code style`;
-
-    const conflictsStr = conflicts
-      .map((c) => {
-        const file = t("ai.format.conflict.file", { file: c.file });
-        const content = t("ai.format.conflict.content", {
-          content: c.conflict,
-        });
-        return `${file}\n${content}`;
-      })
-      .join("\n\n");
-
-    const contextStr = prContext
-      ? `\nPR Title: ${prContext.title}\nPR Description: ${prContext.description}\nChanged Files:\n${prContext.changedFiles
-          .map(
-            (f) =>
-              `- ${f.filename} (additions: ${f.additions}, deletions: ${f.deletions}, changes: ${f.changes})`,
-          )
-          .join("\n")}`
-      : "";
-
-    const prompt = t("ai.prompts.conflict_resolution.analyze", {
-      conflicts: conflictsStr,
-      context: contextStr,
-    });
-
     try {
-      return await this.processWithAI(prompt, this.getMaxTokens("chunk"), {
-        temperature: 0.4, // 더 신중한 결정
-        presence_penalty: 0, // 정확한 해결책 필요
-        frequency_penalty: 0.1, // 약간의 다양성
-        systemPrompt,
-      });
+      const result = await aiClient.callAPI<ConflictResolutionResponse>(
+        "/ai/google/features/conflict-resolution",
+        {
+          conflicts,
+          prContext,
+          language,
+        },
+      );
+
+      return result.resolution || "";
     } catch (error) {
       log.error(t("ai.error.conflict_resolution_failed"), error);
       throw error;
     }
   }
 
+  /**
+   * 커밋 메시지를 개선합니다.
+   * @param message 현재 커밋 메시지
+   * @param diff diff 내용
+   * @param changedFiles 변경된 파일 목록
+   * @param language 응답 언어 (ko 또는 en, 기본값: ko)
+   * @returns 개선된 커밋 메시지
+   */
   async improveCommitMessage(
     message: string,
     diff: string,
     changedFiles?: string[],
+    language: SupportedLanguage = "ko",
   ): Promise<string> {
-    const systemPrompt = `You are a commit message improvement expert. Your task is to:
-1. Create concise and impactful commit messages
-2. Follow conventional commit format strictly
-3. Maintain consistent terminology throughout the message
-4. Focus on actual changes visible in the diff
-5. Avoid redundancy and unnecessary details
-6. Use appropriate language based on the user's locale
-7. Prioritize user-facing changes
-8. Keep technical details clear but brief
-9. Include ALL changed files without exception
-
-Format Guidelines:
-- Follow the format specified in the prompt
-- Keep subject line under 50 characters
-- Use consistent terminology
-- Focus on actual changes
-- Avoid redundancy
-- Include file names for specific changes`;
-
-    const prompt = t("ai.prompts.commit_message.analyze", {
-      message,
-      diff,
-      files: changedFiles?.join(", ") || "",
-    });
-
     try {
-      return await this.processWithAI(prompt, this.getMaxTokens("chunk"), {
-        temperature: 0.4, // 더 일관된 출력을 위해 낮춤
-        presence_penalty: 0.1,
-        frequency_penalty: 0.3, // 중복 방지를 위해 높임
-        systemPrompt,
-      });
+      const result = await aiClient.callAPI<CommitMessageResponse>(
+        "/ai/google/features/improve-commit-message",
+        {
+          message,
+          diff,
+          changedFiles: changedFiles || [],
+          language,
+        },
+      );
+
+      return result.message || "";
     } catch (error) {
       log.error(t("ai.error.commit_message_failed"), error);
       throw error;
@@ -525,12 +200,11 @@ Format Guidelines:
 
   /**
    * 일일 커밋 보고서 요약을 생성합니다.
-   * 여러 커밋의 내용을 분석하여 전문적인 일일 보고서 형태로 요약합니다.
-   *
    * @param commits 커밋 정보 배열
    * @param username 사용자 이름
    * @param date 보고서 날짜 또는 날짜 범위
    * @param stats 커밋 통계 정보
+   * @param language 응답 언어 (ko 또는 en, 기본값: ko)
    * @returns 생성된 보고서 요약
    */
   async generateDailyCommitSummary(
@@ -554,67 +228,21 @@ Format Guidelines:
       branches?: Record<string, number>;
       fileTypes?: Record<string, number>;
     },
+    language: SupportedLanguage = "ko",
   ): Promise<string> {
-    const systemPrompt = t("ai.prompts.daily_report_summary.system");
-
-    // 커밋 메시지와 파일 정보를 문자열로 변환
-    const commitsInfo = commits
-      .map((commit) => {
-        const filesInfo = commit.files
-          ? commit.files
-              .map((f) => `- ${f.filename} (+${f.additions}/-${f.deletions})`)
-              .join("\n")
-          : "파일 정보 없음";
-
-        return `커밋: ${commit.sha.substring(0, 7)}
-시간: ${new Date(commit.date).toLocaleString()}
-메시지: ${commit.message}
-변경된 파일:
-${filesInfo}
-`;
-      })
-      .join("\n---\n");
-
-    // 통계 정보 추가
-    const statsInfo = `
-커밋 통계:
-- 총 커밋 수: ${stats.totalCommits}
-- 변경된 파일: ${stats.filesChanged}
-- 추가된 라인: ${stats.additions}
-- 삭제된 라인: ${stats.deletions}
-${
-  stats.branches
-    ? "\n브랜치별 커밋:" +
-      Object.entries(stats.branches)
-        .map(([branch, count]) => `\n- ${branch}: ${count}`)
-        .join("")
-    : ""
-}
-${
-  stats.fileTypes
-    ? "\n파일 유형별 변경:" +
-      Object.entries(stats.fileTypes)
-        .map(([type, count]) => `\n- ${type}: ${count}`)
-        .join("")
-    : ""
-}
-`;
-
-    const prompt = t("ai.prompts.daily_report_summary.prompt", {
-      username,
-      date,
-      commitsInfo:
-        commits.length > 0 ? commitsInfo : "이 기간에 커밋이 없습니다.",
-      statsInfo,
-    });
-
     try {
-      return await this.processWithAI(prompt, this.getMaxTokens("summary"), {
-        temperature: 0.5, // 적절한 창의성과 정확성의 균형
-        presence_penalty: 0.2, // 다양한 측면 포함
-        frequency_penalty: 0.3, // 반복 감소
-        systemPrompt,
-      });
+      const result = await aiClient.callAPI<DailyCommitSummaryResponse>(
+        "/ai/google/features/daily-commit-summary",
+        {
+          commits,
+          username,
+          date,
+          stats,
+          language,
+        },
+      );
+
+      return result.summary || "";
     } catch (error) {
       log.error(t("ai.error.daily_report_failed"), error);
       throw error;

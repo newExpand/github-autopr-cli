@@ -25,24 +25,29 @@ export const BranchPatternSchema = z.object({
   reviewerGroups: z.array(z.string()).default([]),
 });
 
-export const AIConfigSchema = z.object({
-  enabled: z.boolean().default(false),
-  provider: z.enum(["openai", "openrouter"]),
-  apiKey: z.string().optional(),
-  options: z
-    .object({
-      model: z.string().optional(),
-      temperature: z.number().optional(),
-      maxTokens: z.number().optional(),
-    })
-    .optional(),
-});
-
 export type BranchPattern = z.infer<typeof BranchPatternSchema>;
 
+// GitHub App 설정 스키마
+export const GitHubAppConfigSchema = z.object({
+  appId: z.string(),
+  privateKey: z.string(),
+  clientId: z.string().optional(),
+  clientSecret: z.string().optional(),
+  webhookSecret: z.string().optional(),
+  installationId: z.number().optional(),
+});
+
+export type GitHubAppConfig = z.infer<typeof GitHubAppConfigSchema>;
+
 export const GlobalConfigSchema = z.object({
-  githubToken: z.string().optional(),
+  // 언어 설정
   language: z.enum(supportedLanguages).default("en"),
+
+  // GitHub App 설정
+  githubApp: GitHubAppConfigSchema.optional(),
+
+  // 인증 모드 (github-app만 지원)
+  authMode: z.literal("github-app"),
 });
 
 export const BranchStrategySchema = z.object({
@@ -66,12 +71,11 @@ export const ProjectConfigSchema = z.object({
   reviewerGroups: z.array(ReviewerGroupSchema).default([]),
   filePatterns: z.array(FilePatternSchema).default([]),
   branchPatterns: z.array(BranchPatternSchema).default([]),
-  aiConfig: AIConfigSchema.optional(),
 });
 
 export type GlobalConfig = z.infer<typeof GlobalConfigSchema>;
 export type ProjectConfig = z.infer<typeof ProjectConfigSchema>;
 
-// 기존 Config 타입은 호환성을 위해 유지
+// 통합 Config 스키마
 export const ConfigSchema = GlobalConfigSchema.merge(ProjectConfigSchema);
 export type Config = z.infer<typeof ConfigSchema>;

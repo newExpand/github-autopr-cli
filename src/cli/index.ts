@@ -15,11 +15,7 @@ import { commitCommand } from "./commands/commit.js";
 import { loadConfig } from "../core/config.js";
 import { log } from "../utils/logger.js";
 import { createReviewerGroupCommand } from "./commands/reviewer-group.js";
-import { createOpenRouterCommand } from "./commands/openrouter.js";
 import { createDailyReportCommand } from "./commands/daily-report.js";
-
-// 개발 모드 확인 (NODE_ENV가 development인 경우에만 true)
-const isDevelopment = process.env.NODE_ENV === "development";
 
 const program = new Command();
 
@@ -31,7 +27,7 @@ async function main() {
     program
       .name("autopr")
       .description(t("common.cli.description"))
-      .version("0.1.23");
+      .version("1.0.0");
 
     // 기본 명령어들
     program
@@ -112,11 +108,6 @@ async function main() {
 
     // 새로운 reviewer-group 명령어 추가
     program.addCommand(createReviewerGroupCommand());
-
-    // OpenRouter 명령어는 개발 모드에서만 추가
-    if (isDevelopment) {
-      program.addCommand(createOpenRouterCommand());
-    }
 
     await program.parseAsync();
   } catch (error) {

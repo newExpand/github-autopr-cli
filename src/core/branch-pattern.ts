@@ -20,21 +20,7 @@ export function matchBranchPattern(
   pattern: string,
 ): boolean {
   const result = minimatch(branchName, pattern);
-  if (result) {
-    log.debug(
-      t("common.branch_pattern.match_success", {
-        branch: branchName,
-        pattern: pattern,
-      }),
-    );
-  } else {
-    log.debug(
-      t("common.branch_pattern.match_fail", {
-        branch: branchName,
-        pattern: pattern,
-      }),
-    );
-  }
+
   return result;
 }
 
@@ -46,18 +32,6 @@ export async function findMatchingPattern(
     log.warn(t("common.branch_pattern.no_config"));
     return null;
   }
-
-  log.debug(t("common.branch_pattern.matching_start"));
-  log.debug(t("common.branch_pattern.current_branch", { branch: branchName }));
-  log.debug(t("common.branch_pattern.available_patterns"));
-  config.branchPatterns.forEach((p) =>
-    log.debug(
-      t("common.branch_pattern.pattern_item", {
-        pattern: p.pattern,
-        type: p.type,
-      }),
-    ),
-  );
 
   const pattern = config.branchPatterns.find((pattern) =>
     matchBranchPattern(branchName, pattern.pattern),
