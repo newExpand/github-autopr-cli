@@ -68,9 +68,6 @@ export async function newCommand(): Promise<void> {
       process.exit(1);
     }
 
-    process.stdout.write(JSON.stringify(config, null, 2));
-    process.stdout.write(JSON.stringify(repoInfo, null, 2));
-
     // main/master 브랜치 체크
     if (
       repoInfo.currentBranch === config.defaultBranch ||
