@@ -404,7 +404,8 @@
         "file_read_failed": "Failed to read file {{file}}",
         "code_review_failed": "Failed to run code review",
         "line_review_failed": "Failed to run line-by-line code review",
-        "no_files_for_review": "No files to review"
+        "no_files_for_review": "No files to review",
+        "code_review_add_failed": "Failed to add code review comments to PR"
       },
       "info": {
         "creating": "Creating PR...",
@@ -420,7 +421,8 @@
         "code_review_result": "Overall code review result:",
         "running_line_by_line_review": "Running line-by-line code review...",
         "line_by_line_review_result": "Line-by-line code review result:",
-        "no_line_comments": "No issues automatically detected"
+        "no_line_comments": "No issues automatically detected",
+        "adding_code_review": "Adding code review to PR..."
       },
       "prompts": {
         "title": "PR title:",
@@ -431,12 +433,14 @@
         "use_ai_description": "Use AI-generated description?",
         "edit_ai_description": "Edit AI-generated description?",
         "run_code_review": "Run overall code review?",
-        "run_line_by_line_review": "Run line-by-line code review for typos, security issues, and potential bugs?"
+        "run_line_by_line_review": "Run line-by-line code review for typos, security issues, and potential bugs?",
+        "add_review_comments": "Add code review comments to PR?"
       },
       "success": {
         "branch_pushed": "Branch {{branch}} pushed to remote",
         "pr_updated": "PR #{{number}} updated successfully",
-        "cancelled": "PR creation cancelled"
+        "cancelled": "PR creation cancelled",
+        "code_review_added": "Code review comments added to PR"
       }
     },
     "reviewer_group": {
@@ -667,13 +671,14 @@
       "success": "AI initialized successfully"
     },
     "error": {
+      "not_initialized": "Failed to initialize AI",
+      "code_review_failed": "Failed to perform AI code review",
       "pr_description_failed": "Failed to generate PR description",
       "pr_title_failed": "Failed to generate PR title",
-      "code_review_failed": "Failed to perform code review",
-      "line_review_failed": "Failed to perform line-by-line code review",
       "conflict_resolution_failed": "Failed to generate conflict resolution suggestion",
       "commit_message_failed": "Failed to improve commit message",
-      "daily_report_failed": "Failed to generate daily report"
+      "daily_report_failed": "Failed to generate daily report summary",
+      "line_review_failed": "Failed to perform line-by-line code review"
     }
   },
   "config": {

@@ -402,9 +402,11 @@
         "ai_initialization_failed": "AI 초기화에 실패했습니다",
         "draft_not_available": "Draft PR 기능은 이 저장소에서 사용할 수 없습니다 (비공개 저장소에서는 GitHub 유료 플랜 필요)",
         "file_read_failed": "파일 {{file}}을(를) 읽을 수 없습니다",
+        "file_too_large": "파일 {{file}}이(가) 너무 큽니다 ({{size}}MB). 처리를 건너뜁니다.",
         "code_review_failed": "코드 리뷰를 실행하지 못했습니다",
         "line_review_failed": "라인별 코드 리뷰를 실행하지 못했습니다",
-        "no_files_for_review": "리뷰할 파일이 없습니다"
+        "no_files_for_review": "리뷰할 파일이 없습니다",
+        "code_review_add_failed": "PR에 코드 리뷰 코멘트를 추가하지 못했습니다"
       },
       "info": {
         "creating": "PR 생성 중...",
@@ -420,7 +422,9 @@
         "code_review_result": "전체 코드 리뷰 결과:",
         "running_line_by_line_review": "라인별 코드 리뷰 실행 중...",
         "line_by_line_review_result": "라인별 코드 리뷰 결과:",
-        "no_line_comments": "자동 감지된 문제가 없습니다"
+        "no_line_comments": "자동 감지된 문제가 없습니다",
+        "no_review_comments": "코드 리뷰 코멘트가 없습니다",
+        "adding_code_review": "PR에 코드 리뷰 추가 중..."
       },
       "prompts": {
         "title": "PR 제목:",
@@ -431,12 +435,14 @@
         "use_ai_description": "AI가 생성한 설명을 사용하시겠습니까?",
         "edit_ai_description": "AI가 생성한 설명을 편집하시겠습니까?",
         "run_code_review": "전체 코드 리뷰를 실행하시겠습니까?",
-        "run_line_by_line_review": "오타, 보안, 버그 등에 대한 라인별 코드 리뷰를 실행하시겠습니까?"
+        "run_line_by_line_review": "오타, 보안, 버그 등에 대한 라인별 코드 리뷰를 실행하시겠습니까?",
+        "add_review_comments": "PR에 코드 리뷰 코멘트를 추가하시겠습니까?"
       },
       "success": {
         "branch_pushed": "브랜치 {{branch}}이(가) 원격 저장소에 푸시되었습니다",
         "pr_updated": "PR #{{number}}이(가) 업데이트되었습니다",
-        "cancelled": "PR 생성이 취소되었습니다"
+        "cancelled": "PR 생성이 취소되었습니다",
+        "code_review_added": "PR에 코드 리뷰 코멘트가 추가되었습니다"
       }
     },
     "reviewer_group": {
@@ -673,7 +679,8 @@
       "pr_title_failed": "PR 제목 생성에 실패했습니다",
       "conflict_resolution_failed": "충돌 해결 제안 생성에 실패했습니다",
       "commit_message_failed": "커밋 메시지 개선에 실패했습니다",
-      "daily_report_failed": "일일 보고서 요약 생성에 실패했습니다"
+      "daily_report_failed": "일일 보고서 요약 생성에 실패했습니다",
+      "line_review_failed": "라인별 코드 리뷰 수행에 실패했습니다"
     }
   },
   "config": {

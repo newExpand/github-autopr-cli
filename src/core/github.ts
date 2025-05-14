@@ -891,3 +891,174 @@ export async function checkDraftPRAvailability(params: {
     return false;
   }
 }
+
+/**
+ * PR에 코드 리뷰 코멘트를 추가합니다.
+ * @param params PR 정보 및 리뷰 내용
+ * @returns 리뷰 결과
+ */
+export async function createPullRequestReview(params: {
+  owner: string;
+  repo: string;
+  pull_number: number;
+  body?: string;
+  event?: "APPROVE" | "REQUEST_CHANGES" | "COMMENT";
+  comments?: Array<{
+    path: string;
+    position?: number;
+    line?: number;
+    side?: "LEFT" | "RIGHT";
+    body: string;
+  }>;
+}): Promise<{ id: number; url: string }> {
+  const client = await getOctokit();
+
+  try {
+    // GitHub API의 파라미터 형식에 맞게 변환
+    const apiParams: any = {
+      owner: params.owner,
+      repo: params.repo,
+      pull_number: params.pull_number,
+      body: params.body || "",
+      event: params.event || "COMMENT",
+    };
+
+    // 라인 코멘트가 있는 경우
+    if (params.comments && params.comments.length > 0) {
+      // GitHub API 요구사항에 맞게 코멘트 변환
+      // line이 있으면 position 대신 line을 사용하는 새 API 형식으로 처리
+      apiParams.comments = params.comments.map((comment) => {
+        const apiComment: any = {
+          path: comment.path,
+          body: comment.body,
+        };
+
+        // line이 있으면 새 API 형식으로 처리
+        if (comment.line) {
+          apiComment.line = comment.line;
+          apiComment.side = comment.side || "RIGHT"; // RIGHT는 PR 브랜치 코드, LEFT는 베이스 브랜치 코드
+        } else if (comment.position) {
+          apiComment.position = comment.position;
+        }
+
+        return apiComment;
+      });
+    }
+
+    // PR 리뷰 생성 API 호출
+    const response = await client.rest.pulls.createReview(apiParams);
+
+    return {
+      id: response.data.id,
+      url: response.data.html_url,
+    };
+  } catch (error) {
+    log.error("PR 리뷰 생성 실패:", error);
+    throw new Error(
+      t("commands.review.error.submit_failed", {
+        error: error instanceof Error ? error.message : String(error),
+      }),
+    );
+  }
+}
+
+/**
+ * 코드 라인 정보를 가져오기 위한 특정 파일의 PR diff 내용을 가져옵니다.
+ * @param params PR 및 파일 정보
+ * @returns 파일의 diff 정보 (가능한 경우 라인 번호 포함)
+ */
+export async function getPullRequestFileDiff(params: {
+  owner: string;
+  repo: string;
+  pull_number: number;
+  file_path: string;
+}): Promise<{
+  patch?: string;
+  changes: Array<{
+    oldLineNumber?: number;
+    newLineNumber?: number;
+    content: string;
+    type: "added" | "removed" | "unchanged";
+  }>;
+}> {
+  const client = await getOctokit();
+
+  try {
+    // 파일 내용 가져오기
+    const response = await client.rest.pulls.listFiles({
+      owner: params.owner,
+      repo: params.repo,
+      pull_number: params.pull_number,
+    });
+
+    // 해당 파일 찾기
+    const fileData = response.data.find(
+      (file) => file.filename === params.file_path,
+    );
+    if (!fileData || !fileData.patch) {
+      return { changes: [] };
+    }
+
+    // patch 정보 파싱하여 라인 번호 정보 추출
+    const changes: Array<{
+      oldLineNumber?: number;
+      newLineNumber?: number;
+      content: string;
+      type: "added" | "removed" | "unchanged";
+    }> = [];
+
+    // patch 파싱 (단순화된 방식으로 구현)
+    const lines = fileData.patch.split("\n");
+    let oldLineNumber = 0;
+    let newLineNumber = 0;
+
+    for (const line of lines) {
+      if (line.startsWith("@@")) {
+        // diff 헤더 파싱하여 시작 라인 번호 추출
+        // 예: @@ -1,7 +1,7 @@ 형식에서 숫자 추출
+        const match = line.match(/@@ -(\d+)(?:,\d+)? \+(\d+)(?:,\d+)? @@/);
+        if (match) {
+          oldLineNumber = parseInt(match[1], 10) - 1;
+          newLineNumber = parseInt(match[2], 10) - 1;
+        }
+        continue;
+      }
+
+      if (line.startsWith("-")) {
+        // 삭제된 라인
+        oldLineNumber++;
+        changes.push({
+          oldLineNumber,
+          content: line.substring(1),
+          type: "removed",
+        });
+      } else if (line.startsWith("+")) {
+        // 추가된 라인
+        newLineNumber++;
+        changes.push({
+          newLineNumber,
+          content: line.substring(1),
+          type: "added",
+        });
+      } else {
+        // 변경되지 않은 라인
+        oldLineNumber++;
+        newLineNumber++;
+        changes.push({
+          oldLineNumber,
+          newLineNumber,
+          content: line.startsWith(" ") ? line.substring(1) : line,
+          type: "unchanged",
+        });
+      }
+    }
+
+    return {
+      patch: fileData.patch,
+      changes,
+    };
+  } catch (error) {
+    log.error("PR 파일 diff 가져오기 실패:", error);
+    return { changes: [] };
+  }
+}

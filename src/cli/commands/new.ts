@@ -7,6 +7,8 @@ import {
   updatePullRequest,
   getOctokit,
   checkDraftPRAvailability,
+  createPullRequestReview,
+  getPullRequestFileDiff,
 } from "../../core/github.js";
 import { getCurrentRepoInfo } from "../../utils/git.js";
 import { log } from "../../utils/logger.js";
@@ -19,8 +21,13 @@ import {
   generatePRBody,
 } from "../../core/branch-pattern.js";
 import { readFile } from "fs/promises";
+import { stat } from "fs/promises";
+import { createReadStream } from "fs";
 
 const execAsync = promisify(exec);
+
+// 파일 크기 제한 (5MB)
+const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
 // 브랜치를 원격 저장소에 push하는 함수 추가
 async function pushToRemote(branch: string): Promise<void> {
@@ -55,7 +62,7 @@ async function getChangedFiles(baseBranch: string): Promise<string[]> {
   }
 }
 
-// 변경된 파일의 내용을 가져오는 함수 추가
+// 변경된 파일의 내용을 가져오는 함수 개선
 async function getFileContents(
   files: string[],
 ): Promise<Array<{ path: string; content: string }>> {
@@ -63,6 +70,18 @@ async function getFileContents(
 
   for (const file of files) {
     try {
+      // 파일 크기 확인
+      const stats = await stat(file);
+      if (stats.size > MAX_FILE_SIZE) {
+        log.warn(
+          t("commands.new.warning.file_too_large", {
+            file,
+            size: Math.round(stats.size / 1024 / 1024),
+          }),
+        );
+        continue;
+      }
+
       const content = await readFile(file, "utf-8");
       result.push({ path: file, content });
     } catch (error) {
@@ -71,6 +90,159 @@ async function getFileContents(
   }
 
   return result;
+}
+
+// 코드 리뷰를 실행하고 PR에 리뷰 코멘트를 추가하는 함수
+async function runCodeReviewAndAddComments(params: {
+  owner: string;
+  repo: string;
+  pull_number: number;
+  files: Array<{ path: string; content: string }>;
+  ai: AIFeatures;
+  shouldRunOverallReview: boolean;
+  shouldRunLineByLineReview: boolean;
+}): Promise<void> {
+  try {
+    // 파일이 없는 경우 빠르게 종료
+    if (params.files.length === 0) {
+      log.warn(t("commands.new.warning.no_files_for_review"));
+      return;
+    }
+
+    let overallReview = "";
+    let lineComments: Array<{
+      file: string;
+      line: number;
+      comment: string;
+      severity?: "info" | "warning" | "error";
+    }> = [];
+
+    // 전체 코드 리뷰 실행
+    if (params.shouldRunOverallReview) {
+      log.info(t("commands.new.info.running_code_review"));
+      try {
+        overallReview = await params.ai.reviewCode(params.files);
+        log.section(t("commands.new.info.code_review_result"));
+        log.section("-------------------");
+        log.verbose(overallReview);
+        log.section("-------------------");
+      } catch (error) {
+        log.warn(t("commands.new.warning.code_review_failed"), error);
+        overallReview = ""; // 에러 발생 시 리뷰 결과 초기화
+      }
+    }
+
+    // 라인별 코드 리뷰 실행
+    if (params.shouldRunLineByLineReview) {
+      log.info(t("commands.new.info.running_line_by_line_review"));
+      try {
+        lineComments = await params.ai.lineByLineCodeReview(params.files);
+
+        if (lineComments.length > 0) {
+          log.section(t("commands.new.info.line_by_line_review_result"));
+          log.section("-------------------");
+
+          lineComments.forEach((comment) => {
+            const severity = comment.severity
+              ? `[${comment.severity.toUpperCase()}]`
+              : "";
+            log.verbose(
+              `${comment.file}:${comment.line} ${severity} - ${comment.comment}`,
+            );
+          });
+
+          log.section("-------------------");
+        } else {
+          log.info(t("commands.new.info.no_line_comments"));
+        }
+      } catch (error) {
+        log.warn(t("commands.new.warning.line_review_failed"), error);
+        lineComments = []; // 에러 발생 시 라인 코멘트 초기화
+      }
+    }
+
+    // 코드 리뷰나 라인별 코멘트가 있는 경우에만 PR 리뷰 생성
+    if (overallReview || lineComments.length > 0) {
+      log.info(t("commands.new.info.adding_code_review"));
+
+      // 리뷰 코멘트 준비
+      const reviewComments = [];
+
+      // 라인별 코멘트가 있는 경우 GitHub API에 맞게 변환
+      if (lineComments.length > 0) {
+        for (const comment of lineComments) {
+          try {
+            // 파일의 diff 정보를 가져와 정확한 라인 번호 매핑
+            const diffInfo = await getPullRequestFileDiff({
+              owner: params.owner,
+              repo: params.repo,
+              pull_number: params.pull_number,
+              file_path: comment.file,
+            });
+
+            // 코멘트를 달 라인 찾기 (추가된 라인이나 변경되지 않은 라인에만 코멘트 가능)
+            // 파일의 전체 내용 라인 번호와 diff에서의 라인 번호가 일치하는지 확인
+            const lineInfo = diffInfo.changes.find(
+              (change) =>
+                change.newLineNumber === comment.line &&
+                (change.type === "added" || change.type === "unchanged"),
+            );
+
+            if (lineInfo && lineInfo.newLineNumber) {
+              // 심각도에 따라 이모지 추가
+              let prefix = "";
+              if (comment.severity === "error") {
+                prefix = "🔴 ";
+              } else if (comment.severity === "warning") {
+                prefix = "⚠️ ";
+              } else if (comment.severity === "info") {
+                prefix = "ℹ️ ";
+              }
+
+              reviewComments.push({
+                path: comment.file,
+                line: lineInfo.newLineNumber,
+                side: "RIGHT" as const,
+                body: `${prefix}${comment.comment}`,
+              });
+            } else {
+              // diff에서 해당 라인을 찾지 못한 경우 (PR에 포함되지 않은 파일의 라인)
+              log.warn(
+                `코멘트를 추가할 수 없습니다: ${comment.file}:${comment.line} - PR diff에서 해당 라인을 찾을 수 없습니다.`,
+              );
+            }
+          } catch (error) {
+            log.warn(
+              `라인 코멘트 매핑 실패 (${comment.file}:${comment.line}):`,
+              error,
+            );
+          }
+        }
+      }
+
+      // 코드 리뷰 결과를 PR에 코멘트로 추가
+      try {
+        await createPullRequestReview({
+          owner: params.owner,
+          repo: params.repo,
+          pull_number: params.pull_number,
+          body: overallReview
+            ? `## 코드 리뷰 결과\n\n${overallReview}`
+            : "코드 리뷰가 완료되었습니다.",
+          event: "COMMENT",
+          comments: reviewComments,
+        });
+
+        log.info(t("commands.new.success.code_review_added"));
+      } catch (error) {
+        log.warn(t("commands.new.warning.code_review_add_failed"), error);
+      }
+    } else {
+      log.info(t("commands.new.info.no_review_comments"));
+    }
+  } catch (error) {
+    log.warn(t("commands.new.warning.code_review_add_failed"), error);
+  }
 }
 
 export async function newCommand(): Promise<void> {
@@ -139,13 +311,6 @@ export async function newCommand(): Promise<void> {
 
     let generatedDescription = "";
     let ai: AIFeatures | null = null;
-    let codeReview = "";
-    let lineByLineComments: Array<{
-      file: string;
-      line: number;
-      comment: string;
-      severity?: "info" | "warning" | "error";
-    }> = [];
     let shouldRunCodeReview = false;
     let shouldRunLineByLineReview = false;
 
@@ -183,29 +348,31 @@ export async function newCommand(): Promise<void> {
       log.section("-------------------");
       log.verbose(generatedDescription);
       log.section("-------------------");
-
-      // AI 코드 리뷰 설정 질문
-      const reviewSettings = await inquirer.prompt([
-        {
-          type: "confirm",
-          name: "runCodeReview",
-          message: t("commands.new.prompts.run_code_review"),
-          default: true,
-        },
-        {
-          type: "confirm",
-          name: "runLineByLineReview",
-          message: t("commands.new.prompts.run_line_by_line_review"),
-          default: true,
-        },
-      ]);
-
-      shouldRunCodeReview = reviewSettings.runCodeReview;
-      shouldRunLineByLineReview = reviewSettings.runLineByLineReview;
     } catch (error) {
-      log.warn(t("commands.new.warning.ai_initialization_failed"));
+      log.warn(t("commands.new.warning.ai_initialization_failed"), error);
       ai = null;
     }
+
+    // AI 초기화에 성공한 경우에만 코드 리뷰 설정 질문
+    const reviewSettings = ai
+      ? await inquirer.prompt([
+          {
+            type: "confirm",
+            name: "runCodeReview",
+            message: t("commands.new.prompts.run_code_review"),
+            default: true,
+          },
+          {
+            type: "confirm",
+            name: "runLineByLineReview",
+            message: t("commands.new.prompts.run_line_by_line_review"),
+            default: true,
+          },
+        ])
+      : { runCodeReview: false, runLineByLineReview: false };
+
+    shouldRunCodeReview = reviewSettings.runCodeReview;
+    shouldRunLineByLineReview = reviewSettings.runLineByLineReview;
 
     const answers = await inquirer.prompt([
       {
@@ -266,56 +433,6 @@ export async function newCommand(): Promise<void> {
       },
     ]);
 
-    // 코드 리뷰 실행
-    if (ai && (shouldRunCodeReview || shouldRunLineByLineReview)) {
-      const fileContents = await getFileContents(changedFiles);
-
-      if (fileContents.length > 0) {
-        // 전반적인 코드 리뷰
-        if (shouldRunCodeReview) {
-          log.info(t("commands.new.info.running_code_review"));
-          try {
-            codeReview = await ai.reviewCode(fileContents);
-            log.section(t("commands.new.info.code_review_result"));
-            log.section("-------------------");
-            log.verbose(codeReview);
-            log.section("-------------------");
-          } catch (error) {
-            log.warn(t("commands.new.warning.code_review_failed"), error);
-          }
-        }
-
-        // 라인별 코드 리뷰
-        if (shouldRunLineByLineReview) {
-          log.info(t("commands.new.info.running_line_by_line_review"));
-          try {
-            lineByLineComments = await ai.lineByLineCodeReview(fileContents);
-            log.section(t("commands.new.info.line_by_line_review_result"));
-            log.section("-------------------");
-
-            if (lineByLineComments.length > 0) {
-              lineByLineComments.forEach((comment) => {
-                const severity = comment.severity
-                  ? `[${comment.severity.toUpperCase()}]`
-                  : "";
-                log.verbose(
-                  `${comment.file}:${comment.line} ${severity} - ${comment.comment}`,
-                );
-              });
-            } else {
-              log.verbose(t("commands.new.info.no_line_comments"));
-            }
-
-            log.section("-------------------");
-          } catch (error) {
-            log.warn(t("commands.new.warning.line_review_failed"), error);
-          }
-        }
-      } else {
-        log.warn(t("commands.new.warning.no_files_for_review"));
-      }
-    }
-
     // PR 생성 시작을 알림
     log.info(t("commands.new.info.creating"));
 
@@ -360,45 +477,10 @@ export async function newCommand(): Promise<void> {
         state: "open",
       });
 
-      // PR 본문에 코드 리뷰 내용 추가
-      let finalBody = answers.useAIDescription
+      // PR 본문 설정 (AI 생성 또는 사용자 입력)
+      const finalBody = answers.useAIDescription
         ? generatedDescription
         : answers.body || "";
-
-      // 전체 코드 리뷰 내용 추가
-      if (codeReview) {
-        finalBody += `\n\n## 전체 코드 리뷰\n\n${codeReview}`;
-      }
-
-      // 라인별 코드 리뷰 내용 추가
-      if (lineByLineComments.length > 0) {
-        finalBody += "\n\n## 라인별 코드 리뷰\n\n";
-        // 파일별로 그룹화
-        const fileGroups = lineByLineComments.reduce(
-          (acc, comment) => {
-            if (!acc[comment.file]) {
-              acc[comment.file] = [];
-            }
-            acc[comment.file].push(comment);
-            return acc;
-          },
-          {} as Record<string, typeof lineByLineComments>,
-        );
-
-        // 파일별로 코멘트 출력
-        for (const [file, comments] of Object.entries(fileGroups)) {
-          finalBody += `### ${file}\n\n`;
-          comments
-            .sort((a, b) => a.line - b.line)
-            .forEach((comment) => {
-              const severity = comment.severity
-                ? `[${comment.severity.toUpperCase()}]`
-                : "";
-              finalBody += `- **${file}:${comment.line}** ${severity} - ${comment.comment}\n`;
-            });
-          finalBody += "\n";
-        }
-      }
 
       if (existingPRs.data.length > 0) {
         const existingPR = existingPRs.data[0];
@@ -449,6 +531,37 @@ ${finalBody}
             t("commands.new.success.pr_updated", { number: existingPR.number }),
           );
           log.info(`PR URL: ${existingPR.html_url}`);
+
+          // 기존 PR에 코드 리뷰 추가 여부 확인
+          if (ai && (shouldRunCodeReview || shouldRunLineByLineReview)) {
+            const fileContents = await getFileContents(changedFiles);
+
+            if (fileContents.length > 0) {
+              const { addReviewComments } = await inquirer.prompt([
+                {
+                  type: "confirm",
+                  name: "addReviewComments",
+                  message: t("commands.new.prompts.add_review_comments"),
+                  default: true,
+                },
+              ]);
+
+              if (addReviewComments) {
+                await runCodeReviewAndAddComments({
+                  owner: repoInfo.owner,
+                  repo: repoInfo.repo,
+                  pull_number: existingPR.number,
+                  files: fileContents,
+                  ai,
+                  shouldRunOverallReview: shouldRunCodeReview,
+                  shouldRunLineByLineReview,
+                });
+              }
+            } else {
+              log.warn(t("commands.new.warning.no_files_for_review"));
+            }
+          }
+
           return;
         } else {
           log.info(t("commands.new.success.cancelled"));
@@ -456,6 +569,7 @@ ${finalBody}
         }
       }
 
+      // 새 PR 생성
       const pr = await createPullRequest({
         owner: repoInfo.owner,
         repo: repoInfo.repo,
@@ -484,6 +598,36 @@ ${finalBody}
 
       log.info(t("common.success.pr_created"));
       log.info(`PR URL: ${pr.html_url}`);
+
+      // PR이 생성된 후 코드 리뷰를 실행하고 코멘트 추가 여부 확인
+      if (ai && (shouldRunCodeReview || shouldRunLineByLineReview)) {
+        const fileContents = await getFileContents(changedFiles);
+
+        if (fileContents.length > 0) {
+          const { addReviewComments } = await inquirer.prompt([
+            {
+              type: "confirm",
+              name: "addReviewComments",
+              message: t("commands.new.prompts.add_review_comments"),
+              default: true,
+            },
+          ]);
+
+          if (addReviewComments) {
+            await runCodeReviewAndAddComments({
+              owner: repoInfo.owner,
+              repo: repoInfo.repo,
+              pull_number: pr.number,
+              files: fileContents,
+              ai,
+              shouldRunOverallReview: shouldRunCodeReview,
+              shouldRunLineByLineReview,
+            });
+          }
+        } else {
+          log.warn(t("commands.new.warning.no_files_for_review"));
+        }
+      }
     } catch (error: any) {
       if (error.message?.includes("No commits between")) {
         log.error(t("common.error.no_commits"));
@@ -499,7 +643,7 @@ ${finalBody}
       process.exit(1);
     }
   } catch (error) {
-    log.error(t("common.error.unknown"), String(error));
+    log.error(t("common.error.unknown"), error);
     process.exit(1);
   }
 }
