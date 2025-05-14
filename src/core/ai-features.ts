@@ -18,6 +18,15 @@ interface CodeReviewResponse {
   review: string;
 }
 
+interface LineByLineReviewResponse {
+  comments: Array<{
+    file: string;
+    line: number;
+    comment: string;
+    severity?: "info" | "warning" | "error";
+  }>;
+}
+
 interface ConflictResolutionResponse {
   resolution: string;
 }
@@ -124,6 +133,40 @@ export class AIFeatures {
       return result.review || "";
     } catch (error) {
       log.error(t("ai.error.code_review_failed"), error);
+      throw error;
+    }
+  }
+
+  /**
+   * 라인별 코드 리뷰를 수행합니다.
+   * @param files 리뷰할 파일 목록
+   * @param language 응답 언어 (ko 또는 en, 기본값: ko)
+   * @returns 라인별 코드 리뷰 결과
+   */
+  async lineByLineCodeReview(
+    files: Array<{ path: string; content: string }>,
+    language: SupportedLanguage = "ko",
+  ): Promise<
+    Array<{
+      file: string;
+      line: number;
+      comment: string;
+      severity?: "info" | "warning" | "error";
+    }>
+  > {
+    try {
+      const result = await aiClient.callAPI<LineByLineReviewResponse>(
+        "/ai/google/features/line-by-line-review",
+        {
+          files,
+          language,
+          analyzers: ["typo", "security", "bug"],
+        },
+      );
+
+      return result.comments || [];
+    } catch (error) {
+      log.error(t("ai.error.line_review_failed"), error);
       throw error;
     }
   }

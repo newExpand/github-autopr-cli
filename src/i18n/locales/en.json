@@ -388,42 +388,55 @@
       }
     },
     "new": {
-      "description": "Create a new pull request",
-      "success": {
-        "branch_pushed": "Branch {{branch}} pushed to remote",
-        "pr_updated": "Pull request #{{number}} updated successfully",
-        "cancelled": "Operation cancelled"
-      },
+      "description": "Create a new PR",
       "error": {
-        "push_failed": "Failed to push branch: {{error}}",
+        "protected_branch": "Cannot create PR from protected branch {{branch}}. Develop on {{development}} branch, release on {{production}} branch.",
+        "push_failed": "Failed to push branch to remote: {{error}}",
         "diff_failed": "Failed to get diff content",
-        "files_failed": "Failed to get changed files",
-        "protected_branch": "Cannot create PR from {{branch}} branch. Please checkout from {{development}} or {{production}} first.",
+        "files_failed": "Failed to get changed files list",
         "create_failed": "Failed to create PR: {{error}}"
-      },
-      "info": {
-        "generating_title": "Generating PR title using AI...",
-        "generated_title": "Generated PR title:",
-        "generating_description": "Generating PR description using AI...",
-        "generated_description": "Generated PR description:",
-        "creating": "Creating pull request...",
-        "pr_exists": "A pull request already exists (#{{number}})",
-        "adding_reviewers": "Adding reviewers...",
-        "reviewers_added": "Reviewers added: {{reviewers}}"
       },
       "warning": {
         "ai_title_failed": "Failed to generate PR title with AI",
         "ai_description_failed": "Failed to generate PR description with AI",
-        "draft_not_available": "Draft PR is not available in this repository. Creating a regular PR instead."
+        "ai_initialization_failed": "Failed to initialize AI",
+        "draft_not_available": "Draft PR feature is not available for this repository (requires GitHub paid plan for private repos)",
+        "file_read_failed": "Failed to read file {{file}}",
+        "code_review_failed": "Failed to run code review",
+        "line_review_failed": "Failed to run line-by-line code review",
+        "no_files_for_review": "No files to review"
+      },
+      "info": {
+        "creating": "Creating PR...",
+        "pr_exists": "PR #{{number}} already exists",
+        "adding_reviewers": "Adding reviewers...",
+        "reviewers_added": "Reviewers added: {{reviewers}}",
+        "generating_title": "Generating PR title with AI...",
+        "generated_title": "Generated title:",
+        "generating_description": "Generating PR description with AI...",
+        "generated_description": "Generated description:",
+        "ai_initialized": "AI initialized successfully",
+        "running_code_review": "Running overall code review...",
+        "code_review_result": "Overall code review result:",
+        "running_line_by_line_review": "Running line-by-line code review...",
+        "line_by_line_review_result": "Line-by-line code review result:",
+        "no_line_comments": "No issues automatically detected"
       },
       "prompts": {
-        "title": "Pull request title:",
-        "use_ai_description": "Use AI-generated description?",
-        "edit_ai_description": "Edit the AI-generated description?",
-        "body": "Pull request description:",
+        "title": "PR title:",
+        "body": "PR description:",
         "reviewers": "Reviewers (comma-separated):",
+        "update_existing": "Update existing PR?",
         "create_as_draft": "Create as draft PR?",
-        "update_existing": "Update existing PR?"
+        "use_ai_description": "Use AI-generated description?",
+        "edit_ai_description": "Edit AI-generated description?",
+        "run_code_review": "Run overall code review?",
+        "run_line_by_line_review": "Run line-by-line code review for typos, security issues, and potential bugs?"
+      },
+      "success": {
+        "branch_pushed": "Branch {{branch}} pushed to remote",
+        "pr_updated": "PR #{{number}} updated successfully",
+        "cancelled": "PR creation cancelled"
       }
     },
     "reviewer_group": {
@@ -654,13 +667,13 @@
       "success": "AI initialized successfully"
     },
     "error": {
-      "not_initialized": "AI could not be initialized",
-      "code_review_failed": "Failed to perform AI code review",
       "pr_description_failed": "Failed to generate PR description",
       "pr_title_failed": "Failed to generate PR title",
-      "conflict_resolution_failed": "Failed to generate conflict resolution suggestions",
+      "code_review_failed": "Failed to perform code review",
+      "line_review_failed": "Failed to perform line-by-line code review",
+      "conflict_resolution_failed": "Failed to generate conflict resolution suggestion",
       "commit_message_failed": "Failed to improve commit message",
-      "daily_report_failed": "Failed to generate daily report summary"
+      "daily_report_failed": "Failed to generate daily report"
     }
   },
   "config": {

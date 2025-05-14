@@ -388,42 +388,55 @@
       }
     },
     "new": {
-      "description": "새 풀 리퀘스트 생성",
-      "success": {
-        "branch_pushed": "브랜치 {{branch}}가 원격에 푸시되었습니다",
-        "pr_updated": "풀 리퀘스트 #{{number}}이(가) 성공적으로 업데이트되었습니다",
-        "cancelled": "작업이 취소되었습니다"
-      },
+      "description": "새 PR 생성",
       "error": {
-        "push_failed": "브랜치 푸시 실패: {{error}}",
-        "diff_failed": "변경 내용을 가져오는데 실패했습니다",
-        "files_failed": "변경된 파일 목록을 가져오는데 실패했습니다",
-        "protected_branch": "{{branch}} 브랜치에서 PR을 생성할 수 없습니다. 먼저 {{development}} 또는 {{production}}에서 체크아웃하세요.",
-        "create_failed": "PR 생성 실패: {{error}}"
-      },
-      "info": {
-        "generating_title": "AI를 사용하여 PR 제목 생성 중...",
-        "generated_title": "생성된 PR 제목:",
-        "generating_description": "AI를 사용하여 PR 설명 생성 중...",
-        "generated_description": "생성된 PR 설명:",
-        "creating": "풀 리퀘스트 생성 중...",
-        "pr_exists": "이미 풀 리퀘스트가 존재합니다 (#{{number}})",
-        "adding_reviewers": "리뷰어 추가 중...",
-        "reviewers_added": "리뷰어 추가됨: {{reviewers}}"
+        "protected_branch": "보호된 브랜치 {{branch}}에서 PR을 생성할 수 없습니다. 기능 개발은 {{development}} 브랜치에서, 릴리스는 {{production}} 브랜치에서 수행하세요.",
+        "push_failed": "브랜치를 원격 저장소에 푸시하지 못했습니다: {{error}}",
+        "diff_failed": "diff 내용을 가져오지 못했습니다",
+        "files_failed": "변경된 파일 목록을 가져오지 못했습니다",
+        "create_failed": "PR 생성에 실패했습니다: {{error}}"
       },
       "warning": {
-        "ai_title_failed": "AI로 PR 제목 생성에 실패했습니다",
-        "ai_description_failed": "AI로 PR 설명 생성에 실패했습니다",
-        "draft_not_available": "이 저장소에서는 초안 PR을 사용할 수 없습니다. 대신 일반 PR을 생성합니다."
+        "ai_title_failed": "AI로 PR 제목을 생성하지 못했습니다",
+        "ai_description_failed": "AI로 PR 설명을 생성하지 못했습니다",
+        "ai_initialization_failed": "AI 초기화에 실패했습니다",
+        "draft_not_available": "Draft PR 기능은 이 저장소에서 사용할 수 없습니다 (비공개 저장소에서는 GitHub 유료 플랜 필요)",
+        "file_read_failed": "파일 {{file}}을(를) 읽을 수 없습니다",
+        "code_review_failed": "코드 리뷰를 실행하지 못했습니다",
+        "line_review_failed": "라인별 코드 리뷰를 실행하지 못했습니다",
+        "no_files_for_review": "리뷰할 파일이 없습니다"
+      },
+      "info": {
+        "creating": "PR 생성 중...",
+        "pr_exists": "PR #{{number}}이(가) 이미 존재합니다",
+        "adding_reviewers": "리뷰어 추가 중...",
+        "reviewers_added": "리뷰어가 추가되었습니다: {{reviewers}}",
+        "generating_title": "AI로 PR 제목 생성 중...",
+        "generated_title": "생성된 제목:",
+        "generating_description": "AI로 PR 설명 생성 중...",
+        "generated_description": "생성된 설명:",
+        "ai_initialized": "AI가 성공적으로 초기화되었습니다",
+        "running_code_review": "전체 코드 리뷰 실행 중...",
+        "code_review_result": "전체 코드 리뷰 결과:",
+        "running_line_by_line_review": "라인별 코드 리뷰 실행 중...",
+        "line_by_line_review_result": "라인별 코드 리뷰 결과:",
+        "no_line_comments": "자동 감지된 문제가 없습니다"
       },
       "prompts": {
-        "title": "풀 리퀘스트 제목:",
+        "title": "PR 제목:",
+        "body": "PR 설명:",
+        "reviewers": "리뷰어 (쉼표로 구분):",
+        "update_existing": "기존 PR을 업데이트하시겠습니까?",
+        "create_as_draft": "Draft PR로 생성하시겠습니까?",
         "use_ai_description": "AI가 생성한 설명을 사용하시겠습니까?",
         "edit_ai_description": "AI가 생성한 설명을 편집하시겠습니까?",
-        "body": "풀 리퀘스트 설명:",
-        "reviewers": "리뷰어 (쉼표로 구분):",
-        "create_as_draft": "초안 PR로 생성하시겠습니까?",
-        "update_existing": "기존 PR을 업데이트하시겠습니까?"
+        "run_code_review": "전체 코드 리뷰를 실행하시겠습니까?",
+        "run_line_by_line_review": "오타, 보안, 버그 등에 대한 라인별 코드 리뷰를 실행하시겠습니까?"
+      },
+      "success": {
+        "branch_pushed": "브랜치 {{branch}}이(가) 원격 저장소에 푸시되었습니다",
+        "pr_updated": "PR #{{number}}이(가) 업데이트되었습니다",
+        "cancelled": "PR 생성이 취소되었습니다"
       }
     },
     "reviewer_group": {

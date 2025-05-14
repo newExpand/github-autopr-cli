@@ -18,6 +18,7 @@ import {
   generatePRTitle,
   generatePRBody,
 } from "../../core/branch-pattern.js";
+import { readFile } from "fs/promises";
 
 const execAsync = promisify(exec);
 
@@ -52,6 +53,24 @@ async function getChangedFiles(baseBranch: string): Promise<string[]> {
     log.error(t("commands.new.error.files_failed"));
     return [];
   }
+}
+
+// 변경된 파일의 내용을 가져오는 함수 추가
+async function getFileContents(
+  files: string[],
+): Promise<Array<{ path: string; content: string }>> {
+  const result: Array<{ path: string; content: string }> = [];
+
+  for (const file of files) {
+    try {
+      const content = await readFile(file, "utf-8");
+      result.push({ path: file, content });
+    } catch (error) {
+      log.warn(t("commands.new.warning.file_read_failed", { file }));
+    }
+  }
+
+  return result;
 }
 
 export async function newCommand(): Promise<void> {
@@ -120,11 +139,20 @@ export async function newCommand(): Promise<void> {
 
     let generatedDescription = "";
     let ai: AIFeatures | null = null;
+    let codeReview = "";
+    let lineByLineComments: Array<{
+      file: string;
+      line: number;
+      comment: string;
+      severity?: "info" | "warning" | "error";
+    }> = [];
+    let shouldRunCodeReview = false;
+    let shouldRunLineByLineReview = false;
 
     // AI 인스턴스 생성
     try {
       ai = new AIFeatures();
-      log.info(t("ai.initialization.success"));
+      log.info(t("commands.new.info.ai_initialized"));
 
       // AI로 PR 제목 생성
       try {
@@ -155,8 +183,27 @@ export async function newCommand(): Promise<void> {
       log.section("-------------------");
       log.verbose(generatedDescription);
       log.section("-------------------");
+
+      // AI 코드 리뷰 설정 질문
+      const reviewSettings = await inquirer.prompt([
+        {
+          type: "confirm",
+          name: "runCodeReview",
+          message: t("commands.new.prompts.run_code_review"),
+          default: true,
+        },
+        {
+          type: "confirm",
+          name: "runLineByLineReview",
+          message: t("commands.new.prompts.run_line_by_line_review"),
+          default: true,
+        },
+      ]);
+
+      shouldRunCodeReview = reviewSettings.runCodeReview;
+      shouldRunLineByLineReview = reviewSettings.runLineByLineReview;
     } catch (error) {
-      log.warn(t("commands.new.warning.ai_description_failed"));
+      log.warn(t("commands.new.warning.ai_initialization_failed"));
       ai = null;
     }
 
@@ -219,6 +266,56 @@ export async function newCommand(): Promise<void> {
       },
     ]);
 
+    // 코드 리뷰 실행
+    if (ai && (shouldRunCodeReview || shouldRunLineByLineReview)) {
+      const fileContents = await getFileContents(changedFiles);
+
+      if (fileContents.length > 0) {
+        // 전반적인 코드 리뷰
+        if (shouldRunCodeReview) {
+          log.info(t("commands.new.info.running_code_review"));
+          try {
+            codeReview = await ai.reviewCode(fileContents);
+            log.section(t("commands.new.info.code_review_result"));
+            log.section("-------------------");
+            log.verbose(codeReview);
+            log.section("-------------------");
+          } catch (error) {
+            log.warn(t("commands.new.warning.code_review_failed"), error);
+          }
+        }
+
+        // 라인별 코드 리뷰
+        if (shouldRunLineByLineReview) {
+          log.info(t("commands.new.info.running_line_by_line_review"));
+          try {
+            lineByLineComments = await ai.lineByLineCodeReview(fileContents);
+            log.section(t("commands.new.info.line_by_line_review_result"));
+            log.section("-------------------");
+
+            if (lineByLineComments.length > 0) {
+              lineByLineComments.forEach((comment) => {
+                const severity = comment.severity
+                  ? `[${comment.severity.toUpperCase()}]`
+                  : "";
+                log.verbose(
+                  `${comment.file}:${comment.line} ${severity} - ${comment.comment}`,
+                );
+              });
+            } else {
+              log.verbose(t("commands.new.info.no_line_comments"));
+            }
+
+            log.section("-------------------");
+          } catch (error) {
+            log.warn(t("commands.new.warning.line_review_failed"), error);
+          }
+        }
+      } else {
+        log.warn(t("commands.new.warning.no_files_for_review"));
+      }
+    }
+
     // PR 생성 시작을 알림
     log.info(t("commands.new.info.creating"));
 
@@ -263,6 +360,46 @@ export async function newCommand(): Promise<void> {
         state: "open",
       });
 
+      // PR 본문에 코드 리뷰 내용 추가
+      let finalBody = answers.useAIDescription
+        ? generatedDescription
+        : answers.body || "";
+
+      // 전체 코드 리뷰 내용 추가
+      if (codeReview) {
+        finalBody += `\n\n## 전체 코드 리뷰\n\n${codeReview}`;
+      }
+
+      // 라인별 코드 리뷰 내용 추가
+      if (lineByLineComments.length > 0) {
+        finalBody += "\n\n## 라인별 코드 리뷰\n\n";
+        // 파일별로 그룹화
+        const fileGroups = lineByLineComments.reduce(
+          (acc, comment) => {
+            if (!acc[comment.file]) {
+              acc[comment.file] = [];
+            }
+            acc[comment.file].push(comment);
+            return acc;
+          },
+          {} as Record<string, typeof lineByLineComments>,
+        );
+
+        // 파일별로 코멘트 출력
+        for (const [file, comments] of Object.entries(fileGroups)) {
+          finalBody += `### ${file}\n\n`;
+          comments
+            .sort((a, b) => a.line - b.line)
+            .forEach((comment) => {
+              const severity = comment.severity
+                ? `[${comment.severity.toUpperCase()}]`
+                : "";
+              finalBody += `- **${file}:${comment.line}** ${severity} - ${comment.comment}\n`;
+            });
+          finalBody += "\n";
+        }
+      }
+
       if (existingPRs.data.length > 0) {
         const existingPR = existingPRs.data[0];
         log.info(
@@ -287,7 +424,7 @@ ${existingPR.body || "(내용 없음)"}
 
 ---
 # 업데이트된 내용
-${answers.useAIDescription ? generatedDescription : answers.body || ""}
+${finalBody}
 `;
 
           await updatePullRequest({
@@ -323,9 +460,7 @@ ${answers.useAIDescription ? generatedDescription : answers.body || ""}
         owner: repoInfo.owner,
         repo: repoInfo.repo,
         title: answers.title,
-        body: answers.useAIDescription
-          ? generatedDescription
-          : answers.body || "",
+        body: finalBody,
         head: headBranch,
         base: baseBranch,
         draft: isDraft,
