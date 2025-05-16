@@ -418,11 +418,14 @@
         "generated_description": "Generated description:",
         "ai_initialized": "AI initialized successfully",
         "running_code_review": "Running overall code review...",
-        "code_review_result": "Overall code review result:",
+        "code_review_completed": "Code review completed",
         "running_line_by_line_review": "Running line-by-line code review...",
-        "line_by_line_review_result": "Line-by-line code review result:",
+        "line_by_line_review_completed": "Line-by-line code review completed",
         "no_line_comments": "No issues automatically detected",
-        "adding_code_review": "Adding code review to PR..."
+        "no_review_comments": "No code review comments to add",
+        "adding_code_review": "Adding code review to PR...",
+        "running_pr_review": "Running PR review...",
+        "pr_review_completed": "PR review completed"
       },
       "prompts": {
         "title": "PR title:",
@@ -434,7 +437,8 @@
         "edit_ai_description": "Edit AI-generated description?",
         "run_code_review": "Run overall code review?",
         "run_line_by_line_review": "Run line-by-line code review for typos, security issues, and potential bugs?",
-        "add_review_comments": "Add code review comments to PR?"
+        "add_review_comments": "Add code review comments to PR?",
+        "run_pr_review": "Run comprehensive PR review?"
       },
       "success": {
         "branch_pushed": "Branch {{branch}} pushed to remote",
@@ -678,7 +682,8 @@
       "conflict_resolution_failed": "Failed to generate conflict resolution suggestion",
       "commit_message_failed": "Failed to improve commit message",
       "daily_report_failed": "Failed to generate daily report summary",
-      "line_review_failed": "Failed to perform line-by-line code review"
+      "line_review_failed": "Failed to perform line-by-line code review",
+      "pr_review_failed": "Failed to perform comprehensive PR review"
     }
   },
   "config": {

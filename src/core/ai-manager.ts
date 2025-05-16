@@ -26,12 +26,12 @@ interface APIResponse<T = any> {
 export class AIClient {
   private baseUrl: string;
 
-  constructor(baseUrl: string = "http://localhost:4000/api") {
-    this.baseUrl = baseUrl;
-  }
   // constructor(baseUrl: string = "https://api.newextend.com/api") {
   //   this.baseUrl = baseUrl;
   // }
+  constructor(baseUrl: string = "http://localhost:4000/api") {
+    this.baseUrl = baseUrl;
+  }
 
   /**
    * API 엔드포인트를 호출합니다.
@@ -58,6 +58,82 @@ export class AIClient {
       log.error(`API 호출 실패 (${endpoint}):`, error);
       throw new Error(
         `API 호출 실패: ${error instanceof Error ? error.message : "알 수 없는 오류"}`,
+      );
+    }
+  }
+
+  /**
+   * GitHub App 기본 정보를 가져옵니다.
+   * @returns GitHub App 정보 (appId, clientId)
+   */
+  public async getGitHubAppInfo(): Promise<{
+    appId: string;
+    clientId: string;
+  }> {
+    try {
+      const response = await fetch.get<
+        APIResponse<{ appId: string; clientId: string }>
+      >(`${this.baseUrl}/github/app-info`);
+
+      // 서버 응답 구조 처리
+      if (response.data && response.data.data) {
+        return response.data.data;
+      }
+
+      throw new Error("GitHub App 정보가 없습니다");
+    } catch (error) {
+      log.error(`GitHub App 정보 획득 실패:`, error);
+      throw new Error(
+        `GitHub App 정보 획득 실패: ${error instanceof Error ? error.message : "알 수 없는 오류"}`,
+      );
+    }
+  }
+
+  /**
+   * GitHub App 설치 토큰을 획득합니다.
+   * @param installationId GitHub App 설치 ID
+   * @returns 설치 토큰
+   */
+  public async getGitHubAppToken(installationId: number): Promise<string> {
+    try {
+      const response = await fetch.get<APIResponse<{ token: string }>>(
+        `${this.baseUrl}/github/app-token/${installationId}`,
+      );
+
+      // 서버 응답 구조 처리
+      if (response.data && response.data.data && response.data.data.token) {
+        return response.data.data.token;
+      }
+
+      throw new Error("토큰 정보가 없습니다");
+    } catch (error) {
+      log.error(`GitHub App 토큰 획득 실패:`, error);
+      throw new Error(
+        `GitHub App 토큰 획득 실패: ${error instanceof Error ? error.message : "알 수 없는 오류"}`,
+      );
+    }
+  }
+
+  /**
+   * GitHub App 설치 목록을 조회합니다.
+   * @returns 설치 목록
+   */
+  public async getGitHubAppInstallations<T>(): Promise<T> {
+    try {
+      const response = await fetch.get<APIResponse<T>>(
+        `${this.baseUrl}/github/app-installations`,
+      );
+
+      // 서버 응답 구조 처리
+      if (response.data && response.data.data) {
+        return response.data.data;
+      }
+
+      throw new Error("설치 목록 정보가 없습니다");
+    } catch (error) {
+      log.error(`GitHub App 설치 목록 조회 실패:`, error);
+      throw new Error(
+        `GitHub App 설치 목록 조회 실패: ${error instanceof Error ? error.message : "알 수 없는 오류"}`,
       );
     }
   }

@@ -419,12 +419,14 @@
         "generated_description": "생성된 설명:",
         "ai_initialized": "AI가 성공적으로 초기화되었습니다",
         "running_code_review": "전체 코드 리뷰 실행 중...",
-        "code_review_result": "전체 코드 리뷰 결과:",
+        "code_review_completed": "코드 리뷰가 완료되었습니다",
         "running_line_by_line_review": "라인별 코드 리뷰 실행 중...",
-        "line_by_line_review_result": "라인별 코드 리뷰 결과:",
+        "line_by_line_review_completed": "라인별 코드 리뷰가 완료되었습니다",
         "no_line_comments": "자동 감지된 문제가 없습니다",
-        "no_review_comments": "코드 리뷰 코멘트가 없습니다",
-        "adding_code_review": "PR에 코드 리뷰 추가 중..."
+        "no_review_comments": "추가할 코드 리뷰 코멘트가 없습니다",
+        "adding_code_review": "PR에 코드 리뷰 추가 중...",
+        "running_pr_review": "PR 리뷰 실행 중...",
+        "pr_review_completed": "PR 리뷰가 완료되었습니다"
       },
       "prompts": {
         "title": "PR 제목:",
@@ -436,7 +438,8 @@
         "edit_ai_description": "AI가 생성한 설명을 편집하시겠습니까?",
         "run_code_review": "전체 코드 리뷰를 실행하시겠습니까?",
         "run_line_by_line_review": "오타, 보안, 버그 등에 대한 라인별 코드 리뷰를 실행하시겠습니까?",
-        "add_review_comments": "PR에 코드 리뷰 코멘트를 추가하시겠습니까?"
+        "add_review_comments": "PR에 코드 리뷰 코멘트를 추가하시겠습니까?",
+        "run_pr_review": "PR 리뷰를 실행하시겠습니까?"
       },
       "success": {
         "branch_pushed": "브랜치 {{branch}}이(가) 원격 저장소에 푸시되었습니다",
@@ -680,7 +683,8 @@
       "conflict_resolution_failed": "충돌 해결 제안 생성에 실패했습니다",
       "commit_message_failed": "커밋 메시지 개선에 실패했습니다",
       "daily_report_failed": "일일 보고서 요약 생성에 실패했습니다",
-      "line_review_failed": "라인별 코드 리뷰 수행에 실패했습니다"
+      "line_review_failed": "라인별 코드 리뷰 수행에 실패했습니다",
+      "pr_review_failed": "종합 PR 리뷰 수행에 실패했습니다"
     }
   },
   "config": {

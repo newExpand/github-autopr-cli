@@ -48,66 +48,10 @@ export async function initCommand(): Promise<void> {
       // 디바이스 플로우로 GitHub App 인증 진행
       await setupGitHubAppCredentials();
 
-      // 개인 키 설정 안내
-      log.section("🔑 GitHub App 개인 키 설정");
-      log.info("GitHub App API 호출을 위해 개인 키가 필요합니다.");
+      // 인증 완료 메시지
       log.info(
-        "GitHub 개발자 설정에서 다운로드한 .pem 파일의 경로를 입력하세요.",
+        "GitHub App 인증이 완료되었습니다. 서버를 통해 자동 인증됩니다.",
       );
-      log.info("개인 키가 없으면 GitHub 개발자 설정에서 생성할 수 있습니다.");
-      log.info(
-        "(https://github.com/settings/apps > 앱 선택 > Private Keys > Generate a private key)",
-      );
-
-      const { privateKeyPath } = await inquirer.prompt([
-        {
-          type: "input",
-          name: "privateKeyPath",
-          message: t("commands.github_app.private_key.prompt"),
-          validate: (value: string) => {
-            if (!value.trim()) {
-              return "개인 키는 필수입니다. GitHub App API를 사용하려면 개인 키가 필요합니다.";
-            }
-
-            // 파일 존재 여부 확인
-            if (!existsSync(value)) {
-              return "해당 경로에 파일이 존재하지 않습니다.";
-            }
-
-            return true;
-          },
-        },
-      ]);
-
-      if (privateKeyPath) {
-        try {
-          // 개인 키 파일 읽기
-          const privateKey = await readFile(privateKeyPath, "utf8");
-
-          // 현재 설정 불러오기
-          const currentConfig = await loadConfig();
-
-          // githubApp 설정이 존재하는지 확인
-          if (!currentConfig.githubApp || !currentConfig.githubApp.appId) {
-            throw new Error(
-              "GitHub App 설정이 불완전합니다. 'autopr init' 명령어를 다시 실행하세요.",
-            );
-          }
-
-          // 설정에 개인 키 저장
-          await updateConfig({
-            githubApp: {
-              ...currentConfig.githubApp, // 기존 GitHub App 설정 유지
-              privateKey, // 개인 키 업데이트
-            },
-          });
-
-          log.info(t("commands.github_app.private_key.success"));
-        } catch (error) {
-          log.error(t("commands.github_app.private_key.failed", { error }));
-          process.exit(1);
-        }
-      }
     } catch (error) {
       log.error(t("commands.github_app.auth.failed", { error }));
       process.exit(1);

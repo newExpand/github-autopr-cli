@@ -101,6 +101,10 @@ async function runCodeReviewAndAddComments(params: {
   ai: AIFeatures;
   shouldRunOverallReview: boolean;
   shouldRunLineByLineReview: boolean;
+  shouldRunPRReview?: boolean; // PR 리뷰 실행 여부
+  prTitle?: string; // PR 제목
+  prDescription?: string; // PR 설명
+  diffContent?: string; // PR diff 내용
 }): Promise<void> {
   try {
     // 파일이 없는 경우 빠르게 종료
@@ -110,6 +114,7 @@ async function runCodeReviewAndAddComments(params: {
     }
 
     let overallReview = "";
+    let prReview = "";
     let lineComments: Array<{
       file: string;
       line: number;
@@ -117,15 +122,42 @@ async function runCodeReviewAndAddComments(params: {
       severity?: "info" | "warning" | "error";
     }> = [];
 
+    // PR 리뷰 실행
+    if (params.shouldRunPRReview && params.prTitle && params.diffContent) {
+      log.info(t("commands.new.info.running_pr_review"));
+
+      try {
+        // PR 컨텍스트 구성
+        const prContext = {
+          prNumber: params.pull_number,
+          title: params.prTitle,
+          changedFiles: params.files.map((file) => ({
+            path: file.path,
+            content: file.content,
+          })),
+          diffContent: params.diffContent,
+          // 선택적 GitHub API 연동 정보
+          repoOwner: params.owner,
+          repoName: params.repo,
+        };
+
+        prReview = await params.ai.reviewPR(prContext);
+        log.info(t("commands.new.info.pr_review_completed"));
+      } catch (error) {
+        // 오류 메시지를 더 자세하게 출력
+        log.warn(
+          t("commands.new.warning.code_review_failed"),
+          JSON.stringify(error, null, 2),
+        );
+      }
+    }
+
     // 전체 코드 리뷰 실행
     if (params.shouldRunOverallReview) {
       log.info(t("commands.new.info.running_code_review"));
       try {
         overallReview = await params.ai.reviewCode(params.files);
-        log.section(t("commands.new.info.code_review_result"));
-        log.section("-------------------");
-        log.verbose(overallReview);
-        log.section("-------------------");
+        log.info(t("commands.new.info.code_review_completed"));
       } catch (error) {
         log.warn(t("commands.new.warning.code_review_failed"), error);
         overallReview = ""; // 에러 발생 시 리뷰 결과 초기화
@@ -135,23 +167,27 @@ async function runCodeReviewAndAddComments(params: {
     // 라인별 코드 리뷰 실행
     if (params.shouldRunLineByLineReview) {
       log.info(t("commands.new.info.running_line_by_line_review"));
+
+      // PR 컨텍스트 정보를 활용하여 변경된 라인만 분석한다는 안내 추가
+      log.info(
+        "PR의 변경된 라인만 분석하여 코멘트를 생성합니다. PR에 포함되지 않은 코드에는 코멘트가 생성되지 않습니다.",
+      );
+
       try {
-        lineComments = await params.ai.lineByLineCodeReview(params.files);
+        // PR 컨텍스트 정보 전달
+        lineComments = await params.ai.lineByLineCodeReview(
+          params.files,
+          {
+            owner: params.owner,
+            repo: params.repo,
+            pull_number: params.pull_number,
+          },
+          // 한국어로 설정 (국제화가 필요한 경우 config에서 가져오도록 수정)
+          "ko",
+        );
 
         if (lineComments.length > 0) {
-          log.section(t("commands.new.info.line_by_line_review_result"));
-          log.section("-------------------");
-
-          lineComments.forEach((comment) => {
-            const severity = comment.severity
-              ? `[${comment.severity.toUpperCase()}]`
-              : "";
-            log.verbose(
-              `${comment.file}:${comment.line} ${severity} - ${comment.comment}`,
-            );
-          });
-
-          log.section("-------------------");
+          log.info(t("commands.new.info.line_by_line_review_completed"));
         } else {
           log.info(t("commands.new.info.no_line_comments"));
         }
@@ -161,8 +197,8 @@ async function runCodeReviewAndAddComments(params: {
       }
     }
 
-    // 코드 리뷰나 라인별 코멘트가 있는 경우에만 PR 리뷰 생성
-    if (overallReview || lineComments.length > 0) {
+    // 코드 리뷰, PR 리뷰, 라인별 코멘트가 있는 경우에만 PR 리뷰 생성
+    if (overallReview || prReview || lineComments.length > 0) {
       log.info(t("commands.new.info.adding_code_review"));
 
       // 리뷰 코멘트 준비
@@ -211,7 +247,7 @@ async function runCodeReviewAndAddComments(params: {
                 `코멘트를 추가할 수 없습니다: ${comment.file}:${comment.line} - PR diff에서 해당 라인을 찾을 수 없습니다.`,
               );
             }
-          } catch (error) {
+          } catch (error: any) {
             log.warn(
               `라인 코멘트 매핑 실패 (${comment.file}:${comment.line}):`,
               error,
@@ -222,13 +258,28 @@ async function runCodeReviewAndAddComments(params: {
 
       // 코드 리뷰 결과를 PR에 코멘트로 추가
       try {
+        let finalReviewBody = "";
+
+        // PR 리뷰가 있으면 추가
+        if (prReview) {
+          finalReviewBody += `## PR 리뷰\n\n${prReview}\n\n`;
+        }
+
+        // 코드 리뷰가 있으면 추가
+        if (overallReview) {
+          finalReviewBody += `## 코드 리뷰\n\n${overallReview}`;
+        }
+
+        // 아무 리뷰도 없으면 기본 메시지
+        if (!finalReviewBody) {
+          finalReviewBody = "코드 리뷰가 완료되었습니다.";
+        }
+
         await createPullRequestReview({
           owner: params.owner,
           repo: params.repo,
           pull_number: params.pull_number,
-          body: overallReview
-            ? `## 코드 리뷰 결과\n\n${overallReview}`
-            : "코드 리뷰가 완료되었습니다.",
+          body: finalReviewBody,
           event: "COMMENT",
           comments: reviewComments,
         });
@@ -313,6 +364,7 @@ export async function newCommand(): Promise<void> {
     let ai: AIFeatures | null = null;
     let shouldRunCodeReview = false;
     let shouldRunLineByLineReview = false;
+    let shouldRunPRReview = false;
 
     // AI 인스턴스 생성
     try {
@@ -353,7 +405,7 @@ export async function newCommand(): Promise<void> {
       ai = null;
     }
 
-    // AI 초기화에 성공한 경우에만 코드 리뷰 설정 질문
+    // 코드 리뷰 실행 여부 물어보기
     const reviewSettings = ai
       ? await inquirer.prompt([
           {
@@ -373,6 +425,16 @@ export async function newCommand(): Promise<void> {
 
     shouldRunCodeReview = reviewSettings.runCodeReview;
     shouldRunLineByLineReview = reviewSettings.runLineByLineReview;
+    shouldRunPRReview = await inquirer
+      .prompt([
+        {
+          type: "confirm",
+          name: "runPRReview",
+          message: t("commands.new.prompts.run_pr_review"),
+          default: false,
+        },
+      ])
+      .then((answers) => answers.runPRReview);
 
     const answers = await inquirer.prompt([
       {
@@ -555,6 +617,10 @@ ${finalBody}
                   ai,
                   shouldRunOverallReview: shouldRunCodeReview,
                   shouldRunLineByLineReview,
+                  shouldRunPRReview: true,
+                  prTitle: answers.title,
+                  prDescription: finalBody,
+                  diffContent: diffContent,
                 });
               }
             } else {
@@ -622,6 +688,10 @@ ${finalBody}
               ai,
               shouldRunOverallReview: shouldRunCodeReview,
               shouldRunLineByLineReview,
+              shouldRunPRReview: shouldRunPRReview,
+              prTitle: answers.title,
+              prDescription: finalBody,
+              diffContent: diffContent,
             });
           }
         } else {

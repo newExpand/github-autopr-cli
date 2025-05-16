@@ -1,14 +1,13 @@
 import { exec } from "child_process";
 import { promisify } from "util";
-import * as crypto from "crypto";
 import { updateConfig } from "./config.js";
 import { t } from "../i18n/index.js";
 import { log } from "../utils/logger.js";
 import { loadConfig } from "./config.js";
 import inquirer from "inquirer";
+import { aiClient } from "./ai-manager.js";
 
 const execAsync = promisify(exec);
-const CLIENT_ID = "Iv23lirIFr3POA13Nwab"; // 생성한 GitHub App의 Client ID
 
 interface DeviceCodeResponse {
   device_code: string;
@@ -23,12 +22,6 @@ interface AccessTokenResponse {
   error?: string;
 }
 
-// GitHub 설치 토큰 응답 타입 추가
-interface InstallationTokenResponse {
-  token: string;
-  expires_at: string;
-}
-
 // 설치 정보 타입 추가
 interface Installation {
   id: number;
@@ -39,64 +32,6 @@ interface Installation {
 }
 
 /**
- * GitHub App의 JWT 토큰 생성
- * @returns JWT 토큰
- */
-export async function createJWT(): Promise<string> {
-  const config = await loadConfig();
-
-  if (
-    !config.githubApp ||
-    !config.githubApp.appId ||
-    !config.githubApp.privateKey
-  ) {
-    throw new Error(t("commands.github_app.error.missing_config"));
-  }
-
-  const appId = config.githubApp.appId;
-  const privateKey = config.githubApp.privateKey;
-
-  // 개인 키가 비어 있는 경우
-  if (!privateKey.trim()) {
-    throw new Error(t("commands.github_app.error.private_key_required"));
-  }
-
-  // JWT 헤더
-  const header = {
-    alg: "RS256",
-    typ: "JWT",
-  };
-
-  // JWT 페이로드
-  const now = Math.floor(Date.now() / 1000);
-  const payload = {
-    iat: now,
-    exp: now + 10 * 60, // 10분 유효
-    iss: appId,
-  };
-
-  // 헤더와 페이로드를 base64로 인코딩
-  const encodedHeader = Buffer.from(JSON.stringify(header)).toString(
-    "base64url",
-  );
-  const encodedPayload = Buffer.from(JSON.stringify(payload)).toString(
-    "base64url",
-  );
-
-  // 서명할 데이터
-  const signatureData = `${encodedHeader}.${encodedPayload}`;
-
-  // 서명 생성
-  const sign = crypto.createSign("RSA-SHA256");
-  sign.update(signatureData);
-  sign.end();
-  const signature = sign.sign(privateKey, "base64url");
-
-  // JWT 토큰 반환
-  return `${signatureData}.${signature}`;
-}
-
-/**
  * GitHub App 설치 토큰 발급
  * @param installationId 설치 ID
  * @returns 설치 액세스 토큰
@@ -104,36 +39,18 @@ export async function createJWT(): Promise<string> {
 export async function getInstallationToken(
   installationId: number,
 ): Promise<string> {
-  const jwt = await createJWT();
-
-  const response = await fetch(
-    `https://api.github.com/app/installations/${installationId}/access_tokens`,
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${jwt}`,
-        Accept: "application/vnd.github.v3+json",
-        "User-Agent": "AutoPR-CLI",
-        "X-GitHub-Api-Version": "2022-11-28",
-      },
-    },
-  );
-
-  if (!response.ok) {
+  try {
+    // 서버 API를 통해 토큰 획득
+    const token = await aiClient.getGitHubAppToken(installationId);
+    log.debug("서버를 통해 GitHub App 토큰을 획득했습니다.");
+    return token;
+  } catch (error) {
+    // 서버 API 실패 시 오류 전달
+    log.error("서버에서 GitHub App 토큰 획득에 실패했습니다.");
     throw new Error(
-      t("commands.github_app.error.token_request_failed", {
-        status: response.status,
-      }),
+      `GitHub App 토큰 획득 실패: ${error instanceof Error ? error.message : "알 수 없는 오류"}`,
     );
   }
-
-  const data = (await response.json()) as InstallationTokenResponse;
-
-  if (!data.token) {
-    throw new Error(t("commands.github_app.error.token_missing"));
-  }
-
-  return data.token;
 }
 
 /**
@@ -141,26 +58,18 @@ export async function getInstallationToken(
  * @returns 설치 목록
  */
 export async function listInstallations(): Promise<Installation[]> {
-  const jwt = await createJWT();
-
-  const response = await fetch("https://api.github.com/app/installations", {
-    headers: {
-      Authorization: `Bearer ${jwt}`,
-      Accept: "application/vnd.github.v3+json",
-      "User-Agent": "AutoPR-CLI",
-      "X-GitHub-Api-Version": "2022-11-28",
-    },
-  });
-
-  if (!response.ok) {
+  try {
+    // 서버 API를 통해 설치 목록 요청
+    const installations =
+      await aiClient.getGitHubAppInstallations<Installation[]>();
+    return installations;
+  } catch (error) {
+    // 서버 API 실패 시 오류 전달
+    log.error("서버에서 GitHub App 설치 목록 획득에 실패했습니다.");
     throw new Error(
-      t("commands.github_app.error.list_installations_failed", {
-        status: response.status,
-      }),
+      `GitHub App 설치 목록 획득 실패: ${error instanceof Error ? error.message : "알 수 없는 오류"}`,
     );
   }
-
-  return (await response.json()) as Installation[];
 }
 
 /**
@@ -169,56 +78,70 @@ export async function listInstallations(): Promise<Installation[]> {
  */
 async function getDeviceCode(): Promise<DeviceCodeResponse> {
   log.info(t("commands.github_app.device_flow.initializing"));
-  log.debug(
-    t("commands.github_app.device_flow.client_id", { clientId: CLIENT_ID }),
-  );
 
-  const requestBody = {
-    client_id: CLIENT_ID,
-    scope: "repo read:user user:email",
-  };
-  log.debug(
-    t("commands.github_app.device_flow.request_data"),
-    JSON.stringify(requestBody, null, 2),
-  );
+  try {
+    // 서버에서 GitHub App 정보(clientId) 가져오기
+    const appInfo = await aiClient.getGitHubAppInfo();
 
-  const response = await fetch("https://github.com/login/device/code", {
-    method: "POST",
-    headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-      "User-Agent": "AutoPR-CLI",
-      "X-GitHub-Api-Version": "2022-11-28",
-    },
-    body: JSON.stringify(requestBody),
-  });
-
-  log.debug(
-    t("commands.github_app.device_flow.response_status"),
-    response.status,
-  );
-  log.debug(
-    t("commands.github_app.device_flow.response_headers"),
-    JSON.stringify(Object.fromEntries(response.headers.entries()), null, 2),
-  );
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    log.error(t("commands.github_app.device_flow.error_response"), errorText);
-    throw new Error(
-      t("commands.github_app.device_flow.init_failed", {
-        status: response.status,
-        error: errorText,
+    process.stdout.write(JSON.stringify(appInfo, null, 2));
+    log.debug(
+      t("commands.github_app.device_flow.client_id", {
+        clientId: appInfo.clientId,
       }),
     );
-  }
 
-  const data = await response.json();
-  log.debug(
-    t("commands.github_app.device_flow.response_data"),
-    JSON.stringify(data, null, 2),
-  );
-  return data as DeviceCodeResponse;
+    const requestBody = {
+      client_id: appInfo.clientId,
+      scope: "repo read:user user:email",
+    };
+    log.debug(
+      t("commands.github_app.device_flow.request_data"),
+      JSON.stringify(requestBody, null, 2),
+    );
+
+    const response = await fetch("https://github.com/login/device/code", {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        "User-Agent": "AutoPR-CLI",
+        "X-GitHub-Api-Version": "2022-11-28",
+      },
+      body: JSON.stringify(requestBody),
+    });
+
+    // Response 객체에서 실제로 유용한 정보만 추출해서 로깅
+    // log.debug("Response status:", response.status);
+    // log.debug("Response statusText:", response.statusText);
+
+    process.stdout.write(
+      JSON.stringify(`==${response.status} ${response.statusText}==`, null, 2),
+    );
+
+    // 로깅보다 응답 처리가 우선이므로 OK 체크를 먼저 함
+    if (!response.ok) {
+      const errorText = await response.text();
+      log.error(t("commands.github_app.device_flow.error_response"), errorText);
+      throw new Error(
+        t("commands.github_app.device_flow.init_failed", {
+          status: response.status,
+          error: errorText,
+        }),
+      );
+    }
+
+    const data = await response.json();
+    log.debug(
+      t("commands.github_app.device_flow.response_data"),
+      JSON.stringify(data, null, 2),
+    );
+    return data as DeviceCodeResponse;
+  } catch (error) {
+    log.error("GitHub App 정보 또는 Device Flow 초기화 실패:", error);
+    throw new Error(
+      `Device Flow 초기화 실패: ${error instanceof Error ? error.message : "알 수 없는 오류"}`,
+    );
+  }
 }
 
 /**
@@ -236,6 +159,10 @@ async function pollForToken(
   const startTime = Date.now();
   const expiresAt = startTime + expiresIn * 1000;
 
+  // 서버에서 GitHub App 정보(clientId) 가져오기
+  const appInfo = await aiClient.getGitHubAppInfo();
+  const clientId = appInfo.clientId;
+
   while (Date.now() < expiresAt) {
     try {
       const response = await fetch(
@@ -249,7 +176,7 @@ async function pollForToken(
             "X-GitHub-Api-Version": "2022-11-28",
           },
           body: JSON.stringify({
-            client_id: CLIENT_ID,
+            client_id: clientId,
             device_code: deviceCode,
             grant_type: "urn:ietf:params:oauth:grant-type:device_code",
           }),
@@ -305,11 +232,8 @@ async function pollForToken(
 
 /**
  * GitHub App 설정 초기화
- * @param privateKeyPath 개인 키 파일 경로 (선택 사항)
  */
-export async function setupGitHubAppCredentials(
-  privateKeyPath?: string,
-): Promise<void> {
+export async function setupGitHubAppCredentials(): Promise<void> {
   try {
     log.info("\n" + t("commands.github_app.setup.starting"));
 
@@ -406,7 +330,9 @@ export async function setupGitHubAppCredentials(
       log.info("다음 단계를 따라 GitHub App을 설치해주세요:");
       log.step("1️⃣ 브라우저에서 GitHub App 설치 페이지를 엽니다");
 
-      let appId = "1271345"; // 기본 App ID
+      // 서버에서 GitHub App 정보 가져오기
+      const appInfo = await aiClient.getGitHubAppInfo();
+      let appId = appInfo.appId;
       let installUrl = `https://github.com/apps/new-autopr-bot/installations/new`;
 
       // 앱 정보 가져오기 시도
@@ -503,16 +429,16 @@ export async function setupGitHubAppCredentials(
 
           // 설정 저장
           await updateConfig({
-            authMode: "github-app",
             githubApp: {
               appId,
-              privateKey: "", // 실제 키는 필요 시 별도로 설정
-              clientId: CLIENT_ID,
+              clientId: appInfo.clientId,
               installationId,
             },
           });
 
+          // 설정 완료 메시지
           log.info("\n" + t("commands.github_app.auth.success"));
+          log.info("GitHub App 설정이 자동으로 완료되었습니다.");
           return;
         }
       }
@@ -526,7 +452,7 @@ export async function setupGitHubAppCredentials(
     // 설치 정보에서 앱 ID 추출
     const appId = installations[0].app_id
       ? installations[0].app_id.toString()
-      : "1271345";
+      : (await aiClient.getGitHubAppInfo()).appId;
 
     // 여러 설치가 있는 경우 사용자에게 선택 요청
     if (installations.length > 1) {
@@ -537,22 +463,38 @@ export async function setupGitHubAppCredentials(
         log.info(`${index + 1}. ${inst.account.login} (${inst.id})`);
       });
 
-      // 여기서는 첫 번째 설치를 자동 선택 (실제로는 inquirer 등으로 사용자에게 선택 요청 필요)
-      installationId = installations[0].id;
+      // inquirer로 사용자에게 선택 요청
+      const { selectedInstallation } = await inquirer.prompt([
+        {
+          type: "list",
+          name: "selectedInstallation",
+          message: "사용할 설치를 선택하세요:",
+          choices: installations.map((inst, index) => ({
+            name: `${inst.account.login} (${inst.id})`,
+            value: index,
+          })),
+          default: 0,
+        },
+      ]);
+
+      installationId = installations[selectedInstallation].id;
     }
+
+    // 서버에서 GitHub App 정보 가져오기
+    const appInfo = await aiClient.getGitHubAppInfo();
 
     // 설정 저장
     await updateConfig({
-      authMode: "github-app",
       githubApp: {
         appId,
-        privateKey: "", // 실제 키는 필요 시 별도로 설정
-        clientId: CLIENT_ID,
+        clientId: appInfo.clientId,
         installationId,
       },
     });
 
+    // 설정 완료 메시지
     log.info("\n" + t("commands.github_app.auth.success"));
+    log.info("GitHub App 설정이 자동으로 완료되었습니다.");
   } catch (error: unknown) {
     if (error instanceof Error) {
       throw new Error(

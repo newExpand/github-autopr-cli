@@ -30,7 +30,6 @@ export type BranchPattern = z.infer<typeof BranchPatternSchema>;
 // GitHub App 설정 스키마
 export const GitHubAppConfigSchema = z.object({
   appId: z.string(),
-  privateKey: z.string(),
   clientId: z.string().optional(),
   clientSecret: z.string().optional(),
   webhookSecret: z.string().optional(),
@@ -45,9 +44,6 @@ export const GlobalConfigSchema = z.object({
 
   // GitHub App 설정
   githubApp: GitHubAppConfigSchema.optional(),
-
-  // 인증 모드 (github-app만 지원)
-  authMode: z.literal("github-app"),
 });
 
 export const BranchStrategySchema = z.object({
