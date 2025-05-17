@@ -1,0 +1,25 @@
+{
+  "success": {
+    "init": "초기화가 완료되었습니다",
+    "pr_created": "PR이 성공적으로 생성되었습니다",
+    "review_submitted": "리뷰가 성공적으로 제출되었습니다"
+  },
+  "error": {
+    "github_token": "GitHub 토큰이 설정되지 않았습니다. 'autopr init'을 실행하여 GitHub 인증을 설정해주세요.",
+    "not_git_repo": "현재 디렉토리는 git 저장소가 아니거나 저장소 정보를 가져올 수 없습니다.",
+    "unknown": "예기치 않은 오류가 발생했습니다: {{error}}",
+    "no_commits": "브랜치 간에 커밋이 없습니다. PR을 생성하기 전에 변경사항을 만들어주세요.",
+    "pr_exists": "이 브랜치에 대한 PR이 이미 존재합니다.",
+    "base_modified": "기본 브랜치가 수정되었습니다. 최신 변경사항으로 브랜치를 업데이트해주세요.",
+    "config_load_failed": "설정을 불러오는데 실패했습니다.",
+    "get_invitation_status": "초대 상태를 가져오는데 실패했습니다: {{error}}",
+    "get_invitation_statuses": "초대 상태 목록을 가져오는데 실패했습니다: {{error}}",
+    "get_conflicts": "PR 충돌 정보를 가져오는데 실패했습니다: {{error}}"
+  },
+  "warning": {
+    "merge_conflict": "해결해야 할 병합 충돌이 있을 수 있습니다",
+    "merge_status_unknown": "GitHub가 아직 병합 상태를 계산 중입니다",
+    "invalid_reviewers": "다음 리뷰어는 유효한 협업자가 아니어서 건너뜁니다: {{reviewers}}",
+    "draft_not_available": "이 저장소에서는 초안 PR 기능을 사용할 수 없습니다. 대신 일반 PR을 생성합니다."
+  }
+} 

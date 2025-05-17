@@ -53,14 +53,12 @@ export async function getOctokit(): Promise<Octokit> {
       } catch (appError) {
         // GitHub App 인증 실패 시 더 명확한 오류 메시지 제공
         log.error("GitHub App 인증 실패:", appError);
-        throw new Error(
-          `GitHub API 인증 실패: 서버를 통한 GitHub App 토큰 획득에 실패했습니다. 네트워크 연결 또는 서버 상태를 확인하세요.`,
-        );
+        throw new Error(t("core.github.error.github_app_auth"));
       }
     }
 
     // GitHub App 설정이 없는 경우
-    throw new Error(t("common.error.github_token"));
+    throw new Error(t("core.github.error.github_token"));
   } catch (error) {
     // 인증 정보가 없거나 유효하지 않은 경우
     log.error("GitHub 인증 실패:", error);
@@ -469,31 +467,36 @@ export async function mergePullRequest({
   const client = await getOctokit();
 
   // PR 상태 확인
-  log.info(`[DEBUG] PR #${pull_number} 병합 시작`);
-  log.info(`[DEBUG] 소유자: ${owner}, 저장소: ${repo}`);
-  log.info(`[DEBUG] 병합 방법: ${merge_method}`);
+  log.info(t("core.github.info.debug.pr_merge_start", { number: pull_number }));
+  log.info(t("core.github.info.debug.owner_repo", { owner, repo }));
+  log.info(t("core.github.info.debug.merge_method", { method: merge_method }));
 
   const pr = await getPullRequest({ owner, repo, pull_number });
-  log.info(`[DEBUG] PR 상태: ${pr.state}`);
-  log.info(`[DEBUG] PR 제목: ${pr.title}`);
-  log.info(`[DEBUG] PR 브랜치: ${pr.head.ref} -> ${pr.base.ref}`);
+  log.info(t("core.github.info.debug.pr_state", { state: pr.state }));
+  log.info(t("core.github.info.debug.pr_title", { title: pr.title }));
+  log.info(
+    t("core.github.info.debug.pr_branch", {
+      head: pr.head.ref,
+      base: pr.base.ref,
+    }),
+  );
 
   if (pr.state !== "open") {
-    log.error(`[DEBUG] PR이 열려있지 않음: ${pr.state}`);
-    throw new Error(t("commands.merge.error.pr_closed"));
+    log.error(t("core.github.info.debug.pr_not_open", { state: pr.state }));
+    throw new Error(t("core.github.error.pr_closed"));
   }
 
   // 병합 가능 상태 확인
   const status = await getPullRequestStatus({ owner, repo, pull_number });
-  log.info(`[DEBUG] 병합 가능 상태: ${status}`);
+  log.info(t("core.github.info.debug.merge_status", { status }));
 
   if (status !== "MERGEABLE") {
-    log.error(`[DEBUG] PR을 병합할 수 없음: ${status}`);
-    throw new Error(t("commands.merge.error.not_mergeable"));
+    log.error(t("core.github.info.debug.pr_not_mergeable", { status }));
+    throw new Error(t("core.github.error.not_mergeable"));
   }
 
   // 병합 실행
-  log.info("[DEBUG] 병합 시도 중...");
+  log.info(t("core.github.info.debug.merge_attempt"));
   try {
     await client.rest.pulls.merge({
       owner,
@@ -503,29 +506,37 @@ export async function mergePullRequest({
       commit_title,
       commit_message,
     });
-    log.info("[DEBUG] 병합 성공");
+    log.info(t("core.github.info.debug.merge_success"));
   } catch (error) {
     log.error(
-      `[DEBUG] 병합 실패: ${error instanceof Error ? error.message : String(error)}`,
+      t("core.github.info.debug.merge_failed", {
+        error: error instanceof Error ? error.message : String(error),
+      }),
     );
     throw error;
   }
 
   // 브랜치 삭제
   if (delete_branch) {
-    log.info(`[DEBUG] 브랜치 삭제 시도: ${pr.head.ref}`);
+    log.info(
+      t("core.github.info.debug.branch_delete_attempt", {
+        branch: pr.head.ref,
+      }),
+    );
     try {
       await client.rest.git.deleteRef({
         owner,
         repo,
         ref: `heads/${pr.head.ref}`,
       });
-      log.info("[DEBUG] 브랜치 삭제 성공");
+      log.info(t("core.github.info.debug.branch_delete_success"));
     } catch (error) {
       log.warn(
-        `[DEBUG] 브랜치 삭제 실패: ${error instanceof Error ? error.message : String(error)}`,
+        t("core.github.info.debug.branch_delete_failed", {
+          error: error instanceof Error ? error.message : String(error),
+        }),
       );
-      log.warn(t("commands.merge.warning.branch_delete_failed"));
+      log.warn(t("core.github.warning.branch_delete_failed"));
     }
   }
 }
@@ -582,7 +593,7 @@ export async function validateReviewers(params: {
 
   if (invalid.length > 0) {
     log.warn(
-      t("common.warning.invalid_reviewers", {
+      t("core.github.warning.invalid_reviewers", {
         reviewers: invalid.join(", "),
       }),
     );

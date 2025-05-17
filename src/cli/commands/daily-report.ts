@@ -391,7 +391,7 @@ function printConsoleReport(
     process.stdout.write(aiSummary + "\n");
   } else {
     process.stdout.write(
-      "AI 요약을 생성하지 못했습니다. 자세한 내용은 로그를 확인하세요.\n",
+      t("commands.daily_report.info.ai_not_available") + "\n",
     );
   }
 
@@ -487,7 +487,7 @@ function generateMarkdownReport(
   // 브랜치별 통계
   if (Object.keys(stats.branches).length > 0) {
     md += `## ${t("commands.daily_report.branch_distribution")}\n\n`;
-    md += "| 브랜치 | 커밋 수 |\n|--------|--------|\n";
+    md += "| branch | commit count |\n|--------|--------|\n";
     Object.entries(stats.branches)
       .sort(([, countA], [, countB]) => countB - countA)
       .forEach(([branch, count]) => {
@@ -499,7 +499,7 @@ function generateMarkdownReport(
   // 파일 유형별 통계
   if (Object.keys(stats.fileTypes).length > 0) {
     md += `## ${t("commands.daily_report.file_types")}\n\n`;
-    md += "| 파일 유형 | 변경 수 |\n|-----------|--------|\n";
+    md += "| file type | change count |\n|-----------|--------|\n";
     Object.entries(stats.fileTypes)
       .sort(([, countA], [, countB]) => countB - countA)
       .forEach(([fileType, count]) => {
@@ -541,7 +541,7 @@ export async function dailyReportCommand(
     let aiFeatures;
     try {
       aiFeatures = new AIFeatures();
-      log.info(t("ai.initialization.success"));
+      log.info(t("commands.daily_report.info.initialization_success"));
     } catch (error) {
       log.error(t("commands.daily_report.error.ai_init_failed"));
       log.info(t("commands.daily_report.error.ai_required"));

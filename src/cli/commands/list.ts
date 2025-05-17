@@ -120,8 +120,8 @@ export async function listCommand(): Promise<void> {
       log.verbose(
         t("commands.list.status", {
           status: pr.draft
-            ? t("commands.review.status.draft")
-            : t("commands.review.status.ready"),
+            ? t("commands.list.status.draft")
+            : t("commands.list.status.ready"),
         }),
       );
 
@@ -135,12 +135,12 @@ export async function listCommand(): Promise<void> {
 
         const statusText =
           status === "CHECKING"
-            ? t("commands.review.status.checking")
+            ? t("commands.list.status.checking")
             : status === "CONFLICTING"
-              ? t("commands.review.status.conflicting")
+              ? t("commands.list.status.conflicting")
               : status === "MERGEABLE"
-                ? t("commands.review.status.mergeable")
-                : t("commands.review.status.unknown");
+                ? t("commands.list.status.mergeable")
+                : t("commands.list.status.unknown");
 
         log.info(
           `   ${t("commands.list.merge_status", { status: statusText })}`,

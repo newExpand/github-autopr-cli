@@ -1,0 +1,11 @@
+{
+  "description": "Reopen a closed pull request",
+  "error": {
+    "merged": "Cannot reopen a merged pull request",
+    "already_open": "This pull request is already open",
+    "cannot_reopen": "Cannot reopen this pull request"
+  },
+  "success": {
+    "reopened": "Pull request #{{number}} reopened successfully"
+  }
+}

@@ -14,7 +14,6 @@ import { log } from "../../utils/logger.js";
 import { execSync } from "child_process";
 import { existsSync } from "fs";
 import { resolve } from "path";
-import os from "os";
 import { getOctokit } from "../../core/github.js";
 
 interface ConflictFile {
@@ -35,7 +34,7 @@ async function handleConflicts(
   // AI 인스턴스 생성
   try {
     ai = new AIFeatures();
-    log.info(t("ai.initialization.success"));
+    log.info(t("commands.merge.info.initialization_success"));
 
     log.info(t("commands.merge.conflict.ai_suggestion_start"));
 

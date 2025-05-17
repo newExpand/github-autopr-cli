@@ -112,7 +112,7 @@ export async function loadGlobalConfig(): Promise<GlobalConfig> {
       return DEFAULT_GLOBAL_CONFIG;
     }
     throw new Error(
-      t("config.error.load_global_failed", { error: String(error) }),
+      t("core.config.error.load_global_failed", { error: String(error) }),
     );
   }
 }
@@ -134,7 +134,7 @@ export async function loadProjectConfig(): Promise<ProjectConfig> {
       return DEFAULT_PROJECT_CONFIG;
     }
     throw new Error(
-      t("config.error.load_project_failed", { error: String(error) }),
+      t("core.config.error.load_project_failed", { error: String(error) }),
     );
   }
 }
@@ -157,7 +157,7 @@ export async function saveGlobalConfig(config: GlobalConfig): Promise<void> {
     await writeFile(GLOBAL_CONFIG_FILE, JSON.stringify(config, null, 2));
   } catch (error) {
     throw new Error(
-      t("config.error.save_global_failed", { error: String(error) }),
+      t("core.config.error.save_global_failed", { error: String(error) }),
     );
   }
 }
@@ -167,7 +167,7 @@ export async function saveProjectConfig(config: ProjectConfig): Promise<void> {
     await writeFile(PROJECT_CONFIG_FILE, JSON.stringify(config, null, 2));
   } catch (error) {
     throw new Error(
-      t("config.error.save_project_failed", { error: String(error) }),
+      t("core.config.error.save_project_failed", { error: String(error) }),
     );
   }
 }

@@ -1,0 +1,8 @@
+{
+  "program": {
+    "description": "AI 지원이 포함된 GitHub PR 자동화 도구"
+  },
+  "error": {
+    "unknown": "알 수 없는 오류가 발생했습니다"
+  }
+}

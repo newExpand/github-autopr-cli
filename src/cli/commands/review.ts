@@ -193,10 +193,10 @@ export async function reviewCommand(prNumber: string): Promise<void> {
     // AI 인스턴스 생성
     try {
       ai = new AIFeatures();
-      log.info(t("ai.initialization.success"));
+      log.info(t("commands.review.info.initialization_success"));
     } catch (error) {
       ai = null;
-      log.error(t("ai.error.not_initialized"));
+      log.error(t("commands.review.error.not_initialized"));
     }
 
     const { action } = await inquirer.prompt([
@@ -225,13 +225,13 @@ export async function reviewCommand(prNumber: string): Promise<void> {
     switch (action) {
       case "view":
         log.info("\n" + t("commands.review.content.title"));
-        log.info("-------------------");
+        log.info(t("commands.review.ui.section_divider"));
         log.info(pr.body || t("commands.review.content.empty"));
         break;
 
       case "ai_review":
         if (!ai) {
-          log.error(t("ai.error.not_initialized"));
+          log.error(t("commands.review.error.not_initialized"));
           break;
         }
 
@@ -255,10 +255,10 @@ export async function reviewCommand(prNumber: string): Promise<void> {
         try {
           const review = await ai.reviewCode(reviewFiles);
           log.info("\n" + t("commands.review.content.ai_review_title"));
-          log.info("-------------------");
+          log.info(t("commands.review.ui.section_divider"));
           log.info(review);
         } catch (error) {
-          log.error(t("ai.error.code_review_failed"));
+          log.error(t("commands.review.error.code_review_failed"));
         }
         break;
 

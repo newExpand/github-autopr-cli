@@ -1,0 +1,11 @@
+{
+  "description": "닫힌 풀 리퀘스트 다시 열기",
+  "error": {
+    "merged": "병합된 풀 리퀘스트는 다시 열 수 없습니다",
+    "already_open": "이 풀 리퀘스트는 이미 열려 있습니다",
+    "cannot_reopen": "이 풀 리퀘스트를 다시 열 수 없습니다"
+  },
+  "success": {
+    "reopened": "풀 리퀘스트 #{{number}}이(가) 성공적으로 다시 열렸습니다"
+  }
+}

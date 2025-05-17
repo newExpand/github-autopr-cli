@@ -1,0 +1,8 @@
+{
+  "error": {
+    "load_global_failed": "전역 설정을 불러오는 데 실패했습니다: {{error}}",
+    "load_project_failed": "프로젝트 설정을 불러오는 데 실패했습니다: {{error}}",
+    "save_global_failed": "전역 설정을 저장하는 데 실패했습니다: {{error}}",
+    "save_project_failed": "프로젝트 설정을 저장하는 데 실패했습니다: {{error}}"
+  }
+}

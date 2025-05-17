@@ -169,9 +169,7 @@ async function runCodeReviewAndAddComments(params: {
       log.info(t("commands.new.info.running_line_by_line_review"));
 
       // PR 컨텍스트 정보를 활용하여 변경된 라인만 분석한다는 안내 추가
-      log.info(
-        "PR의 변경된 라인만 분석하여 코멘트를 생성합니다. PR에 포함되지 않은 코드에는 코멘트가 생성되지 않습니다.",
-      );
+      log.info(t("commands.new.info.pr_analysis_info"));
 
       try {
         // PR 컨텍스트 정보 전달
@@ -244,12 +242,18 @@ async function runCodeReviewAndAddComments(params: {
             } else {
               // diff에서 해당 라인을 찾지 못한 경우 (PR에 포함되지 않은 파일의 라인)
               log.warn(
-                `코멘트를 추가할 수 없습니다: ${comment.file}:${comment.line} - PR diff에서 해당 라인을 찾을 수 없습니다.`,
+                t("commands.new.warning.comment_add_failed", {
+                  file: comment.file,
+                  line: comment.line,
+                }),
               );
             }
           } catch (error: any) {
             log.warn(
-              `라인 코멘트 매핑 실패 (${comment.file}:${comment.line}):`,
+              t("commands.new.debug.line_comment_mapping_failed", {
+                file: comment.file,
+                line: comment.line,
+              }),
               error,
             );
           }
@@ -384,7 +388,7 @@ export async function newCommand(): Promise<void> {
         defaultTitle = generatedTitle || defaultTitle;
       } catch (error) {
         log.warn(t("commands.new.warning.ai_title_failed"), error);
-        log.debug("AI 제목 생성 에러:", error);
+        log.debug(t("commands.new.info.ai_title_error"), error);
       }
 
       log.info(t("commands.new.info.generating_description"));
@@ -397,9 +401,9 @@ export async function newCommand(): Promise<void> {
 
       // AI가 생성한 설명 표시
       log.section(t("commands.new.info.generated_description"));
-      log.section("-------------------");
+      log.section(t("commands.new.ui.section_divider"));
       log.verbose(generatedDescription);
-      log.section("-------------------");
+      log.section(t("commands.new.ui.section_divider"));
     } catch (error) {
       log.warn(t("commands.new.warning.ai_initialization_failed"), error);
       ai = null;
@@ -563,11 +567,11 @@ export async function newCommand(): Promise<void> {
         if (updateExisting) {
           // 기존 PR 업데이트
           const newBody = `
-# 이전 내용
-${existingPR.body || "(내용 없음)"}
+${t("commands.new.pr_update.previous_content")}
+${existingPR.body || t("commands.new.pr_update.no_content")}
 
----
-# 업데이트된 내용
+${t("commands.new.pr_update.divider")}
+${t("commands.new.pr_update.updated_content")}
 ${finalBody}
 `;
 

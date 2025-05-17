@@ -9,7 +9,6 @@ import { updateCommand } from "./commands/update.js";
 import { mergeCommand } from "./commands/merge.js";
 import { reopenCommand } from "./commands/reopen.js";
 import { createLangCommand } from "./commands/lang.js";
-import { createHookCommand } from "./commands/hook.js";
 import { createCollaboratorCommand } from "./commands/collaborator.js";
 import { commitCommand } from "./commands/commit.js";
 import { loadConfig } from "../core/config.js";
@@ -26,7 +25,7 @@ async function main() {
 
     program
       .name("autopr")
-      .description(t("common.cli.description"))
+      .description(t("commands.index.program.description"))
       .version("1.0.0");
 
     // 기본 명령어들
@@ -100,9 +99,6 @@ async function main() {
     // 언어 설정 명령어
     program.addCommand(createLangCommand());
 
-    // Git 훅 처리 명령어
-    program.addCommand(createHookCommand());
-
     // Collaborator 관리 명령어
     program.addCommand(createCollaboratorCommand());
 
@@ -111,7 +107,7 @@ async function main() {
 
     await program.parseAsync();
   } catch (error) {
-    log.error(t("common.error.unknown"), error);
+    log.error(t("commands.index.error.unknown"), error);
     process.exit(1);
   }
 }

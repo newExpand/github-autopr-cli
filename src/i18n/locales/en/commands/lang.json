@@ -1,0 +1,14 @@
+{
+  "description": "Set or view the language settings",
+  "argument": {
+    "language_code": "Language code (e.g. en, ko)"
+  },
+  "error": {
+    "unsupported": "Unsupported language: {{language}}",
+    "supported_list": "Supported languages: {{languages}}"
+  },
+  "success": {
+    "changed": "Language changed to {{language}}",
+    "current": "Current language: {{language}}"
+  }
+}

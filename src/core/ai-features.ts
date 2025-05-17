@@ -78,7 +78,7 @@ export class AIFeatures {
 
       return result.description || "";
     } catch (error) {
-      log.error(t("ai.error.pr_description_failed"), error);
+      log.error(t("core.ai_features.error.pr_description_failed"), error);
       throw error;
     }
   }
@@ -111,7 +111,7 @@ export class AIFeatures {
       // 서버에서 이미 [TYPE] 접두사를 추가하므로 그대로 반환
       return result.title || "";
     } catch (error) {
-      log.error(t("ai.error.pr_title_failed"), error);
+      log.error(t("core.ai_features.error.pr_title_failed"), error);
       throw error;
     }
   }
@@ -137,7 +137,7 @@ export class AIFeatures {
 
       return result.review || "";
     } catch (error) {
-      log.error(t("ai.error.code_review_failed"), error);
+      log.error(t("core.ai_features.error.code_review_failed"), error);
       throw error;
     }
   }
@@ -227,7 +227,7 @@ export class AIFeatures {
 
       return result.comments || [];
     } catch (error) {
-      log.error(t("ai.error.line_review_failed"), error);
+      log.error(t("core.ai_features.error.line_review_failed"), error);
       throw error;
     }
   }
@@ -265,7 +265,7 @@ export class AIFeatures {
 
       return result.resolution || "";
     } catch (error) {
-      log.error(t("ai.error.conflict_resolution_failed"), error);
+      log.error(t("core.ai_features.error.conflict_resolution_failed"), error);
       throw error;
     }
   }
@@ -297,7 +297,7 @@ export class AIFeatures {
 
       return result.message || "";
     } catch (error) {
-      log.error(t("ai.error.commit_message_failed"), error);
+      log.error(t("core.ai_features.error.commit_message_failed"), error);
       throw error;
     }
   }
@@ -348,7 +348,7 @@ export class AIFeatures {
 
       return result.summary || "";
     } catch (error) {
-      log.error(t("ai.error.daily_report_failed"), error);
+      log.error(t("core.ai_features.error.daily_report_failed"), error);
       throw error;
     }
   }
@@ -385,7 +385,7 @@ export class AIFeatures {
 
       return result.review;
     } catch (error) {
-      log.error(t("ai.error.pr_review_failed"), error);
+      log.error(t("core.ai_features.error.pr_review_failed"), error);
       throw error;
     }
   }

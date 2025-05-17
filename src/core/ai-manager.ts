@@ -1,5 +1,6 @@
 import { createFetch } from "next-type-fetch";
 import { log } from "../utils/logger.js";
+import { t } from "../i18n/index.js";
 
 // 기본 fetch 인스턴스 생성
 const fetch = createFetch({
@@ -55,9 +56,17 @@ export class AIClient {
       return response.data as unknown as T;
     } catch (error) {
       process.stdout.write(JSON.stringify(error, null, 2));
-      log.error(`API 호출 실패 (${endpoint}):`, error);
+      log.error(
+        t("core.ai_manager.error.api_call_failed", { endpoint }),
+        error,
+      );
       throw new Error(
-        `API 호출 실패: ${error instanceof Error ? error.message : "알 수 없는 오류"}`,
+        t("core.ai_manager.error.api_call_error", {
+          message:
+            error instanceof Error
+              ? error.message
+              : t("core.ai_manager.error.unknown_error"),
+        }),
       );
     }
   }
@@ -80,11 +89,16 @@ export class AIClient {
         return response.data.data;
       }
 
-      throw new Error("GitHub App 정보가 없습니다");
+      throw new Error(t("core.ai_manager.error.github_app_info_missing"));
     } catch (error) {
-      log.error(`GitHub App 정보 획득 실패:`, error);
+      log.error(t("core.ai_manager.error.github_app_info_failed"), error);
       throw new Error(
-        `GitHub App 정보 획득 실패: ${error instanceof Error ? error.message : "알 수 없는 오류"}`,
+        t("core.ai_manager.error.github_app_info_error", {
+          message:
+            error instanceof Error
+              ? error.message
+              : t("core.ai_manager.error.unknown_error"),
+        }),
       );
     }
   }
@@ -105,11 +119,16 @@ export class AIClient {
         return response.data.data.token;
       }
 
-      throw new Error("토큰 정보가 없습니다");
+      throw new Error(t("core.ai_manager.error.token_missing"));
     } catch (error) {
-      log.error(`GitHub App 토큰 획득 실패:`, error);
+      log.error(t("core.ai_manager.error.app_token_failed"), error);
       throw new Error(
-        `GitHub App 토큰 획득 실패: ${error instanceof Error ? error.message : "알 수 없는 오류"}`,
+        t("core.ai_manager.error.app_token_error", {
+          message:
+            error instanceof Error
+              ? error.message
+              : t("core.ai_manager.error.unknown_error"),
+        }),
       );
     }
   }
@@ -129,11 +148,16 @@ export class AIClient {
         return response.data.data;
       }
 
-      throw new Error("설치 목록 정보가 없습니다");
+      throw new Error(t("core.ai_manager.error.installations_missing"));
     } catch (error) {
-      log.error(`GitHub App 설치 목록 조회 실패:`, error);
+      log.error(t("core.ai_manager.error.installations_failed"), error);
       throw new Error(
-        `GitHub App 설치 목록 조회 실패: ${error instanceof Error ? error.message : "알 수 없는 오류"}`,
+        t("core.ai_manager.error.installations_error", {
+          message:
+            error instanceof Error
+              ? error.message
+              : t("core.ai_manager.error.unknown_error"),
+        }),
       );
     }
   }

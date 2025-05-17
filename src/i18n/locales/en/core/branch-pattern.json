@@ -1,0 +1,40 @@
+{
+  "match": {
+    "success": "Branch '{{branch}}' matches pattern '{{pattern}}'",
+    "fail": "Branch '{{branch}}' does not match pattern '{{pattern}}'"
+  },
+  "no_config": "No configuration found",
+  "matching_start": "Starting to match branch patterns",
+  "current_branch": "Current branch: {{branch}}",
+  "available_patterns": "Available branch patterns:",
+  "pattern_item": "- Pattern: {{pattern}}, Type: {{type}}",
+  "matched_pattern": "Found matching branch pattern",
+  "pattern_info": "Pattern: {{pattern}}, Type: {{type}}, Draft: {{draft}}, Labels: {{labels}}, Template: {{template}}",
+  "no_match": "No matching branch pattern found",
+  "yes": "Yes",
+  "no": "No",
+  "none": "None",
+  "default": "Default",
+  "warning": {
+    "invalid_reviewers": "The following reviewers are invalid: {{reviewers}}"
+  },
+  "error": {
+    "not_git_repo": "Not a git repository"
+  },
+  "success": {
+    "pr_created": "Pull request created successfully"
+  },
+  "template": {
+    "default": {
+      "changes": "## Changes",
+      "changes_placeholder": "Describe the changes made in this PR",
+      "tests": "## Tests",
+      "unit_test": "- [ ] Unit tests",
+      "integration_test": "- [ ] Integration tests",
+      "reviewer_checklist": "## Reviewer Checklist",
+      "code_clarity": "- [ ] Code is clear and understandable",
+      "test_coverage": "- [ ] Tests cover the changes adequately",
+      "performance": "- [ ] Performance considerations have been addressed"
+    }
+  }
+}

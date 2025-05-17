@@ -1,0 +1,16 @@
+{
+  "initialization": {
+    "success": "AI가 성공적으로 초기화되었습니다"
+  },
+  "error": {
+    "not_initialized": "AI를 초기화할 수 없습니다",
+    "code_review_failed": "AI 코드 리뷰 수행에 실패했습니다",
+    "pr_description_failed": "PR 설명 생성에 실패했습니다",
+    "pr_title_failed": "PR 제목 생성에 실패했습니다",
+    "conflict_resolution_failed": "충돌 해결 제안 생성에 실패했습니다",
+    "commit_message_failed": "커밋 메시지 개선에 실패했습니다",
+    "daily_report_failed": "일일 보고서 요약 생성에 실패했습니다",
+    "line_review_failed": "라인별 코드 리뷰 수행에 실패했습니다",
+    "pr_review_failed": "종합 PR 리뷰 수행에 실패했습니다"
+  }
+}

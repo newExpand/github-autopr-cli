@@ -1,0 +1,71 @@
+{
+  "description": "풀 리퀘스트 리뷰",
+  "error": {
+    "browser_open_failed": "브라우저 열기 실패: {{error}}",
+    "pr_closed": "이 PR은 이미 닫혔거나 병합되었습니다",
+    "files_failed": "변경된 파일을 가져오지 못했습니다",
+    "file_content_failed": "파일 내용을 가져오지 못했습니다: {{file}}",
+    "comment_required": "댓글을 입력해야 합니다",
+    "submit_failed": "리뷰 제출에 실패했습니다",
+    "checkout_failed": "PR 브랜치 체크아웃 실패: {{error}}",
+    "not_initialized": "AI 기능이 초기화되지 않았습니다",
+    "code_review_failed": "코드 리뷰 생성에 실패했습니다"
+  },
+  "warning": {
+    "file_too_large": "파일 {{file}}이(가) 너무 커서 처리할 수 없습니다",
+    "no_changes": "이 풀 리퀘스트에서 변경사항을 찾을 수 없습니다"
+  },
+  "info": {
+    "title": "풀 리퀘스트 정보:",
+    "author": "작성자: {{author}}",
+    "status": "상태: {{status}}",
+    "merge_status": "병합 상태: {{status}}",
+    "url": "URL: {{url}}",
+    "file_stats": "파일: 총 {{total}}개, 처리됨 {{processed}}개 | 변경사항: +{{additions}} -{{deletions}} (총 {{changes}}개) | 브랜치: {{base_branch}} ← {{head_branch}}",
+    "ai_review_start": "AI 코드 리뷰를 시작합니다...",
+    "initialization_success": "AI 기능이 성공적으로 초기화되었습니다"
+  },
+  "status": {
+    "draft": "초안",
+    "ready": "리뷰 준비됨",
+    "checking": "확인 중",
+    "conflicting": "충돌 있음",
+    "mergeable": "병합 가능",
+    "unknown": "알 수 없음"
+  },
+  "prompts": {
+    "action": "무엇을 하시겠습니까?",
+    "review_type": "리뷰 유형 선택:",
+    "comment": {
+      "approve": "승인 댓글 추가:",
+      "request_changes": "요청할 변경사항 설명:",
+      "comment": "리뷰 댓글 추가:"
+    }
+  },
+  "actions": {
+    "view": "PR 설명 보기",
+    "ai_review": "AI 코드 리뷰",
+    "review": "리뷰 제출",
+    "checkout": "PR 브랜치 체크아웃",
+    "open": "브라우저에서 열기",
+    "cancel": "취소"
+  },
+  "content": {
+    "title": "풀 리퀘스트 설명:",
+    "empty": "(설명 없음)",
+    "ai_review_title": "AI 코드 리뷰:"
+  },
+  "review_types": {
+    "approve": "승인",
+    "request_changes": "변경 요청",
+    "comment": "댓글"
+  },
+  "success": {
+    "opened": "풀 리퀘스트가 브라우저에서 열렸습니다",
+    "checkout": "PR 브랜치를 성공적으로 체크아웃했습니다",
+    "cancelled": "작업이 취소되었습니다"
+  },
+  "ui": {
+    "section_divider": "-------------------"
+  }
+}

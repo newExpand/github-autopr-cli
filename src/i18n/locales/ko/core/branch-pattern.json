@@ -1,0 +1,40 @@
+{
+  "match": {
+    "success": "브랜치 '{{branch}}'가 패턴 '{{pattern}}'과 일치합니다",
+    "fail": "브랜치 '{{branch}}'가 패턴 '{{pattern}}'과 일치하지 않습니다"
+  },
+  "no_config": "설정을 찾을 수 없습니다",
+  "matching_start": "브랜치 패턴 매칭을 시작합니다",
+  "current_branch": "현재 브랜치: {{branch}}",
+  "available_patterns": "사용 가능한 브랜치 패턴:",
+  "pattern_item": "- 패턴: {{pattern}}, 유형: {{type}}",
+  "matched_pattern": "일치하는 브랜치 패턴을 찾았습니다",
+  "pattern_info": "패턴: {{pattern}}, 유형: {{type}}, 초안: {{draft}}, 라벨: {{labels}}, 템플릿: {{template}}",
+  "no_match": "일치하는 브랜치 패턴을 찾을 수 없습니다",
+  "yes": "예",
+  "no": "아니오",
+  "none": "없음",
+  "default": "기본값",
+  "warning": {
+    "invalid_reviewers": "다음 리뷰어는 유효하지 않습니다: {{reviewers}}"
+  },
+  "error": {
+    "not_git_repo": "Git 저장소가 아닙니다"
+  },
+  "success": {
+    "pr_created": "풀 리퀘스트가 성공적으로 생성되었습니다"
+  },
+  "template": {
+    "default": {
+      "changes": "## 변경 사항",
+      "changes_placeholder": "이 PR에서 변경된 내용을 설명하세요",
+      "tests": "## 테스트",
+      "unit_test": "- [ ] 단위 테스트",
+      "integration_test": "- [ ] 통합 테스트",
+      "reviewer_checklist": "## 리뷰어 체크리스트",
+      "code_clarity": "- [ ] 코드가 명확하고 이해하기 쉬움",
+      "test_coverage": "- [ ] 테스트가 변경 사항을 충분히 커버함",
+      "performance": "- [ ] 성능 고려 사항이 해결됨"
+    }
+  }
+}

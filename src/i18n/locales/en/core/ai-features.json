@@ -1,0 +1,16 @@
+{
+  "initialization": {
+    "success": "AI initialized successfully"
+  },
+  "error": {
+    "not_initialized": "Failed to initialize AI",
+    "code_review_failed": "Failed to perform AI code review",
+    "pr_description_failed": "Failed to generate PR description",
+    "pr_title_failed": "Failed to generate PR title",
+    "conflict_resolution_failed": "Failed to generate conflict resolution suggestion",
+    "commit_message_failed": "Failed to improve commit message",
+    "daily_report_failed": "Failed to generate daily report summary",
+    "line_review_failed": "Failed to perform line-by-line code review",
+    "pr_review_failed": "Failed to perform comprehensive PR review"
+  }
+}

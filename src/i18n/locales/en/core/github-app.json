@@ -1,0 +1,101 @@
+{
+  "description": "Manage GitHub App settings",
+  "auth": {
+    "description": "Manage GitHub App authentication",
+    "initializing": "Initializing GitHub App device flow",
+    "instructions": "Follow these steps to complete GitHub App authentication:",
+    "open_url": "Open this URL in your browser: {{url}}",
+    "enter_code": "Enter this code: {{code}}",
+    "waiting": "Waiting for browser authentication to complete...",
+    "time_limit": "(Time limit: {{minutes}} minutes)",
+    "browser_open_failed": "Failed to open browser automatically. Please open the URL manually.",
+    "starting": "Starting GitHub App authentication process",
+    "success": "GitHub App authentication successful!",
+    "failed": "GitHub App authentication failed: {{error}}"
+  },
+  "setup": {
+    "description": "Set up GitHub App authentication",
+    "private_key_prompt": "Enter the path to your private key file (or press enter to skip)",
+    "starting": "Setting up GitHub App",
+    "info": "Setting up GitHub App authentication",
+    "multiple_installations": "Multiple GitHub App installations found.",
+    "success": "GitHub App configuration saved successfully",
+    "auto_complete": "GitHub App setup was automatically completed."
+  },
+  "info": {
+    "description": "Show GitHub App configuration information",
+    "title": "GitHub App Configuration",
+    "app_id": "App ID: {{id}}",
+    "installation_id": "Installation ID: {{id}}",
+    "has_private_key": "Has private key: {{hasKey}}",
+    "not_configured": "GitHub App is not yet configured. Please run 'autopr github-app setup' first",
+    "success": "Successfully fetched GitHub App information",
+    "failed": "Failed to fetch GitHub App information: {{error}}"
+  },
+  "reset": {
+    "description": "Reset GitHub App configuration",
+    "confirm": "Are you sure you want to reset the GitHub App configuration? This will remove all GitHub App settings.",
+    "confirm_true": "Yes, reset it",
+    "success": "GitHub App configuration reset successfully",
+    "failed": "Failed to reset GitHub App configuration: {{error}}"
+  },
+  "private_key": {
+    "description": "Import private key file for GitHub App",
+    "prompt": "Enter the path to your private key file:",
+    "success": "Private key successfully registered",
+    "failed": "Failed to register private key: {{error}}",
+    "no_config": "GitHub App is not yet configured. Please run 'autopr github-app setup' first"
+  },
+  "device_flow": {
+    "client_id": "Client ID: {{clientId}}",
+    "request_data": "Request data:",
+    "response_status": "Response status:",
+    "response_headers": "Response headers:",
+    "error_response": "Error response content:",
+    "response_data": "Response data:",
+    "init_failed": "Device flow initialization failed: {{status}} - {{error}}",
+    "initializing": "Initializing GitHub App device flow"
+  },
+  "token": {
+    "error": "Token error: {{error}}",
+    "expired": "Authentication token expired. Please try again.",
+    "missing": "Token not found",
+    "request_failed": "Token request failed: {{status}}",
+    "success": "Retrieved GitHub App token via server.",
+    "failed": "Failed to retrieve GitHub App token from server."
+  },
+  "error": {
+    "missing_config": "GitHub App configuration is missing",
+    "missing_installation_id": "GitHub App installation ID is missing",
+    "token_request_failed": "Installation token request failed: {{status}}",
+    "token_missing": "No token in installation token response",
+    "list_installations_failed": "Failed to list installations: {{status}}",
+    "no_installations": "No GitHub App installations found",
+    "app_info_failed": "Failed to get GitHub App information: {{status}}",
+    "installation_verification_failed": "Failed to verify GitHub App installation",
+    "installation_cancelled": "GitHub App installation was cancelled",
+    "private_key_required": "GitHub App private key is required for this operation. Please run 'autopr github-app setup' to set up your private key.",
+    "unknown": "Unknown error"
+  },
+  "installations": {
+    "fetching": "Retrieving authentication information...",
+    "not_found": "No app installation information found. Checking app information...",
+    "success": "GitHub App installation confirmed!",
+    "verification": "Verifying installation information again...",
+    "fetch_failed": "Failed to retrieve GitHub App installation list from server."
+  },
+  "ui": {
+    "auth_guide_title": "🔐 GitHub Authentication Guide",
+    "auth_steps_title": "📋 Authentication Steps",
+    "auth_waiting_title": "⏳ Waiting for Authentication",
+    "install_required_title": "⚠️ GitHub App Installation Required",
+    "install_not_found": "This GitHub App is not installed on your account.",
+    "install_steps": "Follow these steps to install the GitHub App:",
+    "install_browser_step": "1️⃣ Open the GitHub App installation page in your browser",
+    "install_url_step": "2️⃣ Visit the following URL: {{url}}",
+    "install_select_step": "3️⃣ Select the account to install the app on and set permissions",
+    "install_completion_title": "⏳ Continue After App Installation",
+    "install_confirm": "Have you completed the GitHub App installation?",
+    "multiple_installations": "Multiple installations found. Please select one to use:"
+  }
+}

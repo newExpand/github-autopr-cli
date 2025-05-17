@@ -1,0 +1,63 @@
+{
+  "description": "Create a commit with AI assistance",
+  "args": {
+    "subcommand": "Subcommand to execute (improve)",
+    "message": "Commit message or message to improve"
+  },
+  "options": {
+    "all_with_push": "Stage all changes and push after commit",
+    "patch": "Use patch mode for staging",
+    "select": "Select files to stage",
+    "select_with_push": "Select files to stage and push after commit"
+  },
+  "help": {
+    "examples": "Examples",
+    "default": "Interactive commit",
+    "all_with_push": "Stage all changes and push",
+    "select": "Select files to stage",
+    "select_with_push": "Select files, commit, and push",
+    "improve_last": "Improve last commit message",
+    "improve_message": "Improve provided commit message",
+    "improve_all_with_push": "Improve message, stage all, and push",
+    "improve_select_with_push": "Improve message, select files, and push"
+  },
+  "error": {
+    "staging_failed": "Failed to stage changes",
+    "files_failed": "Failed to get changed files",
+    "file_selection_failed": "Failed to select files",
+    "diff_failed": "Failed to get staged diff",
+    "get_branch_failed": "Failed to get current branch",
+    "no_staged_changes": "No staged changes found",
+    "no_commit_message": "No commit message found",
+    "invalid_subcommand": "Invalid subcommand",
+    "push_failed": "Push failed: {{error}}",
+    "commit_failed": "Failed to commit changes",
+    "not_initialized": "AI features are not initialized"
+  },
+  "info": {
+    "patch_mode": "Running in patch mode. Please run 'git add -p' manually",
+    "no_unstaged_files": "No unstaged files found",
+    "no_files_selected": "No files selected",
+    "run_patch_mode": "Please run 'git add -p' manually to stage changes",
+    "improving_message": "Improving commit message...",
+    "analyzing_changes": "Analyzing changes...",
+    "suggested_message": "Suggested commit message:",
+    "operation_cancelled": "Operation cancelled",
+    "pr_creation_guide": "To create a pull request for your changes:",
+    "run_new_command": "Run 'autopr new' to create a new pull request",
+    "initialization_success": "AI features initialized successfully"
+  },
+  "success": {
+    "files_staged": "{{count}} files staged",
+    "pushed": "Successfully pushed to {{branch}}",
+    "committed": "Changes committed successfully"
+  },
+  "warning": {
+    "pr_check_failed": "Failed to check for existing PR"
+  },
+  "prompts": {
+    "select_files": "Select files to stage:",
+    "use_message": "Use this commit message?",
+    "edit_message": "Edit commit message:"
+  }
+}

@@ -295,13 +295,13 @@ export async function commitCommand(
 
     try {
       ai = new AIFeatures();
-      log.info(t("ai.initialization.success"));
+      log.info(t("commands.commit.info.initialization_success"));
     } catch (error) {
       ai = null;
     }
 
     if (!ai && subcommand === "improve") {
-      log.error(t("ai.error.not_initialized"));
+      log.error(t("commands.commit.error.not_initialized"));
       process.exit(1);
     }
 

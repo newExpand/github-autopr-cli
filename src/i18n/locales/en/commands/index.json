@@ -1,0 +1,8 @@
+{
+  "program": {
+    "description": "GitHub PR automation tool with AI assistance"
+  },
+  "error": {
+    "unknown": "An unknown error occurred"
+  }
+}

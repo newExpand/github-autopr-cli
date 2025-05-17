@@ -1,0 +1,76 @@
+{
+  "description": "새 PR 생성",
+  "error": {
+    "protected_branch": "보호된 브랜치 {{branch}}에서 PR을 생성할 수 없습니다. 기능 개발은 {{development}} 브랜치에서, 릴리스는 {{production}} 브랜치에서 수행하세요.",
+    "push_failed": "브랜치를 원격 저장소에 푸시하지 못했습니다: {{error}}",
+    "diff_failed": "diff 내용을 가져오지 못했습니다",
+    "files_failed": "변경된 파일 목록을 가져오지 못했습니다",
+    "create_failed": "PR 생성에 실패했습니다: {{error}}"
+  },
+  "warning": {
+    "ai_title_failed": "AI로 PR 제목을 생성하지 못했습니다",
+    "ai_description_failed": "AI로 PR 설명을 생성하지 못했습니다",
+    "ai_initialization_failed": "AI 초기화에 실패했습니다",
+    "draft_not_available": "Draft PR 기능은 이 저장소에서 사용할 수 없습니다 (비공개 저장소에서는 GitHub 유료 플랜 필요)",
+    "file_read_failed": "파일 {{file}}을(를) 읽을 수 없습니다",
+    "file_too_large": "파일 {{file}}이(가) 너무 큽니다 ({{size}}MB). 처리를 건너뜁니다.",
+    "code_review_failed": "코드 리뷰를 실행하지 못했습니다",
+    "line_review_failed": "라인별 코드 리뷰를 실행하지 못했습니다",
+    "no_files_for_review": "리뷰할 파일이 없습니다",
+    "code_review_add_failed": "PR에 코드 리뷰 코멘트를 추가하지 못했습니다",
+    "comment_add_failed": "코멘트를 추가할 수 없습니다: {{file}}:{{line}} - PR diff에서 해당 라인을 찾을 수 없습니다"
+  },
+  "info": {
+    "creating": "PR 생성 중...",
+    "pr_exists": "PR #{{number}}이(가) 이미 존재합니다",
+    "adding_reviewers": "리뷰어 추가 중...",
+    "reviewers_added": "리뷰어가 추가되었습니다: {{reviewers}}",
+    "generating_title": "AI로 PR 제목 생성 중...",
+    "generated_title": "생성된 제목:",
+    "generating_description": "AI로 PR 설명 생성 중...",
+    "generated_description": "생성된 설명:",
+    "ai_initialized": "AI가 성공적으로 초기화되었습니다",
+    "running_code_review": "전체 코드 리뷰 실행 중...",
+    "code_review_completed": "코드 리뷰가 완료되었습니다",
+    "running_line_by_line_review": "라인별 코드 리뷰 실행 중...",
+    "line_by_line_review_completed": "라인별 코드 리뷰가 완료되었습니다",
+    "no_line_comments": "자동 감지된 문제가 없습니다",
+    "no_review_comments": "추가할 코드 리뷰 코멘트가 없습니다",
+    "adding_code_review": "PR에 코드 리뷰 추가 중...",
+    "running_pr_review": "PR 리뷰 실행 중...",
+    "pr_review_completed": "PR 리뷰가 완료되었습니다",
+    "ai_title_error": "AI 제목 생성 에러:",
+    "pr_analysis_info": "PR의 변경된 라인만 분석하여 코멘트를 생성합니다. PR에 포함되지 않은 코드에는 코멘트가 생성되지 않습니다."
+  },
+  "prompts": {
+    "title": "PR 제목:",
+    "body": "PR 설명:",
+    "reviewers": "리뷰어 (쉼표로 구분):",
+    "update_existing": "기존 PR을 업데이트하시겠습니까?",
+    "create_as_draft": "Draft PR로 생성하시겠습니까?",
+    "use_ai_description": "AI가 생성한 설명을 사용하시겠습니까?",
+    "edit_ai_description": "AI가 생성한 설명을 편집하시겠습니까?",
+    "run_code_review": "전체 코드 리뷰를 실행하시겠습니까?",
+    "run_line_by_line_review": "오타, 보안, 버그 등에 대한 라인별 코드 리뷰를 실행하시겠습니까?",
+    "add_review_comments": "PR에 코드 리뷰 코멘트를 추가하시겠습니까?",
+    "run_pr_review": "PR 리뷰를 실행하시겠습니까?"
+  },
+  "success": {
+    "branch_pushed": "브랜치 {{branch}}이(가) 원격 저장소에 푸시되었습니다",
+    "pr_updated": "PR #{{number}}이(가) 업데이트되었습니다",
+    "cancelled": "PR 생성이 취소되었습니다",
+    "code_review_added": "PR에 코드 리뷰 코멘트가 추가되었습니다"
+  },
+  "debug": {
+    "line_comment_mapping_failed": "라인 코멘트 매핑 실패 ({{file}}:{{line}}):"
+  },
+  "pr_update": {
+    "previous_content": "# 이전 내용",
+    "no_content": "(내용 없음)",
+    "divider": "---",
+    "updated_content": "# 업데이트된 내용"
+  },
+  "ui": {
+    "section_divider": "-------------------"
+  }
+}

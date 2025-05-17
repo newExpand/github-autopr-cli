@@ -4,34 +4,11 @@ import {
   updateConfig,
   loadGlobalConfig,
   loadProjectConfig,
-  loadConfig,
 } from "../../core/config.js";
 import { setupGitHubAppCredentials } from "../../core/github-app.js";
-import { writeFile, mkdir, readFile } from "fs/promises";
-import { existsSync } from "fs";
-import { join } from "path";
 import { log } from "../../utils/logger.js";
 
 import { Config } from "../../types/config.js";
-
-async function setupGitHooks(): Promise<void> {
-  try {
-    // Git 훅 디렉토리 생성
-    const hooksDir = join(process.cwd(), ".git", "hooks");
-    await mkdir(hooksDir, { recursive: true });
-
-    // post-checkout 훅 스크립트 생성
-    const hookPath = join(hooksDir, "post-checkout");
-    const hookScript = `#!/bin/sh
-BRANCH_NAME=$(git rev-parse --abbrev-ref HEAD)
-npx autopr hook post-checkout "$BRANCH_NAME"
-`;
-
-    await writeFile(hookPath, hookScript, { mode: 0o755 });
-  } catch (error) {
-    log.error(t("commands.init.error.git_hooks", { error }));
-  }
-}
 
 export async function initCommand(): Promise<void> {
   try {
@@ -49,9 +26,7 @@ export async function initCommand(): Promise<void> {
       await setupGitHubAppCredentials();
 
       // 인증 완료 메시지
-      log.info(
-        "GitHub App 인증이 완료되었습니다. 서버를 통해 자동 인증됩니다.",
-      );
+      log.info(t("commands.init.info.github_app_auth_success"));
     } catch (error) {
       log.error(t("commands.github_app.auth.failed", { error }));
       process.exit(1);
@@ -153,10 +128,6 @@ export async function initCommand(): Promise<void> {
         }),
       );
       log.info(t("commands.init.info.release_template_set_automatically"));
-
-      // Git 훅 설정 - 사용자 선택 없이 무조건 설정
-      await setupGitHooks();
-      log.info(t("commands.init.info.hooks_setup_automatically"));
 
       log.info(t("common.success.init"));
     } catch (error) {

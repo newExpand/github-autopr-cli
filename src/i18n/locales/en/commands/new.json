@@ -1,0 +1,76 @@
+{
+  "description": "Create a new PR",
+  "error": {
+    "protected_branch": "Cannot create PR from protected branch {{branch}}. Develop on {{development}} branch, release on {{production}} branch.",
+    "push_failed": "Failed to push branch to remote: {{error}}",
+    "diff_failed": "Failed to get diff content",
+    "files_failed": "Failed to get changed files list",
+    "create_failed": "Failed to create PR: {{error}}"
+  },
+  "warning": {
+    "ai_title_failed": "Failed to generate PR title with AI",
+    "ai_description_failed": "Failed to generate PR description with AI",
+    "ai_initialization_failed": "Failed to initialize AI",
+    "draft_not_available": "Draft PR feature is not available for this repository (requires GitHub paid plan for private repos)",
+    "file_read_failed": "Failed to read file {{file}}",
+    "file_too_large": "File {{file}} is too large ({{size}}MB). Skipping processing.",
+    "code_review_failed": "Failed to run code review",
+    "line_review_failed": "Failed to run line-by-line code review",
+    "no_files_for_review": "No files to review",
+    "code_review_add_failed": "Failed to add code review comments to PR",
+    "comment_add_failed": "Cannot add comment to: {{file}}:{{line}} - Line not found in PR diff"
+  },
+  "info": {
+    "creating": "Creating PR...",
+    "pr_exists": "PR #{{number}} already exists",
+    "adding_reviewers": "Adding reviewers...",
+    "reviewers_added": "Reviewers added: {{reviewers}}",
+    "generating_title": "Generating PR title with AI...",
+    "generated_title": "Generated title:",
+    "generating_description": "Generating PR description with AI...",
+    "generated_description": "Generated description:",
+    "ai_initialized": "AI initialized successfully",
+    "running_code_review": "Running overall code review...",
+    "code_review_completed": "Code review completed",
+    "running_line_by_line_review": "Running line-by-line code review...",
+    "line_by_line_review_completed": "Line-by-line code review completed",
+    "no_line_comments": "No issues automatically detected",
+    "no_review_comments": "No code review comments to add",
+    "adding_code_review": "Adding code review to PR...",
+    "running_pr_review": "Running PR review...",
+    "pr_review_completed": "PR review completed",
+    "ai_title_error": "AI title generation error:",
+    "pr_analysis_info": "Analyzing only the changed lines in the PR. Comments will not be generated for code not included in the PR."
+  },
+  "prompts": {
+    "title": "PR title:",
+    "body": "PR description:",
+    "reviewers": "Reviewers (comma-separated):",
+    "update_existing": "Update existing PR?",
+    "create_as_draft": "Create as draft PR?",
+    "use_ai_description": "Use AI-generated description?",
+    "edit_ai_description": "Edit AI-generated description?",
+    "run_code_review": "Run overall code review?",
+    "run_line_by_line_review": "Run line-by-line code review for typos, security issues, and potential bugs?",
+    "add_review_comments": "Add code review comments to PR?",
+    "run_pr_review": "Run comprehensive PR review?"
+  },
+  "success": {
+    "branch_pushed": "Branch {{branch}} pushed to remote",
+    "pr_updated": "PR #{{number}} updated successfully",
+    "cancelled": "PR creation cancelled",
+    "code_review_added": "Code review comments added to PR"
+  },
+  "debug": {
+    "line_comment_mapping_failed": "Line comment mapping failed ({{file}}:{{line}}):"
+  },
+  "pr_update": {
+    "previous_content": "# Previous Content",
+    "no_content": "(No content)",
+    "divider": "---",
+    "updated_content": "# Updated Content"
+  },
+  "ui": {
+    "section_divider": "-------------------"
+  }
+}

@@ -1,0 +1,71 @@
+{
+  "description": "Review a pull request",
+  "error": {
+    "browser_open_failed": "Failed to open browser: {{error}}",
+    "pr_closed": "This PR is closed or merged",
+    "files_failed": "Failed to get changed files",
+    "file_content_failed": "Failed to get content for file: {{file}}",
+    "comment_required": "Comment is required",
+    "submit_failed": "Failed to submit review",
+    "checkout_failed": "Failed to checkout PR: {{error}}",
+    "not_initialized": "AI features are not initialized",
+    "code_review_failed": "Failed to generate code review"
+  },
+  "warning": {
+    "file_too_large": "File {{file}} is too large to process",
+    "no_changes": "No changes found in this pull request"
+  },
+  "info": {
+    "title": "Pull Request Information:",
+    "author": "Author: {{author}}",
+    "status": "Status: {{status}}",
+    "merge_status": "Merge status: {{status}}",
+    "url": "URL: {{url}}",
+    "file_stats": "Files: {{total}} total, {{processed}} processed | Changes: +{{additions}} -{{deletions}} ({{changes}} total) | Branches: {{base_branch}} ← {{head_branch}}",
+    "ai_review_start": "Starting AI code review...",
+    "initialization_success": "AI features initialized successfully"
+  },
+  "status": {
+    "draft": "Draft",
+    "ready": "Ready for review",
+    "checking": "Checking",
+    "conflicting": "Conflicts",
+    "mergeable": "Ready to merge",
+    "unknown": "Unknown"
+  },
+  "prompts": {
+    "action": "What would you like to do?",
+    "review_type": "Select review type:",
+    "comment": {
+      "approve": "Add approval comment:",
+      "request_changes": "Describe requested changes:",
+      "comment": "Add review comment:"
+    }
+  },
+  "actions": {
+    "view": "View PR description",
+    "ai_review": "AI code review",
+    "review": "Submit review",
+    "checkout": "Checkout PR branch",
+    "open": "Open in browser",
+    "cancel": "Cancel"
+  },
+  "content": {
+    "title": "Pull Request Description:",
+    "empty": "(No description provided)",
+    "ai_review_title": "AI Code Review:"
+  },
+  "review_types": {
+    "approve": "Approve",
+    "request_changes": "Request Changes",
+    "comment": "Comment"
+  },
+  "success": {
+    "opened": "Pull request opened in browser",
+    "checkout": "Successfully checked out PR branch",
+    "cancelled": "Operation cancelled"
+  },
+  "ui": {
+    "section_divider": "-------------------"
+  }
+}

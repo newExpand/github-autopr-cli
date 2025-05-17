@@ -1,0 +1,45 @@
+{
+  "description": "Generate a daily commit report",
+  "title": "Daily Commit Report",
+  "date_single": "Date: {{date}}",
+  "date_range": "Date Range: {{from}} to {{to}}",
+  "user": "User: {{username}}",
+  "ai_summary": "AI Summary",
+  "summary": "Summary",
+  "total_commits": "Total Commits: {{count}}",
+  "files_changed": "Files Changed: {{count}}",
+  "lines_added": "Lines Added: {{count}}",
+  "lines_deleted": "Lines Deleted: {{count}}",
+  "hourly_distribution": "Hourly Distribution",
+  "branch_distribution": "Branch Distribution",
+  "file_types": "File Types",
+  "fetching_commit_dates": "Fetching commit dates...",
+  "no_commit_dates": "No commit dates found",
+  "select_date": "Select date:",
+  "fetching": "Fetching commits for {{username}} on {{date}}...",
+  "report_saved": "Report saved to: {{path}}",
+  "options": {
+    "username": "Specify GitHub username",
+    "format": "Output format (console, json, markdown)",
+    "date": "Specify date (YYYY-MM-DD)",
+    "output": "Save report to file"
+  },
+  "info": {
+    "initialization_success": "AI features initialized successfully",
+    "ai_not_available": "AI summary could not be generated. Check logs for details."
+  },
+  "error": {
+    "commit_dates_failed": "Failed to get commit dates",
+    "user_not_found": "User not found",
+    "local_commits_failed": "Failed to get local commits",
+    "ai_generation_failed": "Failed to generate AI summary",
+    "ai_fallback": "AI summary generation failed. Check logs for details.",
+    "ai_init_failed": "Failed to initialize AI",
+    "ai_required": "AI is required for this feature"
+  },
+  "debug": {
+    "using_github_user": "Using GitHub username: {{username}}",
+    "github_user_failed": "Failed to get GitHub username",
+    "using_git_user": "Using Git username: {{username}}"
+  }
+}

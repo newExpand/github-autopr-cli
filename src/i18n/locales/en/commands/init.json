@@ -1,0 +1,28 @@
+{
+  "description": "Initialize autopr configuration",
+  "info": {
+    "branch_strategy": "Branch strategy set up successfully",
+    "production_branch_set": "Production branch set to: {{branch}}",
+    "development_branch_set": "Development branch set to: {{branch}}",
+    "release_template_set_automatically": "Release PR template set automatically",
+    "github_app_auth_success": "GitHub App authentication successful! Server-based authentication is set up."
+  },
+  "error": {
+    "invalid_token": "Invalid GitHub token"
+  },
+  "prompts": {
+    "update_token": "A GitHub token is already configured. Update it?",
+    "auth_method": "How would you like to authenticate with GitHub?",
+    "auth_choices": {
+      "oauth": "Use OAuth (browser-based authentication)",
+      "manual": "Enter token manually"
+    },
+    "token": "Enter your GitHub token:",
+    "update_language": "Current language is {{language}}. Update it?",
+    "language": "Select language:",
+    "setup_ai": "Set up AI features?",
+    "default_branch": "Default (production) branch:",
+    "development_branch": "Development branch:",
+    "reviewers": "Default reviewers (comma-separated):"
+  }
+}

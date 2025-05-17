@@ -1,0 +1,46 @@
+{
+  "error": {
+    "github_token": "GitHub token not found. Please run 'autopr init' first",
+    "not_git_repo": "Not a git repository",
+    "no_commits": "No commits found between branches",
+    "pr_exists": "A pull request already exists for this branch",
+    "base_modified": "Base branch was modified. Please pull the latest changes",
+    "base_change_failed": "Failed to change base branch",
+    "merge_conflict": "Merge conflict detected",
+    "pr_closed": "This pull request is closed or merged",
+    "not_mergeable": "This pull request cannot be merged",
+    "submit_failed": "Failed to submit review",
+    "get_invitation_status": "Failed to get invitation status: {{error}}",
+    "get_invitation_statuses": "Failed to get invitation statuses: {{error}}",
+    "get_conflicts": "Failed to get pull request conflicts: {{error}}",
+    "github_app_auth": "GitHub API authentication failed: Failed to obtain GitHub App token via server. Please check your network connection or server status.",
+    "app_info": "Failed to get app info, using default values"
+  },
+  "warning": {
+    "merge_conflict": "Merge conflicts detected in this pull request",
+    "merge_status_unknown": "Merge status is unknown, please check later",
+    "branch_delete_failed": "Failed to delete the remote branch, you may need to delete it manually",
+    "invalid_reviewers": "The following reviewers are invalid: {{reviewers}}",
+    "draft_pr_check_failed": "Failed to check Draft PR availability, proceeding with regular PR"
+  },
+  "info": {
+    "debug": {
+      "pr_merge_start": "[DEBUG] Starting merge of PR #{{number}}",
+      "owner_repo": "[DEBUG] Owner: {{owner}}, Repository: {{repo}}",
+      "merge_method": "[DEBUG] Merge method: {{method}}",
+      "pr_state": "[DEBUG] PR state: {{state}}",
+      "pr_title": "[DEBUG] PR title: {{title}}",
+      "pr_branch": "[DEBUG] PR branch: {{head}} -> {{base}}",
+      "pr_not_open": "[DEBUG] PR is not open: {{state}}",
+      "merge_status": "[DEBUG] Merge status: {{status}}",
+      "pr_not_mergeable": "[DEBUG] PR cannot be merged: {{status}}",
+      "merge_attempt": "[DEBUG] Attempting to merge...",
+      "merge_success": "[DEBUG] Merge successful",
+      "merge_failed": "[DEBUG] Merge failed: {{error}}",
+      "branch_delete_attempt": "[DEBUG] Attempting to delete branch: {{branch}}",
+      "branch_delete_success": "[DEBUG] Branch deletion successful",
+      "branch_delete_failed": "[DEBUG] Branch deletion failed: {{error}}"
+    },
+    "update_review": "Updating PR review status using GraphQL API..."
+  }
+}

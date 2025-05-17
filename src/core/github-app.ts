@@ -42,13 +42,13 @@ export async function getInstallationToken(
   try {
     // 서버 API를 통해 토큰 획득
     const token = await aiClient.getGitHubAppToken(installationId);
-    log.debug("서버를 통해 GitHub App 토큰을 획득했습니다.");
+    log.debug(t("core.github_app.token.success"));
     return token;
   } catch (error) {
     // 서버 API 실패 시 오류 전달
-    log.error("서버에서 GitHub App 토큰 획득에 실패했습니다.");
+    log.error(t("core.github_app.token.failed"));
     throw new Error(
-      `GitHub App 토큰 획득 실패: ${error instanceof Error ? error.message : "알 수 없는 오류"}`,
+      `${t("core.github_app.error.token_request_failed", { status: error instanceof Error ? error.message : t("core.github_app.error.unknown") })}`,
     );
   }
 }
@@ -65,9 +65,9 @@ export async function listInstallations(): Promise<Installation[]> {
     return installations;
   } catch (error) {
     // 서버 API 실패 시 오류 전달
-    log.error("서버에서 GitHub App 설치 목록 획득에 실패했습니다.");
+    log.error(t("core.github_app.installations.fetch_failed"));
     throw new Error(
-      `GitHub App 설치 목록 획득 실패: ${error instanceof Error ? error.message : "알 수 없는 오류"}`,
+      `${t("core.github_app.error.list_installations_failed", { status: error instanceof Error ? error.message : t("core.github_app.error.unknown") })}`,
     );
   }
 }
@@ -77,7 +77,7 @@ export async function listInstallations(): Promise<Installation[]> {
  * @returns Device 코드 정보
  */
 async function getDeviceCode(): Promise<DeviceCodeResponse> {
-  log.info(t("commands.github_app.device_flow.initializing"));
+  log.info(t("core.github_app.device_flow.initializing"));
 
   try {
     // 서버에서 GitHub App 정보(clientId) 가져오기
@@ -85,7 +85,7 @@ async function getDeviceCode(): Promise<DeviceCodeResponse> {
 
     process.stdout.write(JSON.stringify(appInfo, null, 2));
     log.debug(
-      t("commands.github_app.device_flow.client_id", {
+      t("core.github_app.device_flow.client_id", {
         clientId: appInfo.clientId,
       }),
     );
@@ -95,7 +95,7 @@ async function getDeviceCode(): Promise<DeviceCodeResponse> {
       scope: "repo read:user user:email",
     };
     log.debug(
-      t("commands.github_app.device_flow.request_data"),
+      t("core.github_app.device_flow.request_data"),
       JSON.stringify(requestBody, null, 2),
     );
 
@@ -121,9 +121,9 @@ async function getDeviceCode(): Promise<DeviceCodeResponse> {
     // 로깅보다 응답 처리가 우선이므로 OK 체크를 먼저 함
     if (!response.ok) {
       const errorText = await response.text();
-      log.error(t("commands.github_app.device_flow.error_response"), errorText);
+      log.error(t("core.github_app.device_flow.error_response"), errorText);
       throw new Error(
-        t("commands.github_app.device_flow.init_failed", {
+        t("core.github_app.device_flow.init_failed", {
           status: response.status,
           error: errorText,
         }),
@@ -132,14 +132,21 @@ async function getDeviceCode(): Promise<DeviceCodeResponse> {
 
     const data = await response.json();
     log.debug(
-      t("commands.github_app.device_flow.response_data"),
+      t("core.github_app.device_flow.response_data"),
       JSON.stringify(data, null, 2),
     );
     return data as DeviceCodeResponse;
   } catch (error) {
-    log.error("GitHub App 정보 또는 Device Flow 초기화 실패:", error);
+    log.error(
+      t("core.github_app.error.app_info_failed", {
+        status:
+          error instanceof Error
+            ? error.message
+            : t("core.github_app.error.unknown"),
+      }),
+    );
     throw new Error(
-      `Device Flow 초기화 실패: ${error instanceof Error ? error.message : "알 수 없는 오류"}`,
+      `${t("core.github_app.device_flow.init_failed", { status: "", error: error instanceof Error ? error.message : t("core.github_app.error.unknown") })}`,
     );
   }
 }
@@ -185,7 +192,7 @@ async function pollForToken(
 
       if (!response.ok) {
         throw new Error(
-          t("commands.github_app.token.request_failed", {
+          t("core.github_app.token.request_failed", {
             status: response.status,
           }),
         );
@@ -206,15 +213,15 @@ async function pollForToken(
           continue;
         }
         if (data.error === "expired_token") {
-          throw new Error(t("commands.github_app.token.expired"));
+          throw new Error(t("core.github_app.token.expired"));
         }
         throw new Error(
-          t("commands.github_app.token.error", { error: data.error }),
+          t("core.github_app.token.error", { error: data.error }),
         );
       }
 
       if (!data.access_token) {
-        throw new Error(t("commands.github_app.token.missing"));
+        throw new Error(t("core.github_app.token.missing"));
       }
 
       return data.access_token;
@@ -227,7 +234,7 @@ async function pollForToken(
     }
   }
 
-  throw new Error(t("commands.github_app.token.expired"));
+  throw new Error(t("core.github_app.token.expired"));
 }
 
 /**
@@ -235,24 +242,24 @@ async function pollForToken(
  */
 export async function setupGitHubAppCredentials(): Promise<void> {
   try {
-    log.info("\n" + t("commands.github_app.setup.starting"));
+    log.info("\n" + t("core.github_app.setup.starting"));
 
     // Device Flow 초기화
     const deviceCode = await getDeviceCode();
 
     // 사용자에게 인증 방법 안내
-    log.section("🔐 GitHub 인증 안내");
-    log.info(t("commands.github_app.auth.instructions"));
-    log.section("📋 인증 단계");
+    log.section(t("core.github_app.ui.auth_guide_title"));
+    log.info(t("core.github_app.auth.instructions"));
+    log.section(t("core.github_app.ui.auth_steps_title"));
     log.step(
       "1️⃣ " +
-        t("commands.github_app.auth.open_url", {
+        t("core.github_app.auth.open_url", {
           url: deviceCode.verification_uri,
         }),
     );
     log.step(
       "2️⃣ " +
-        t("commands.github_app.auth.enter_code", {
+        t("core.github_app.auth.enter_code", {
           code: deviceCode.user_code,
         }),
     );
@@ -268,13 +275,13 @@ export async function setupGitHubAppCredentials(): Promise<void> {
       }
     } catch (error) {
       // 브라우저를 열지 못해도 계속 진행 (사용자가 수동으로 URL을 열 수 있음)
-      log.warn(t("commands.github_app.auth.browser_open_failed"));
+      log.warn(t("core.github_app.auth.browser_open_failed"));
     }
 
-    log.section("⏳ 인증 대기 중");
-    log.info(t("commands.github_app.auth.waiting"));
+    log.section(t("core.github_app.ui.auth_waiting_title"));
+    log.info(t("core.github_app.auth.waiting"));
     log.info(
-      t("commands.github_app.auth.time_limit", {
+      t("core.github_app.auth.time_limit", {
         minutes: Math.floor(deviceCode.expires_in / 60),
       }),
     );
@@ -287,7 +294,7 @@ export async function setupGitHubAppCredentials(): Promise<void> {
     );
 
     // 토큰으로 설치 목록 직접 가져오기
-    log.info("인증 정보 가져오는 중...");
+    log.info(t("core.github_app.installations.fetching"));
     const installationsResponse = await fetch(
       "https://api.github.com/user/installations",
       {
@@ -302,7 +309,7 @@ export async function setupGitHubAppCredentials(): Promise<void> {
 
     if (!installationsResponse.ok) {
       throw new Error(
-        t("commands.github_app.error.list_installations_failed", {
+        t("core.github_app.error.list_installations_failed", {
           status: installationsResponse.status,
         }),
       );
@@ -322,13 +329,13 @@ export async function setupGitHubAppCredentials(): Promise<void> {
 
     if (installations.length === 0) {
       // 앱 정보 가져오기
-      log.info("앱 설치 정보를 찾을 수 없습니다. 앱 정보를 확인 중...");
+      log.info(t("core.github_app.installations.not_found"));
 
       // 앱 설치 안내 시작
-      log.section("⚠️ GitHub App 설치 필요");
-      log.warn("이 GitHub App이 계정에 설치되어 있지 않습니다.");
-      log.info("다음 단계를 따라 GitHub App을 설치해주세요:");
-      log.step("1️⃣ 브라우저에서 GitHub App 설치 페이지를 엽니다");
+      log.section(t("core.github_app.ui.install_required_title"));
+      log.warn(t("core.github_app.ui.install_not_found"));
+      log.info(t("core.github_app.ui.install_steps"));
+      log.step(t("core.github_app.ui.install_browser_step"));
 
       // 서버에서 GitHub App 정보 가져오기
       const appInfo = await aiClient.getGitHubAppInfo();
@@ -368,8 +375,8 @@ export async function setupGitHubAppCredentials(): Promise<void> {
       }
 
       // 앱 설치 URL 생성 및 브라우저로 열기
-      log.step(`2️⃣ 다음 URL을 방문하세요: ${installUrl}`);
-      log.step("3️⃣ 앱을 설치할 계정을 선택하고 권한을 설정하세요");
+      log.step(t("core.github_app.ui.install_url_step", { url: installUrl }));
+      log.step(t("core.github_app.ui.install_select_step"));
 
       try {
         if (process.platform === "darwin") {
@@ -380,30 +387,28 @@ export async function setupGitHubAppCredentials(): Promise<void> {
           await execAsync(`xdg-open "${installUrl}"`);
         }
       } catch (error) {
-        log.warn(
-          "브라우저를 자동으로 열지 못했습니다. 수동으로 URL을 열어주세요.",
-        );
+        log.warn(t("core.github_app.auth.browser_open_failed"));
       }
 
       // 사용자에게 설치 완료 여부 확인
-      log.section("⏳ 앱 설치 완료 후 진행");
+      log.section(t("core.github_app.ui.install_completion_title"));
 
       // 사용자 입력 받기
       const { confirmed } = await inquirer.prompt([
         {
           type: "confirm",
           name: "confirmed",
-          message: "GitHub App 설치를 완료하셨나요?",
+          message: t("core.github_app.ui.install_confirm"),
           default: false,
         },
       ]);
 
       if (!confirmed) {
-        throw new Error(t("commands.github_app.error.installation_cancelled"));
+        throw new Error(t("core.github_app.error.installation_cancelled"));
       }
 
       // 설치 정보 다시 확인
-      log.info("설치 정보를 다시 확인합니다...");
+      log.info(t("core.github_app.installations.verification"));
       const refreshResponse = await fetch(
         "https://api.github.com/user/installations",
         {
@@ -423,7 +428,7 @@ export async function setupGitHubAppCredentials(): Promise<void> {
         const refreshInstallations = refreshData.installations || [];
 
         if (refreshInstallations.length > 0) {
-          log.info("GitHub App 설치가 확인되었습니다!");
+          log.info(t("core.github_app.installations.success"));
           // 첫 번째 설치 ID 사용
           const installationId = refreshInstallations[0].id;
 
@@ -437,14 +442,14 @@ export async function setupGitHubAppCredentials(): Promise<void> {
           });
 
           // 설정 완료 메시지
-          log.info("\n" + t("commands.github_app.auth.success"));
-          log.info("GitHub App 설정이 자동으로 완료되었습니다.");
+          log.info("\n" + t("core.github_app.auth.success"));
+          log.info(t("core.github_app.setup.auto_complete"));
           return;
         }
       }
 
       throw new Error(
-        t("commands.github_app.error.installation_verification_failed"),
+        t("core.github_app.error.installation_verification_failed"),
       );
     }
 
@@ -456,7 +461,7 @@ export async function setupGitHubAppCredentials(): Promise<void> {
 
     // 여러 설치가 있는 경우 사용자에게 선택 요청
     if (installations.length > 1) {
-      log.info(t("commands.github_app.setup.multiple_installations"));
+      log.info(t("core.github_app.setup.multiple_installations"));
 
       // 설치 목록 표시
       installations.forEach((inst: Installation, index: number) => {
@@ -468,7 +473,7 @@ export async function setupGitHubAppCredentials(): Promise<void> {
         {
           type: "list",
           name: "selectedInstallation",
-          message: "사용할 설치를 선택하세요:",
+          message: t("core.github_app.ui.multiple_installations"),
           choices: installations.map((inst, index) => ({
             name: `${inst.account.login} (${inst.id})`,
             value: index,
@@ -493,12 +498,12 @@ export async function setupGitHubAppCredentials(): Promise<void> {
     });
 
     // 설정 완료 메시지
-    log.info("\n" + t("commands.github_app.auth.success"));
-    log.info("GitHub App 설정이 자동으로 완료되었습니다.");
+    log.info("\n" + t("core.github_app.auth.success"));
+    log.info(t("core.github_app.setup.auto_complete"));
   } catch (error: unknown) {
     if (error instanceof Error) {
       throw new Error(
-        t("commands.github_app.auth.failed", { error: error.message }),
+        t("core.github_app.auth.failed", { error: error.message }),
       );
     }
     throw error;

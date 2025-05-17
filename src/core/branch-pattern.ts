@@ -29,7 +29,7 @@ export async function findMatchingPattern(
 ): Promise<BranchPattern | null> {
   const config = await loadConfig();
   if (!config) {
-    log.warn(t("common.branch_pattern.no_config"));
+    log.warn(t("core.branch_pattern.no_config"));
     return null;
   }
 
@@ -38,23 +38,23 @@ export async function findMatchingPattern(
   );
 
   if (pattern) {
-    log.info(t("common.branch_pattern.matched_pattern"));
+    log.info(t("core.branch_pattern.matched_pattern"));
     log.info(
-      t("common.branch_pattern.pattern_info", {
+      t("core.branch_pattern.pattern_info", {
         pattern: pattern.pattern,
         type: pattern.type,
         draft: pattern.draft
-          ? t("common.branch_pattern.yes")
-          : t("common.branch_pattern.no"),
+          ? t("core.branch_pattern.yes")
+          : t("core.branch_pattern.no"),
         labels:
           pattern.labels.length > 0
             ? pattern.labels.join(", ")
-            : t("common.branch_pattern.none"),
-        template: pattern.template || t("common.branch_pattern.default"),
+            : t("core.branch_pattern.none"),
+        template: pattern.template || t("core.branch_pattern.default"),
       }),
     );
   } else {
-    log.warn(t("common.branch_pattern.no_match"));
+    log.warn(t("core.branch_pattern.no_match"));
   }
 
   return pattern || null;
@@ -86,17 +86,17 @@ export async function generatePRBody(pattern: BranchPattern): Promise<string> {
 
   // 기본 템플릿 (국제화 적용)
   return [
-    t("common.template.default.changes"),
-    t("common.template.default.changes_placeholder"),
+    t("core.branch_pattern.template.default.changes"),
+    t("core.branch_pattern.template.default.changes_placeholder"),
     "",
-    t("common.template.default.tests"),
-    t("common.template.default.unit_test"),
-    t("common.template.default.integration_test"),
+    t("core.branch_pattern.template.default.tests"),
+    t("core.branch_pattern.template.default.unit_test"),
+    t("core.branch_pattern.template.default.integration_test"),
     "",
-    t("common.template.default.reviewer_checklist"),
-    t("common.template.default.code_clarity"),
-    t("common.template.default.test_coverage"),
-    t("common.template.default.performance"),
+    t("core.branch_pattern.template.default.reviewer_checklist"),
+    t("core.branch_pattern.template.default.code_clarity"),
+    t("core.branch_pattern.template.default.test_coverage"),
+    t("core.branch_pattern.template.default.performance"),
   ].join("\n");
 }
 
@@ -219,7 +219,7 @@ async function selectReviewers(
   // 유효하지 않은 리뷰어가 있으면 경고 메시지 출력
   if (invalid.length > 0) {
     console.warn(
-      t("common.warning.invalid_reviewers", {
+      t("core.branch_pattern.warning.invalid_reviewers", {
         reviewers: invalid.join(", "),
       }),
     );
@@ -237,7 +237,7 @@ export async function createAutoPR(branchName: string): Promise<void> {
 
   const repoInfo = await getCurrentRepoInfo();
   if (!repoInfo) {
-    throw new Error(t("common.error.not_git_repo"));
+    throw new Error(t("core.branch_pattern.error.not_git_repo"));
   }
 
   const title = await generatePRTitle(branchName, pattern);
@@ -287,6 +287,6 @@ export async function createAutoPR(branchName: string): Promise<void> {
     }
   }
 
-  log.info(t("common.success.pr_created"));
+  log.info(t("core.branch_pattern.success.pr_created"));
   log.info(`PR URL: ${pr.html_url}`);
 }

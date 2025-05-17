@@ -1,0 +1,8 @@
+{
+  "error": {
+    "load_global_failed": "Failed to load global configuration: {{error}}",
+    "load_project_failed": "Failed to load project configuration: {{error}}",
+    "save_global_failed": "Failed to save global configuration: {{error}}",
+    "save_project_failed": "Failed to save project configuration: {{error}}"
+  }
+}
