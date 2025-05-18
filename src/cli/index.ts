@@ -15,6 +15,7 @@ import { loadConfig } from "../core/config.js";
 import { log } from "../utils/logger.js";
 import { createReviewerGroupCommand } from "./commands/reviewer-group.js";
 import { createDailyReportCommand } from "./commands/daily-report.js";
+import { createTemplateCommand } from "./commands/template.js";
 
 const program = new Command();
 
@@ -104,6 +105,9 @@ async function main() {
 
     // 새로운 reviewer-group 명령어 추가
     program.addCommand(createReviewerGroupCommand());
+
+    // 템플릿 관리 명령어 추가
+    program.addCommand(createTemplateCommand());
 
     await program.parseAsync();
   } catch (error) {

@@ -43,6 +43,13 @@ interface PRReviewResponse {
   review: string;
 }
 
+// 관련 이슈 정보 인터페이스
+export interface RelatedIssue {
+  id: number;
+  title: string;
+  url: string;
+}
+
 /**
  * API 호출을 통해 AI 기능을 제공하는 클래스
  */
@@ -55,14 +62,17 @@ export class AIFeatures {
    * PR 설명을 생성합니다.
    * @param files 변경된 파일 목록
    * @param diffContent diff 내용
-   * @param options 옵션 (템플릿 등)
+   * @param options 옵션 (템플릿, 관련 이슈 등)
    * @param language 응답 언어 (ko 또는 en, 기본값: ko)
    * @returns 생성된 PR 설명
    */
   async generatePRDescription(
     files: string[],
     diffContent: string,
-    options?: { template?: string },
+    options?: {
+      template?: string;
+      relatedIssues?: RelatedIssue[];
+    },
     language: SupportedLanguage = "ko",
   ): Promise<string> {
     try {
@@ -72,6 +82,7 @@ export class AIFeatures {
           files,
           diffContent,
           template: options?.template || "",
+          relatedIssues: options?.relatedIssues || [],
           language,
         },
       );
@@ -155,6 +166,7 @@ export class AIFeatures {
       owner: string;
       repo: string;
       pull_number: number;
+      baseBranch?: string;
     },
     language: SupportedLanguage = "ko",
   ): Promise<
@@ -205,6 +217,7 @@ export class AIFeatures {
           repo: prContext.repo,
           pullNumber: prContext.pull_number,
           diffOnly: true, // 변경된 라인만 분석
+          baseBranch: prContext.baseBranch || "main", // 기본 브랜치 정보 추가
         };
 
         // 토큰이 있는 경우에만 추가

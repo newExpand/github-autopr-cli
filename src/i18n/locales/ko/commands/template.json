@@ -1,0 +1,55 @@
+{
+  "description": "PR 템플릿 관리",
+  "subcommands": {
+    "list": "사용 가능한 모든 템플릿 목록 보기",
+    "create": "새 템플릿 생성",
+    "edit": "기존 템플릿 편집",
+    "delete": "템플릿 삭제",
+    "view": "템플릿 내용 보기"
+  },
+  "error": {
+    "directory_create_failed": "템플릿 디렉토리 생성에 실패했습니다",
+    "list_failed": "템플릿 목록 조회에 실패했습니다",
+    "read_failed": "템플릿 '{{name}}' 읽기에 실패했습니다",
+    "save_failed": "템플릿 '{{name}}' 저장에 실패했습니다",
+    "delete_failed": "템플릿 '{{name}}' 삭제에 실패했습니다",
+    "create_failed": "템플릿 '{{name}}' 생성에 실패했습니다",
+    "edit_failed": "템플릿 '{{name}}' 편집에 실패했습니다",
+    "view_failed": "템플릿 '{{name}}' 보기에 실패했습니다",
+    "template_not_found": "템플릿 '{{name}}'을(를) 찾을 수 없습니다",
+    "template_name_required": "템플릿 이름이 필요합니다"
+  },
+  "info": {
+    "directory_created": "템플릿 디렉토리를 생성했습니다: {{dir}}",
+    "no_templates": "사용 가능한 템플릿이 없습니다. 'autopr template create'로 템플릿을 생성하세요",
+    "available_templates": "사용 가능한 템플릿:",
+    "opening_editor": "에디터 열기: {{editor}}",
+    "template_content": "'{{name}}' 템플릿 내용:",
+    "no_changes": "템플릿에 변경 사항이 없습니다",
+    "delete_cancelled": "템플릿 삭제가 취소되었습니다"
+  },
+  "success": {
+    "saved": "템플릿 '{{name}}'이(가) 성공적으로 저장되었습니다",
+    "deleted": "템플릿 '{{name}}'이(가) 성공적으로 삭제되었습니다"
+  },
+  "prompts": {
+    "enter_name": "템플릿 이름 입력:",
+    "select_template": "템플릿 선택:",
+    "select_delete": "삭제할 템플릿 선택:",
+    "select_view": "볼 템플릿 선택:",
+    "confirm_delete": "정말로 템플릿 '{{name}}'을(를) 삭제하시겠습니까?"
+  },
+  "validation": {
+    "name_required": "템플릿 이름이 필요합니다"
+  },
+  "help": {
+    "examples": "예시",
+    "list": "사용 가능한 모든 템플릿 목록 보기",
+    "create": "새 템플릿 생성 (대화형)",
+    "create_named": "'feature-2'라는 이름의 템플릿 생성",
+    "edit": "템플릿 편집 (목록에서 선택)",
+    "edit_named": "'bugfix' 템플릿 편집",
+    "delete": "템플릿 삭제 (목록에서 선택)",
+    "view": "템플릿 내용 보기 (목록에서 선택)"
+  }
+} 

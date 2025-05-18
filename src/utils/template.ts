@@ -7,237 +7,149 @@ const TEMPLATE_DIR = ".github/PULL_REQUEST_TEMPLATE";
 const DEFAULT_TEMPLATES: Record<string, Record<string, string>> = {
   en: {
     feature: `## Feature Description
-What new feature did you add?
+A brief description of the new feature you're adding.
 
 ## Implementation Details
-- [ ] New Feature 1
-- [ ] New Feature 2
+Explain the key implementation details and technical decisions.
 
 ## Testing
-- [ ] Unit Tests Added
-- [ ] Integration Tests Performed
-- [ ] E2E Tests (if needed)
+Describe how this feature was tested.
 
-## Screenshots (if UI changes)
-Please attach screenshots if there are UI changes.
+## Screenshots
+If there are UI changes, include screenshots here.
 
 ## Related Issues
-- Related Issue Number: #
-
-## Checklist
-- [ ] Does the code follow conventions?
-- [ ] Were new dependencies added?
-- [ ] Are there performance impacts?
-- [ ] Is documentation needed?`,
+Related issue numbers: #`,
 
     bugfix: `## Bug Description
-What bug did you fix?
+Describe the bug that was fixed.
 
 ## Root Cause
-What was causing the bug?
+Explain what was causing the bug.
 
 ## Solution
-How did you fix it?
+Describe how you fixed the issue.
 
 ## Testing
-- [ ] Bug reproduction case added
-- [ ] Fix verified
-- [ ] Regression tests
+Explain how you tested the fix.
 
 ## Related Issues
-- Bug Report: #
-
-## Checklist
-- [ ] No impact on other features?
-- [ ] Logging or monitoring needed?
-- [ ] Performance impact considered?`,
+Bug report: #`,
 
     refactor: `## Refactoring Description
-What did you refactor?
+Describe what was refactored.
 
 ## Reason for Change
-Why was this refactoring needed?
+Explain why this refactoring was needed.
 
 ## Major Changes
-- [ ] Change 1
-- [ ] Change 2
+List the key changes made during refactoring.
 
 ## Testing
-- [ ] Existing tests pass
-- [ ] New tests added (if needed)
+Describe how you verified the refactoring doesn't break existing functionality.
 
 ## Performance Impact
-Is there any impact on performance?
-
-## Checklist
-- [ ] All existing features work correctly?
-- [ ] Code complexity reduced?
-- [ ] Maintainability improved?`,
+Note any performance impacts from this change.`,
 
     docs: `## Documentation Changes
-What documentation did you change?
+Describe what documentation was changed.
 
 ## Reason for Change
-Why was this change needed?
+Explain why these changes were needed.
 
 ## Major Changes
-- [ ] Change 1
-- [ ] Change 2
-
-## Checklist
-- [ ] Spell-checked?
-- [ ] All links work?
-- [ ] Proper formatting?`,
+List the key documentation changes.`,
 
     chore: `## Changes
-What maintenance work was performed?
+Describe what maintenance work was performed.
 
 ## Reason for Change
-Why was this change needed?
+Explain why these changes were needed.
 
 ## Scope
-- [ ] Build System
-- [ ] Dependencies
-- [ ] Configuration Files
-- [ ] Other
-
-## Checklist
-- [ ] No impact on existing features?
-- [ ] CI/CD impact considered?`,
+Indicate the scope of changes (build system, dependencies, configuration files, etc.).`,
 
     test: `## Test Changes
-What tests did you add/modify?
+Describe what tests were added or modified.
 
 ## Test Coverage
-- [ ] Unit Tests
-- [ ] Integration Tests
-- [ ] E2E Tests
+Explain what types of testing was added (unit, integration, E2E).
 
 ## Test Cases
-- [ ] Test Case 1
-- [ ] Test Case 2
-
-## Checklist
-- [ ] Test coverage improved?
-- [ ] No conflicts with existing tests?
-- [ ] Reasonable test execution time?`,
+List the key test cases that were implemented.`,
   },
   ko: {
     feature: `## 기능 설명
-어떤 새로운 기능을 추가했나요?
+추가한 새로운 기능에 대한 간략한 설명을 작성하세요.
 
 ## 구현 내용
-- [ ] 새로운 기능 1
-- [ ] 새로운 기능 2
+주요 구현 내용과 기술적 결정 사항을 설명하세요.
 
 ## 테스트
-- [ ] 단위 테스트 추가
-- [ ] 통합 테스트 수행
-- [ ] E2E 테스트 (필요한 경우)
+이 기능을 어떻게 테스트했는지 설명하세요.
 
-## 스크린샷 (UI 변경시)
-변경된 UI가 있다면 스크린샷을 첨부해주세요.
+## 스크린샷
+UI 변경사항이 있는 경우 스크린샷을 첨부하세요.
 
 ## 관련 이슈
-- 관련된 이슈 번호: #
-
-## 체크리스트
-- [ ] 코드가 컨벤션을 준수하나요?
-- [ ] 새로운 의존성이 추가되었나요?
-- [ ] 성능에 영향을 주는 변경사항인가요?
-- [ ] 문서화가 필요한 부분이 있나요?`,
+관련된 이슈 번호: #`,
 
     bugfix: `## 버그 설명
-어떤 버그를 수정했나요?
+수정한 버그에 대해 설명하세요.
 
 ## 원인
-버그의 원인은 무엇이었나요?
+버그의 원인이 무엇이었는지 설명하세요.
 
 ## 해결 방법
-어떻게 해결했나요?
+문제를 어떻게 해결했는지 설명하세요.
 
 ## 테스트
-- [ ] 버그 재현 케이스 추가
-- [ ] 수정 사항 테스트
-- [ ] 회귀 테스트
+수정 사항을 어떻게 테스트했는지 설명하세요.
 
 ## 관련 이슈
-- 버그 리포트: #
-
-## 체크리스트
-- [ ] 다른 기능에 영향을 주지 않나요?
-- [ ] 로깅이나 모니터링이 필요한가요?
-- [ ] 성능에 영향을 주는 변경사항인가요?`,
+버그 리포트: #`,
 
     refactor: `## 리팩토링 설명
-어떤 부분을 리팩토링했나요?
+어떤 부분을 리팩토링했는지 설명하세요.
 
 ## 변경 이유
-왜 이 리팩토링이 필요했나요?
+이 리팩토링이 왜 필요했는지 설명하세요.
 
 ## 주요 변경 사항
-- [ ] 변경 사항 1
-- [ ] 변경 사항 2
+리팩토링 중 이루어진 주요 변경 사항을 나열하세요.
 
 ## 테스트
-- [ ] 기존 테스트 통과 확인
-- [ ] 새로운 테스트 추가 (필요시)
+리팩토링이 기존 기능을 손상시키지 않는지 어떻게 확인했는지 설명하세요.
 
 ## 성능 영향
-성능에 미치는 영향이 있나요?
-
-## 체크리스트
-- [ ] 기존 기능이 모두 정상 동작하나요?
-- [ ] 코드 복잡도가 감소했나요?
-- [ ] 유지보수성이 향상되었나요?`,
+이 변경으로 인한 성능 영향을 설명하세요.`,
 
     docs: `## 문서 변경 사항
-어떤 문서를 변경했나요?
+어떤 문서를 변경했는지 설명하세요.
 
 ## 변경 이유
-왜 이 변경이 필요했나요?
+이 변경이 왜 필요했는지 설명하세요.
 
 ## 주요 변경 내용
-- [ ] 변경 내용 1
-- [ ] 변경 내용 2
-
-## 체크리스트
-- [ ] 맞춤법 검사를 했나요?
-- [ ] 링크가 모두 정상 작동하나요?
-- [ ] 포맷팅이 올바른가요?`,
+주요 문서 변경 사항을 나열하세요.`,
 
     chore: `## 변경 사항
-어떤 유지보수 작업을 수행했나요?
+어떤 유지보수 작업을 수행했는지 설명하세요.
 
 ## 변경 이유
-왜 이 변경이 필요했나요?
+이 변경이 왜 필요했는지 설명하세요.
 
 ## 영향 범위
-- [ ] 빌드 시스템
-- [ ] 의존성
-- [ ] 설정 파일
-- [ ] 기타
-
-## 체크리스트
-- [ ] 기존 기능에 영향이 없나요?
-- [ ] CI/CD에 영향이 있나요?`,
+변경 사항의 영향 범위를 설명하세요(빌드 시스템, 의존성, 설정 파일 등).`,
 
     test: `## 테스트 추가/수정 사항
-어떤 테스트를 추가/수정했나요?
+어떤 테스트를 추가하거나 수정했는지 설명하세요.
 
 ## 테스트 범위
-- [ ] 단위 테스트
-- [ ] 통합 테스트
-- [ ] E2E 테스트
+어떤 유형의 테스트가 추가되었는지 설명하세요(단위, 통합, E2E).
 
 ## 테스트 케이스
-- [ ] 테스트 케이스 1
-- [ ] 테스트 케이스 2
-
-## 체크리스트
-- [ ] 테스트 커버리지가 향상되었나요?
-- [ ] 기존 테스트와 충돌이 없나요?
-- [ ] 테스트 실행 시간이 적절한가요?`,
+구현된 주요 테스트 케이스를 나열하세요.`,
   },
 };
 

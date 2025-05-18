@@ -15,8 +15,12 @@
   "no": "아니오",
   "none": "없음",
   "default": "기본값",
+  "prompts": {
+    "select_base_branch": "PR 대상(target) 브랜치를 선택하세요:"
+  },
   "warning": {
-    "invalid_reviewers": "다음 리뷰어는 유효하지 않습니다: {{reviewers}}"
+    "invalid_reviewers": "다음 리뷰어는 유효하지 않습니다: {{reviewers}}",
+    "branch_list_failed": "브랜치 목록을 가져오지 못했습니다. 기본 브랜치를 사용합니다."
   },
   "error": {
     "not_git_repo": "Git 저장소가 아닙니다"

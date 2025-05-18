@@ -1,10 +1,12 @@
 {
   "description": "autopr 설정 초기화",
+  "setup": {
+    "info": "GitHub App 인증 설정 중"
+  },
   "info": {
     "branch_strategy": "브랜치 전략이 성공적으로 설정되었습니다",
     "production_branch_set": "프로덕션 브랜치 설정: {{branch}}",
     "development_branch_set": "개발 브랜치 설정: {{branch}}",
-    "release_template_set_automatically": "릴리스 PR 템플릿이 자동으로 설정되었습니다",
     "github_app_auth_success": "GitHub App 인증이 완료되었습니다. 서버를 통해 자동 인증됩니다."
   },
   "error": {

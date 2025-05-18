@@ -75,7 +75,8 @@
     "installation_verification_failed": "Failed to verify GitHub App installation",
     "installation_cancelled": "GitHub App installation was cancelled",
     "private_key_required": "GitHub App private key is required for this operation. Please run 'autopr github-app setup' to set up your private key.",
-    "unknown": "Unknown error"
+    "unknown": "Unknown error",
+    "auth_failed": "GitHub App authentication failed: {{error}}"
   },
   "installations": {
     "fetching": "Retrieving authentication information...",

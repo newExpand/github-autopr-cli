@@ -1,10 +1,12 @@
 {
   "description": "Initialize autopr configuration",
+  "setup": {
+    "info": "Setting up GitHub App authentication"
+  },
   "info": {
     "branch_strategy": "Branch strategy set up successfully",
     "production_branch_set": "Production branch set to: {{branch}}",
     "development_branch_set": "Development branch set to: {{branch}}",
-    "release_template_set_automatically": "Release PR template set automatically",
     "github_app_auth_success": "GitHub App authentication successful! Server-based authentication is set up."
   },
   "error": {

@@ -83,21 +83,10 @@ async function getDeviceCode(): Promise<DeviceCodeResponse> {
     // 서버에서 GitHub App 정보(clientId) 가져오기
     const appInfo = await aiClient.getGitHubAppInfo();
 
-    process.stdout.write(JSON.stringify(appInfo, null, 2));
-    log.debug(
-      t("core.github_app.device_flow.client_id", {
-        clientId: appInfo.clientId,
-      }),
-    );
-
     const requestBody = {
       client_id: appInfo.clientId,
       scope: "repo read:user user:email",
     };
-    log.debug(
-      t("core.github_app.device_flow.request_data"),
-      JSON.stringify(requestBody, null, 2),
-    );
 
     const response = await fetch("https://github.com/login/device/code", {
       method: "POST",
@@ -109,14 +98,6 @@ async function getDeviceCode(): Promise<DeviceCodeResponse> {
       },
       body: JSON.stringify(requestBody),
     });
-
-    // Response 객체에서 실제로 유용한 정보만 추출해서 로깅
-    // log.debug("Response status:", response.status);
-    // log.debug("Response statusText:", response.statusText);
-
-    process.stdout.write(
-      JSON.stringify(`==${response.status} ${response.statusText}==`, null, 2),
-    );
 
     // 로깅보다 응답 처리가 우선이므로 OK 체크를 먼저 함
     if (!response.ok) {
@@ -131,10 +112,7 @@ async function getDeviceCode(): Promise<DeviceCodeResponse> {
     }
 
     const data = await response.json();
-    log.debug(
-      t("core.github_app.device_flow.response_data"),
-      JSON.stringify(data, null, 2),
-    );
+
     return data as DeviceCodeResponse;
   } catch (error) {
     log.error(
@@ -319,10 +297,6 @@ export async function setupGitHubAppCredentials(): Promise<void> {
     const installationsRawData = (await installationsResponse.json()) as {
       installations?: Installation[];
     };
-    log.debug(
-      "Installations response: " +
-        JSON.stringify(installationsRawData, null, 2),
-    );
 
     // 응답 구조 처리
     const installations = installationsRawData.installations || [];

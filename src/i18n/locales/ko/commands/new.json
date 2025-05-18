@@ -1,13 +1,12 @@
 {
   "description": "새 PR 생성",
   "error": {
-    "protected_branch": "보호된 브랜치 {{branch}}에서 PR을 생성할 수 없습니다. 기능 개발은 {{development}} 브랜치에서, 릴리스는 {{production}} 브랜치에서 수행하세요.",
-    "push_failed": "브랜치를 원격 저장소에 푸시하지 못했습니다: {{error}}",
     "diff_failed": "diff 내용을 가져오지 못했습니다",
     "files_failed": "변경된 파일 목록을 가져오지 못했습니다",
     "create_failed": "PR 생성에 실패했습니다: {{error}}"
   },
   "warning": {
+    "push_failed": "브랜치를 원격 저장소에 푸시하지 못했습니다: {{error}}",
     "ai_title_failed": "AI로 PR 제목을 생성하지 못했습니다",
     "ai_description_failed": "AI로 PR 설명을 생성하지 못했습니다",
     "ai_initialization_failed": "AI 초기화에 실패했습니다",
@@ -18,7 +17,12 @@
     "line_review_failed": "라인별 코드 리뷰를 실행하지 못했습니다",
     "no_files_for_review": "리뷰할 파일이 없습니다",
     "code_review_add_failed": "PR에 코드 리뷰 코멘트를 추가하지 못했습니다",
-    "comment_add_failed": "코멘트를 추가할 수 없습니다: {{file}}:{{line}} - PR diff에서 해당 라인을 찾을 수 없습니다"
+    "comment_add_failed": "코멘트를 추가할 수 없습니다: {{file}}:{{line}} - PR diff에서 해당 라인을 찾을 수 없습니다",
+    "branch_list_failed": "브랜치 목록을 가져오지 못했습니다. 기본 브랜치를 사용합니다.",
+    "template_create_failed": "템플릿 생성에 실패했습니다. 기본 템플릿을 사용합니다.",
+    "template_list_failed": "템플릿 목록을 가져오지 못했습니다.",
+    "issue_fetch_failed": "이슈 #{{issueNumber}}을(를) 가져오지 못했습니다. 이슈가 존재하지 않거나 접근 권한이 없을 수 있습니다.",
+    "issues_list_failed": "이슈 목록을 가져오지 못했습니다. 직접 이슈 번호를 입력해주세요."
   },
   "info": {
     "creating": "PR 생성 중...",
@@ -40,7 +44,18 @@
     "running_pr_review": "PR 리뷰 실행 중...",
     "pr_review_completed": "PR 리뷰가 완료되었습니다",
     "ai_title_error": "AI 제목 생성 에러:",
-    "pr_analysis_info": "PR의 변경된 라인만 분석하여 코멘트를 생성합니다. PR에 포함되지 않은 코드에는 코멘트가 생성되지 않습니다."
+    "pr_analysis_info": "PR의 변경된 라인만 분석하여 코멘트를 생성합니다. PR에 포함되지 않은 코드에는 코멘트가 생성되지 않습니다.",
+    "creating_template": "새 템플릿 생성 중...",
+    "no_custom_templates": "사용자 정의 템플릿이 없습니다. 새로 생성합니다...",
+    "fetching_issues": "관련 이슈 정보를 가져오는 중...",
+    "issues_fetched": "{{count}}개의 이슈 정보를 성공적으로 가져왔습니다.",
+    "fetching_issues_list": "열린 이슈 목록을 가져오는 중...",
+    "issues_page": "이슈 목록 페이지 {{page}} 조회 중",
+    "operation_cancelled": "작업이 취소되었습니다.",
+    "suggested_title": "브랜치 패턴에서 제안된 제목: {{title}}",
+    "recommended": "추천",
+    "running_all_reviews": "모든 유형의 코드 리뷰를 실행합니다 (전체 코드 리뷰, 라인별 리뷰, PR 전체 분석)",
+    "adding_code_review_to_pr": "PR에 자동 코드 리뷰를 추가합니다..."
   },
   "prompts": {
     "title": "PR 제목:",
@@ -53,10 +68,30 @@
     "run_code_review": "전체 코드 리뷰를 실행하시겠습니까?",
     "run_line_by_line_review": "오타, 보안, 버그 등에 대한 라인별 코드 리뷰를 실행하시겠습니까?",
     "add_review_comments": "PR에 코드 리뷰 코멘트를 추가하시겠습니까?",
-    "run_pr_review": "PR 리뷰를 실행하시겠습니까?"
+    "run_pr_review": "PR 리뷰를 실행하시겠습니까?",
+    "run_all_code_reviews": "코드 리뷰를 실행하시겠습니까? (전체 코드 리뷰, 라인별 리뷰, PR 전체 분석 포함)",
+    "select_base_branch": "PR 대상(target) 브랜치를 선택하세요:",
+    "select_template": "PR 템플릿을 선택하세요:",
+    "use_branch_pattern_template": "브랜치 패턴에서 제안된 템플릿을 사용하시겠습니까?",
+    "custom_template_name": "사용자 정의 템플릿 이름을 입력하세요:",
+    "custom_template_action": "어떤 작업을 수행하시겠습니까?",
+    "use_existing_template": "기존 템플릿 사용하기",
+    "create_new_template": "새 템플릿 만들기",
+    "select_custom_template": "사용자 정의 템플릿을 선택하세요:",
+    "related_issues": "관련 이슈 (쉼표로 구분된 이슈 번호, 예: 123,456):",
+    "related_issues_method": "관련 이슈를 어떻게 지정하시겠습니까?",
+    "select_from_list": "열린 이슈 목록에서 선택",
+    "enter_manually": "이슈 번호 직접 입력",
+    "select_related_issues": "관련 이슈를 선택하세요 (스페이스바로 여러 개 선택 가능):",
+    "related_issues_manual": "직접 입력",
+    "no_issues_found": "열린 이슈가 없습니다. 이슈 번호를 직접 입력해주세요.",
+    "previous_page": "← 이전 페이지",
+    "next_page": "다음 페이지 →",
+    "manual_entry": "이슈 번호 직접 입력",
+    "finish_selection": "선택 완료",
+    "page_navigation": "페이지 이동:"
   },
   "success": {
-    "branch_pushed": "브랜치 {{branch}}이(가) 원격 저장소에 푸시되었습니다",
     "pr_updated": "PR #{{number}}이(가) 업데이트되었습니다",
     "cancelled": "PR 생성이 취소되었습니다",
     "code_review_added": "PR에 코드 리뷰 코멘트가 추가되었습니다"

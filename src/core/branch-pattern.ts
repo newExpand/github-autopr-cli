@@ -14,6 +14,12 @@ import { log } from "../utils/logger.js";
 import { join, dirname } from "path";
 import { homedir } from "os";
 import { readFile, writeFile, mkdir } from "fs/promises";
+import { exec } from "child_process";
+import { promisify } from "util";
+import inquirer from "inquirer";
+
+// promisify exec
+const execAsync = promisify(exec);
 
 export function matchBranchPattern(
   branchName: string,
@@ -243,11 +249,45 @@ export async function createAutoPR(branchName: string): Promise<void> {
   const title = await generatePRTitle(branchName, pattern);
   const body = await generatePRBody(pattern);
 
-  // 브랜치 전략에 따라 base 브랜치 결정
-  const baseBranch =
-    pattern.type === "release"
-      ? config.defaultBranch
-      : config.developmentBranch || config.defaultBranch;
+  // 사용 가능한 브랜치 목록 가져오기
+  let availableBranches: string[] = [];
+  try {
+    const { stdout } = await execAsync("git branch -r");
+    availableBranches = stdout
+      .split("\n")
+      .map((b: string) => b.trim().replace("origin/", ""))
+      .filter((b: string) => b && !b.includes("HEAD ->"));
+
+    // 로컬 브랜치도 추가
+    const { stdout: localBranches } = await execAsync("git branch");
+    const localBranchList = localBranches
+      .split("\n")
+      .map((b: string) => b.trim().replace("* ", ""))
+      .filter((b: string) => b && b !== branchName);
+
+    // 중복 제거하여 병합
+    availableBranches = [
+      ...new Set([...availableBranches, ...localBranchList]),
+    ];
+  } catch (error) {
+    log.warn(t("core.branch_pattern.warning.branch_list_failed"));
+    availableBranches = ["main", "master", "dev", "develop"];
+  }
+
+  // 사용자에게 대상 브랜치 선택 요청
+  const { baseBranch } = await inquirer.prompt([
+    {
+      type: "list",
+      name: "baseBranch",
+      message: t("core.branch_pattern.prompts.select_base_branch"),
+      choices: availableBranches,
+      default: availableBranches.includes("main")
+        ? "main"
+        : availableBranches.includes("master")
+          ? "master"
+          : availableBranches[0],
+    },
+  ]);
 
   const pr = await createPullRequest({
     owner: repoInfo.owner,
