@@ -11,6 +11,7 @@ import path from "path";
 import { Command } from "commander";
 import { AIFeatures } from "../../core/ai-features.js";
 import inquirer from "inquirer";
+import type { SupportedLanguage } from "../../core/ai-features.js";
 
 const execAsync = promisify(exec);
 
@@ -342,9 +343,10 @@ async function generateAIReport(
   username: string,
   date: string,
   until: string,
+  language: SupportedLanguage = "ko",
 ): Promise<string> {
   try {
-    const aiFeatures = new AIFeatures();
+    const aiFeatures = new AIFeatures(language);
 
     // 날짜 포맷
     const dateStr = date === until ? date : `${date} ~ ${until}`;
@@ -540,7 +542,7 @@ export async function dailyReportCommand(
     // AI 기능 초기화
     let aiFeatures;
     try {
-      aiFeatures = new AIFeatures();
+      aiFeatures = new AIFeatures(config.language || "ko");
       log.info(t("commands.daily_report.info.initialization_success"));
     } catch (error) {
       log.error(t("commands.daily_report.error.ai_init_failed"));
@@ -642,7 +644,14 @@ export async function dailyReportCommand(
     // AI 요약 생성 (기본적으로 항상 생성)
     let aiSummary: string | undefined;
     if (stats.totalCommits > 0) {
-      aiSummary = await generateAIReport(commits, stats, username, date, date);
+      aiSummary = await generateAIReport(
+        commits,
+        stats,
+        username,
+        date,
+        date,
+        (config.language as SupportedLanguage) || "ko",
+      );
     }
 
     switch (format) {

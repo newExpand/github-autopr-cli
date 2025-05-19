@@ -45,7 +45,9 @@
     "operation_cancelled": "Operation cancelled",
     "pr_creation_guide": "To create a pull request for your changes:",
     "run_new_command": "Run 'autopr new' to create a new pull request",
-    "initialization_success": "AI features initialized successfully"
+    "initialization_success": "AI features initialized successfully",
+    "branch_not_on_remote": "{{branch}} branch does not exist on remote. Creating it.",
+    "creating_remote_branch": "Creating remote branch: {{branch}}"
   },
   "success": {
     "files_staged": "{{count}} files staged",

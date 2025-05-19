@@ -54,8 +54,9 @@ export interface RelatedIssue {
  * API 호출을 통해 AI 기능을 제공하는 클래스
  */
 export class AIFeatures {
-  constructor() {
-    // 생성자 간소화
+  private defaultLanguage: SupportedLanguage;
+  constructor(defaultLanguage: SupportedLanguage = "ko") {
+    this.defaultLanguage = defaultLanguage;
   }
 
   /**
@@ -73,9 +74,10 @@ export class AIFeatures {
       template?: string;
       relatedIssues?: RelatedIssue[];
     },
-    language: SupportedLanguage = "ko",
+    language?: SupportedLanguage,
   ): Promise<string> {
     try {
+      const lang = language || this.defaultLanguage;
       const result = await aiClient.callAPI<PRDescriptionResponse>(
         "/ai/google/features/pr-description",
         {
@@ -83,7 +85,7 @@ export class AIFeatures {
           diffContent,
           template: options?.template || "",
           relatedIssues: options?.relatedIssues || [],
-          language,
+          language: lang,
         },
       );
 
@@ -106,16 +108,17 @@ export class AIFeatures {
     files: string[],
     diffContent: string,
     pattern: { type: string },
-    language: SupportedLanguage = "ko",
+    language?: SupportedLanguage,
   ): Promise<string> {
     try {
+      const lang = language || this.defaultLanguage;
       const result = await aiClient.callAPI<PRTitleResponse>(
         "/ai/google/features/pr-title",
         {
           files,
           diffContent,
           type: pattern.type,
-          language,
+          language: lang,
         },
       );
 
@@ -135,14 +138,15 @@ export class AIFeatures {
    */
   async reviewCode(
     files: Array<{ path: string; content: string }>,
-    language: SupportedLanguage = "ko",
+    language?: SupportedLanguage,
   ): Promise<string> {
     try {
+      const lang = language || this.defaultLanguage;
       const result = await aiClient.callAPI<CodeReviewResponse>(
         "/ai/google/features/code-review",
         {
           files,
-          language,
+          language: lang,
         },
       );
 
@@ -168,7 +172,7 @@ export class AIFeatures {
       pull_number: number;
       baseBranch?: string;
     },
-    language: SupportedLanguage = "ko",
+    language?: SupportedLanguage,
   ): Promise<
     Array<{
       file: string;
@@ -178,9 +182,10 @@ export class AIFeatures {
     }>
   > {
     try {
+      const lang = language || this.defaultLanguage;
       const requestPayload: any = {
         files,
-        language,
+        language: lang,
         analyzers: ["typo", "security", "bug"],
       };
 

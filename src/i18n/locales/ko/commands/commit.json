@@ -45,7 +45,9 @@
     "operation_cancelled": "작업이 취소되었습니다",
     "pr_creation_guide": "변경사항에 대한 PR을 생성하려면:",
     "run_new_command": "'autopr new' 명령어를 실행하여 새 PR을 생성하세요",
-    "initialization_success": "AI 기능이 성공적으로 초기화되었습니다"
+    "initialization_success": "AI 기능이 성공적으로 초기화되었습니다",
+    "branch_not_on_remote": "{{branch}} 브랜치가 원격 저장소에 존재하지 않습니다. 새로 생성합니다.",
+    "creating_remote_branch": "{{branch}} 브랜치를 원격 저장소에 생성합니다."
   },
   "success": {
     "files_staged": "{{count}}개 파일이 스테이징되었습니다",

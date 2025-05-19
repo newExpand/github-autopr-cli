@@ -33,7 +33,7 @@ async function handleConflicts(
 
   // AI 인스턴스 생성
   try {
-    ai = new AIFeatures();
+    ai = new AIFeatures(config.language || "ko");
     log.info(t("commands.merge.info.initialization_success"));
 
     log.info(t("commands.merge.conflict.ai_suggestion_start"));

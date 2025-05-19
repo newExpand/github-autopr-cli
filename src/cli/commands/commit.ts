@@ -294,7 +294,7 @@ export async function commitCommand(
     let ai: AIFeatures | null = null;
 
     try {
-      ai = new AIFeatures();
+      ai = new AIFeatures(config.language || "ko");
       log.info(t("commands.commit.info.initialization_success"));
     } catch (error) {
       ai = null;
@@ -354,7 +354,7 @@ export async function commitCommand(
 
       // AI 인스턴스가 없으면 새로 생성
       if (!ai) {
-        ai = new AIFeatures();
+        ai = new AIFeatures(config.language || "ko");
       }
 
       commitMessage = await ai.improveCommitMessage(

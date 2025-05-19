@@ -92,10 +92,6 @@ async function runCodeReviewAndAddComments(params: {
   ai: AIFeatures;
   shouldRunOverallReview: boolean;
   shouldRunLineByLineReview: boolean;
-  shouldRunPRReview?: boolean; // PR 리뷰 실행 여부
-  prTitle?: string; // PR 제목
-  prDescription?: string; // PR 설명
-  diffContent?: string; // PR diff 내용
   base_branch?: string;
   base?: string;
 }): Promise<void> {
@@ -110,7 +106,6 @@ async function runCodeReviewAndAddComments(params: {
     const reviewTasks: Promise<any>[] = [];
     const reviewResults: {
       overallReview: string;
-      prReview: string;
       lineComments: Array<{
         file: string;
         line: number;
@@ -119,43 +114,8 @@ async function runCodeReviewAndAddComments(params: {
       }>;
     } = {
       overallReview: "",
-      prReview: "",
       lineComments: [],
     };
-
-    // PR 리뷰 실행 준비
-    if (params.shouldRunPRReview && params.prTitle && params.diffContent) {
-      log.info(t("commands.new.info.running_pr_review"));
-
-      const prReviewTask = (async () => {
-        try {
-          // PR 컨텍스트 구성
-          const prContext = {
-            prNumber: params.pull_number,
-            title: params.prTitle as string,
-            changedFiles: params.files.map((file) => ({
-              path: file.path,
-              content: file.content,
-            })),
-            diffContent: params.diffContent as string,
-            // 선택적 GitHub API 연동 정보
-            repoOwner: params.owner,
-            repoName: params.repo,
-          };
-
-          reviewResults.prReview = await params.ai.reviewPR(prContext);
-          log.info(t("commands.new.info.pr_review_completed"));
-        } catch (error) {
-          // 오류 메시지를 더 자세하게 출력
-          log.warn(
-            t("commands.new.warning.code_review_failed"),
-            JSON.stringify(error, null, 2),
-          );
-        }
-      })();
-
-      reviewTasks.push(prReviewTask);
-    }
 
     // 전체 코드 리뷰 실행 준비
     if (params.shouldRunOverallReview) {
@@ -214,11 +174,7 @@ async function runCodeReviewAndAddComments(params: {
     await Promise.all(reviewTasks);
 
     // 코드 리뷰, PR 리뷰, 라인별 코멘트가 있는 경우에만 PR 리뷰 생성
-    if (
-      reviewResults.overallReview ||
-      reviewResults.prReview ||
-      reviewResults.lineComments.length > 0
-    ) {
+    if (reviewResults.overallReview || reviewResults.lineComments.length > 0) {
       log.info(t("commands.new.info.adding_code_review"));
 
       // 리뷰 코멘트 준비
@@ -295,11 +251,6 @@ async function runCodeReviewAndAddComments(params: {
       try {
         let finalReviewBody = "";
 
-        // PR 리뷰가 있으면 추가
-        if (reviewResults.prReview) {
-          finalReviewBody += `## PR 리뷰\n\n${reviewResults.prReview}\n\n`;
-        }
-
         // 코드 리뷰가 있으면 추가
         if (reviewResults.overallReview) {
           finalReviewBody += `## 코드 리뷰\n\n${reviewResults.overallReview}`;
@@ -331,6 +282,161 @@ async function runCodeReviewAndAddComments(params: {
   }
 }
 
+// 템플릿 제안 및 선택 개선 함수 (루트로 이동)
+async function selectTemplateImproved(
+  pattern: BranchPattern | undefined,
+  t: any,
+  log: any,
+): Promise<string> {
+  // 가능한 모든 템플릿 가져오기
+  const customTemplates = await getAvailableTemplates().catch(() => []);
+  // 기본 템플릿 목록
+  const standardTemplates = [
+    "feature",
+    "bugfix",
+    "refactor",
+    "docs",
+    "chore",
+    "test",
+  ];
+  // 추천 템플릿 (패턴 매칭에서 가져옴)
+  let recommendedTemplate = pattern?.type || "feature";
+  if (pattern?.template) {
+    recommendedTemplate = pattern.template;
+  }
+  // 템플릿 옵션 구성 (타입을 any로 설정하여 다양한 형태를 허용)
+  const templateChoices: any[] = standardTemplates.map((template) => ({
+    name:
+      template === recommendedTemplate
+        ? `${template} (${t("commands.new.info.recommended")})`
+        : template,
+    value: template,
+  }));
+  // 사용자 정의 템플릿 추가
+  if (customTemplates.length > 0) {
+    // inquirer의 Separator로 구분선 추가
+    templateChoices.push(
+      new inquirer.Separator("---- 사용자 정의 템플릿 ----"),
+    );
+    // 사용자 정의 템플릿 추가
+    customTemplates.forEach((template) => {
+      templateChoices.push({
+        name:
+          template === recommendedTemplate
+            ? `${template} (${t("commands.new.info.recommended")})`
+            : template,
+        value: template,
+      });
+    });
+  }
+  // 새 템플릿 생성 옵션 추가
+  templateChoices.push(new inquirer.Separator("----------------"));
+  templateChoices.push({
+    name: t("commands.new.prompts.create_new_template"),
+    value: "custom",
+  });
+  // 템플릿 선택
+  const { template } = await inquirer.prompt([
+    {
+      type: "list",
+      name: "template",
+      message: t("commands.new.prompts.select_template"),
+      choices: templateChoices,
+      default: recommendedTemplate,
+      pageSize: 15,
+    },
+  ]);
+  if (template === "custom") {
+    return await handleCustomTemplateSelection(t, log);
+  }
+  return template;
+}
+
+// 사용자 정의 템플릿 처리 함수 (루트로 이동)
+async function handleCustomTemplateSelection(
+  t: any,
+  log: any,
+): Promise<string> {
+  try {
+    // 사용자 정의 템플릿 목록 가져오기
+    const customTemplates = await getAvailableTemplates();
+    if (customTemplates.length > 0) {
+      // 템플릿 선택 또는 새 템플릿 만들기 옵션 제공
+      const { action } = await inquirer.prompt([
+        {
+          type: "list",
+          name: "action",
+          message: t("commands.new.prompts.custom_template_action"),
+          choices: [
+            {
+              name: t("commands.new.prompts.use_existing_template"),
+              value: "use",
+            },
+            {
+              name: t("commands.new.prompts.create_new_template"),
+              value: "create",
+            },
+          ],
+        },
+      ]);
+      if (action === "use") {
+        // 기존 템플릿 선택
+        const { template } = await inquirer.prompt([
+          {
+            type: "list",
+            name: "template",
+            message: t("commands.new.prompts.select_custom_template"),
+            choices: customTemplates,
+          },
+        ]);
+        return template;
+      }
+    }
+    // 새 템플릿 생성
+    const { newTemplate } = await inquirer.prompt([
+      {
+        type: "input",
+        name: "newTemplate",
+        message: t("commands.new.prompts.custom_template_name"),
+        validate: (value: string) => value.length > 0,
+      },
+    ]);
+    // 에디터로 템플릿 생성
+    log.info(t("commands.new.info.creating_template"));
+    // 템플릿 생성 프로세스 실행
+    const templateProcess = spawn(
+      "autopr",
+      ["template", "create", newTemplate],
+      {
+        stdio: "inherit",
+        shell: true,
+      },
+    );
+    return new Promise((resolve) => {
+      templateProcess.on("close", (code) => {
+        if (code === 0) {
+          resolve(newTemplate);
+        } else {
+          log.warn(t("commands.new.warning.template_create_failed"));
+          resolve("feature"); // 실패 시 기본 템플릿 사용
+        }
+      });
+    });
+  } catch (error) {
+    log.warn(t("commands.new.warning.template_list_failed"));
+    // 사용자 정의 템플릿 이름 입력 받기 (기존 방식)
+    const { customTemplate } = await inquirer.prompt([
+      {
+        type: "input",
+        name: "customTemplate",
+        message: t("commands.new.prompts.custom_template_name"),
+        validate: (value: string) => value.length > 0,
+      },
+    ]);
+    return customTemplate;
+  }
+}
+
 export async function newCommand(): Promise<void> {
   try {
     const config = await loadConfig();
@@ -338,104 +444,22 @@ export async function newCommand(): Promise<void> {
       log.error(t("common.error.github_token"));
       process.exit(1);
     }
-
     const repoInfo = await getCurrentRepoInfo();
     if (!repoInfo) {
       log.error(t("common.error.not_git_repo"));
       process.exit(1);
     }
-
     // 브랜치 패턴 매칭 (참고용 제안으로만 사용)
-    const pattern = await findMatchingPattern(repoInfo.currentBranch);
-
+    const foundPattern = await findMatchingPattern(repoInfo.currentBranch);
+    const pattern: BranchPattern | undefined =
+      foundPattern === null ? undefined : foundPattern;
     let defaultTitle = repoInfo.currentBranch;
     let defaultBody = "";
     let generatedTitle = "";
     let selectedTemplate = "";
 
-    // 템플릿 제안 및 선택 개선
-    async function selectTemplateImproved(): Promise<string> {
-      // 가능한 모든 템플릿 가져오기
-      const customTemplates = await getAvailableTemplates().catch(() => []);
-
-      // 기본 템플릿 목록
-      const standardTemplates = [
-        "feature",
-        "bugfix",
-        "refactor",
-        "docs",
-        "chore",
-        "test",
-      ];
-
-      // 추천 템플릿 (패턴 매칭에서 가져옴)
-      let recommendedTemplate = pattern?.type || "feature";
-      if (pattern?.template) {
-        recommendedTemplate = pattern.template;
-      }
-
-      // 템플릿 옵션 구성 (타입을 any로 설정하여 다양한 형태를 허용)
-      const templateChoices: any[] = standardTemplates.map((template) => ({
-        name:
-          template === recommendedTemplate
-            ? `${template} (${t("commands.new.info.recommended")})`
-            : template,
-        value: template,
-      }));
-
-      // 사용자 정의 템플릿 추가
-      if (customTemplates.length > 0) {
-        // inquirer의 Separator로 구분선 추가
-        templateChoices.push(
-          new inquirer.Separator("---- 사용자 정의 템플릿 ----"),
-        );
-
-        // 사용자 정의 템플릿 추가
-        customTemplates.forEach((template) => {
-          templateChoices.push({
-            name:
-              template === recommendedTemplate
-                ? `${template} (${t("commands.new.info.recommended")})`
-                : template,
-            value: template,
-          });
-        });
-      }
-
-      // 새 템플릿 생성 옵션 추가
-      templateChoices.push(new inquirer.Separator("----------------"));
-      templateChoices.push({
-        name: t("commands.new.prompts.create_new_template"),
-        value: "custom",
-      });
-
-      // 템플릿 선택
-      const { template } = await inquirer.prompt([
-        {
-          type: "list",
-          name: "template",
-          message: t("commands.new.prompts.select_template"),
-          choices: templateChoices,
-          default: recommendedTemplate,
-          pageSize: 15,
-        },
-      ]);
-
-      if (template === "custom") {
-        return await handleCustomTemplateSelection();
-      }
-
-      return template;
-    }
-
-    // 브랜치 패턴에서 제목 제안 가져오기
-    if (pattern) {
-      defaultTitle = await generatePRTitle(repoInfo.currentBranch, pattern);
-      log.info(t("commands.new.info.suggested_title", { title: defaultTitle }));
-    }
-
-    // 템플릿 선택
-    selectedTemplate = await selectTemplateImproved();
+    // selectTemplateImproved 함수 호출 시 인자 전달
+    selectedTemplate = await selectTemplateImproved(pattern, t, log);
 
     // 선택된 템플릿으로 PR 본문 생성
     if (pattern && selectedTemplate) {
@@ -456,97 +480,7 @@ export async function newCommand(): Promise<void> {
       defaultBody = await generatePRBody(dummyPattern);
     }
 
-    // 사용자 정의 템플릿 처리 함수
-    async function handleCustomTemplateSelection(): Promise<string> {
-      try {
-        // 사용자 정의 템플릿 목록 가져오기
-        const customTemplates = await getAvailableTemplates();
-
-        if (customTemplates.length > 0) {
-          // 템플릿 선택 또는 새 템플릿 만들기 옵션 제공
-          const { action } = await inquirer.prompt([
-            {
-              type: "list",
-              name: "action",
-              message: t("commands.new.prompts.custom_template_action"),
-              choices: [
-                {
-                  name: t("commands.new.prompts.use_existing_template"),
-                  value: "use",
-                },
-                {
-                  name: t("commands.new.prompts.create_new_template"),
-                  value: "create",
-                },
-              ],
-            },
-          ]);
-
-          if (action === "use") {
-            // 기존 템플릿 선택
-            const { template } = await inquirer.prompt([
-              {
-                type: "list",
-                name: "template",
-                message: t("commands.new.prompts.select_custom_template"),
-                choices: customTemplates,
-              },
-            ]);
-            return template;
-          }
-        }
-
-        // 새 템플릿 생성
-        const { newTemplate } = await inquirer.prompt([
-          {
-            type: "input",
-            name: "newTemplate",
-            message: t("commands.new.prompts.custom_template_name"),
-            validate: (value: string) => value.length > 0,
-          },
-        ]);
-
-        // 에디터로 템플릿 생성
-        log.info(t("commands.new.info.creating_template"));
-
-        // 템플릿 생성 프로세스 실행
-        const templateProcess = spawn(
-          "autopr",
-          ["template", "create", newTemplate],
-          {
-            stdio: "inherit",
-            shell: true,
-          },
-        );
-
-        return new Promise((resolve) => {
-          templateProcess.on("close", (code) => {
-            if (code === 0) {
-              resolve(newTemplate);
-            } else {
-              log.warn(t("commands.new.warning.template_create_failed"));
-              resolve("feature"); // 실패 시 기본 템플릿 사용
-            }
-          });
-        });
-      } catch (error) {
-        log.warn(t("commands.new.warning.template_list_failed"));
-
-        // 사용자 정의 템플릿 이름 입력 받기 (기존 방식)
-        const { customTemplate } = await inquirer.prompt([
-          {
-            type: "input",
-            name: "customTemplate",
-            message: t("commands.new.prompts.custom_template_name"),
-            validate: (value: string) => value.length > 0,
-          },
-        ]);
-
-        return customTemplate;
-      }
-    }
-
-    // 사용 가능한 브랜치 목록 가져오기
+    // 사용자에게 대상 브랜치 선택 요청
     let availableBranches: string[] = [];
     try {
       const { stdout } = await execAsync("git branch -r");
@@ -609,7 +543,7 @@ export async function newCommand(): Promise<void> {
         let currentPage = 1;
         let hasMorePages = true;
         const perPage = 10; // 한 번에 표시할 이슈 수 줄임
-        let selectedIssuesSet = new Set<string>();
+        const selectedIssuesSet = new Set<string>();
 
         // 페이징 처리하며 이슈 선택
         while (hasMorePages) {
@@ -773,24 +707,10 @@ export async function newCommand(): Promise<void> {
               }
             });
           } else {
-            // 이슈가 없는 경우
+            // 열린 이슈가 없으면 입력 프롬프트 없이 바로 빈 배열 처리
             if (currentPage === 1) {
               log.info(t("commands.new.prompts.no_issues_found"));
-              const { manualIssues } = await inquirer.prompt([
-                {
-                  type: "input",
-                  name: "manualIssues",
-                  message: t("commands.new.prompts.related_issues"),
-                  default: "",
-                  filter: (value: string) =>
-                    value
-                      .split(",")
-                      .map((issue) => issue.trim().replace("#", ""))
-                      .filter(Boolean),
-                },
-              ]);
-
-              relatedIssues = manualIssues;
+              relatedIssues = [];
             }
             hasMorePages = false;
           }
@@ -872,7 +792,7 @@ export async function newCommand(): Promise<void> {
 
     // AI 인스턴스 생성
     try {
-      ai = new AIFeatures();
+      ai = new AIFeatures(config.language);
       log.info(t("commands.new.info.ai_initialized"));
 
       // AI로 PR 제목 생성
@@ -893,14 +813,15 @@ export async function newCommand(): Promise<void> {
 
       log.info(t("commands.new.info.generating_description"));
       // 변경 시작: AI에게 템플릿과 함께 관련 이슈 정보도 전달
-      generatedDescription = await ai.generatePRDescription(
-        changedFiles,
-        diffContent,
-        {
-          template: defaultBody,
-          relatedIssues: relatedIssuesData,
-        },
-      );
+      const fileContents = await getFileContents(changedFiles);
+      generatedDescription = await ai.reviewPR({
+        prNumber: 0, // 실제 PR 생성 전이므로 0 또는 임시값
+        title: defaultTitle,
+        changedFiles: fileContents,
+        diffContent: diffContent,
+        repoOwner: repoInfo.owner,
+        repoName: repoInfo.repo,
+      });
       // 변경 끝
 
       // AI가 생성한 설명 표시
@@ -1112,10 +1033,6 @@ ${finalBody}
                 ai,
                 shouldRunOverallReview: shouldRunCodeReview,
                 shouldRunLineByLineReview: shouldRunLineByLineReview,
-                shouldRunPRReview: shouldRunPRReview,
-                prTitle: answers.title,
-                prDescription: finalBody,
-                diffContent: diffContent,
                 base_branch: baseBranch,
               });
             } else {
@@ -1175,10 +1092,6 @@ ${finalBody}
             ai,
             shouldRunOverallReview: shouldRunCodeReview,
             shouldRunLineByLineReview: shouldRunLineByLineReview,
-            shouldRunPRReview: shouldRunPRReview,
-            prTitle: answers.title,
-            prDescription: finalBody,
-            diffContent: diffContent,
             base_branch: baseBranch,
           });
         } else {
