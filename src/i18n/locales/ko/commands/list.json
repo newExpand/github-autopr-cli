@@ -46,6 +46,10 @@
     "action": "이 PR로 무엇을 하시겠습니까?"
   },
   "success": {
-    "cancelled": "작업이 취소되었습니다"
+    "cancelled": "작업이 취소되었습니다",
+    "opened": "PR이 브라우저에서 열렸습니다"
+  },
+  "error": {
+    "browser_open_failed": "브라우저 열기 실패: {{error}}"
   }
 }

@@ -46,6 +46,10 @@
     "action": "What would you like to do with this PR?"
   },
   "success": {
-    "cancelled": "Operation cancelled"
+    "cancelled": "Operation cancelled",
+    "opened": "PR opened in browser"
+  },
+  "error": {
+    "browser_open_failed": "Failed to open browser: {{error}}"
   }
 }

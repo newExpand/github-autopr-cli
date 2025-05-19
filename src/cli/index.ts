@@ -4,7 +4,6 @@ import { initializeI18n, t } from "../i18n/index.js";
 import { initCommand } from "./commands/init.js";
 import { newCommand } from "./commands/new.js";
 import { listCommand } from "./commands/list.js";
-import { reviewCommand } from "./commands/review.js";
 import { updateCommand } from "./commands/update.js";
 import { mergeCommand } from "./commands/merge.js";
 import { reopenCommand } from "./commands/reopen.js";
@@ -44,11 +43,6 @@ async function main() {
       .command("list")
       .description(t("commands.list.description"))
       .action(listCommand);
-
-    program
-      .command("review <pr-number>")
-      .description(t("commands.review.description"))
-      .action(reviewCommand);
 
     program
       .command("update <pr-number>")

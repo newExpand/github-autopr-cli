@@ -72,15 +72,6 @@ autopr new
 # List PRs (with interactive selection option)
 autopr list
 
-# Review PR
-autopr review <pr-number>
-# Available review actions:
-# - View PR content
-# - Run AI code review
-# - Approve/Request changes/Comment
-# - Checkout branch
-# - Open PR in GitHub
-
 # Update PR
 autopr update <pr-number>
 # Updatable items:
