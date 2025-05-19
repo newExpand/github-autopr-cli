@@ -40,21 +40,16 @@ function loadJsonFile(filePath: string) {
 
 // 로케일 디렉토리 경로 찾기
 function findLocalesPath(): string | null {
-  const possiblePaths = [
-    join(__dirname, "locales"), // src/i18n/locales 또는 dist/i18n/locales
-    join(dirname(__dirname), "i18n", "locales"), // dist/i18n/locales (다른 구조)
-    join(process.cwd(), "dist", "i18n", "locales"), // 현재 작업 디렉토리 기준
-    join(dirname(dirname(__dirname)), "i18n", "locales"), // 전역 설치 환경
-    join(dirname(dirname(dirname(__dirname))), "dist", "i18n", "locales"), // npm 전역 설치
-  ];
-
-  for (const path of possiblePaths) {
-    if (existsSync(path)) {
-      console.log(`Found locales at: ${path}`);
-      return path;
-    }
+  // 빌드 후 구조: dist/i18n/locales 또는 dist/locales
+  const localesPath = join(__dirname, "locales");
+  if (existsSync(localesPath)) {
+    return localesPath;
   }
-
+  // 혹시 모를 구조 대응 (dist/i18n/locales)
+  const altPath = join(__dirname, "i18n", "locales");
+  if (existsSync(altPath)) {
+    return altPath;
+  }
   console.warn("Warning: Could not find locales directory.");
   return null;
 }

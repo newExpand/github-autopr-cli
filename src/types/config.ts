@@ -30,10 +30,10 @@ export type BranchPattern = z.infer<typeof BranchPatternSchema>;
 // GitHub App 설정 스키마
 export const GitHubAppConfigSchema = z.object({
   appId: z.string(),
-  clientId: z.string().optional(),
+  clientId: z.string(),
+  installationId: z.number(),
   clientSecret: z.string().optional(),
   webhookSecret: z.string().optional(),
-  installationId: z.number().optional(),
 });
 
 export type GitHubAppConfig = z.infer<typeof GitHubAppConfigSchema>;
@@ -43,7 +43,7 @@ export const GlobalConfigSchema = z.object({
   language: z.enum(supportedLanguages).default("en"),
 
   // GitHub App 설정
-  githubApp: GitHubAppConfigSchema.optional(),
+  githubApp: GitHubAppConfigSchema,
 });
 
 export const ProjectConfigSchema = z.object({

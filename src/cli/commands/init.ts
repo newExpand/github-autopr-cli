@@ -4,14 +4,29 @@ import {
   updateConfig,
   loadGlobalConfig,
   loadProjectConfig,
+  DEFAULT_PROJECT_CONFIG,
 } from "../../core/config.js";
 import { setupGitHubAppCredentials } from "../../core/github-app.js";
 import { log } from "../../utils/logger.js";
+import { existsSync, renameSync } from "fs";
+import { writeFile } from "fs/promises";
 
 import { Config } from "../../types/config.js";
 
 export async function initCommand(): Promise<void> {
   try {
+    // 오버라이드: 기존 .autopr.json 파일이 있으면 백업 후 새로 생성
+    const PROJECT_CONFIG_FILE = ".autopr.json";
+    if (existsSync(PROJECT_CONFIG_FILE)) {
+      const backupFile = PROJECT_CONFIG_FILE + ".bak";
+      renameSync(PROJECT_CONFIG_FILE, backupFile);
+      await writeFile(
+        PROJECT_CONFIG_FILE,
+        JSON.stringify(DEFAULT_PROJECT_CONFIG, null, 2),
+      );
+      log.info(".autopr.json 파일이 백업되고, 새로 초기화되었습니다.");
+    }
+
     // 기존 설정 로드
     const globalConfig = await loadGlobalConfig();
     const projectConfig = await loadProjectConfig();

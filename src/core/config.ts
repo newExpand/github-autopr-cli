@@ -1,6 +1,8 @@
 import { homedir } from "os";
 import { join } from "path";
 import { readFile, writeFile, mkdir } from "fs/promises";
+import { existsSync, renameSync } from "fs";
+import { log } from "../utils/logger.js";
 import { t } from "../i18n/index.js";
 import {
   Config,
@@ -18,9 +20,14 @@ const PROJECT_CONFIG_FILE = ".autopr.json";
 
 const DEFAULT_GLOBAL_CONFIG: GlobalConfig = {
   language: "en",
+  githubApp: {
+    appId: "",
+    clientId: "",
+    installationId: 0,
+  },
 };
 
-const DEFAULT_PROJECT_CONFIG: ProjectConfig = {
+export const DEFAULT_PROJECT_CONFIG: ProjectConfig = {
   defaultReviewers: [],
   autoPrEnabled: true,
   defaultLabels: [],
@@ -99,6 +106,8 @@ export async function loadGlobalConfig(): Promise<GlobalConfig> {
     if ((error as NodeJS.ErrnoException).code === "ENOENT") {
       return DEFAULT_GLOBAL_CONFIG;
     }
+    log.error(t("core.config.global_invalid_notice"));
+    process.exit(1);
     throw new Error(
       t("core.config.error.load_global_failed", { error: String(error) }),
     );
@@ -119,6 +128,16 @@ export async function loadProjectConfig(): Promise<ProjectConfig> {
     return ProjectConfigSchema.parse(config);
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+      return DEFAULT_PROJECT_CONFIG;
+    }
+    if (existsSync(PROJECT_CONFIG_FILE)) {
+      const backupFile = PROJECT_CONFIG_FILE + ".bak";
+      renameSync(PROJECT_CONFIG_FILE, backupFile);
+      await writeFile(
+        PROJECT_CONFIG_FILE,
+        JSON.stringify(DEFAULT_PROJECT_CONFIG, null, 2),
+      );
+      log.info(t("core.config.auto_override_notice"));
       return DEFAULT_PROJECT_CONFIG;
     }
     throw new Error(
