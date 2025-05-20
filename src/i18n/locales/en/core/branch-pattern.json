@@ -18,15 +18,8 @@
   "prompts": {
     "select_base_branch": "Select target branch for PR:"
   },
-  "warning": {
-    "invalid_reviewers": "The following reviewers are invalid: {{reviewers}}",
-    "branch_list_failed": "Failed to get branch list. Using default branches."
-  },
   "error": {
     "not_git_repo": "Not a git repository"
-  },
-  "success": {
-    "pr_created": "Pull request created successfully"
   },
   "template": {
     "default": {

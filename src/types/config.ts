@@ -50,7 +50,6 @@ export const ProjectConfigSchema = z.object({
   owner: z.string().optional(),
   repo: z.string().optional(),
   defaultReviewers: z.array(z.string()).default([]),
-  autoPrEnabled: z.boolean().default(true),
   defaultLabels: z.array(z.string()).default([]),
   reviewerGroups: z.array(ReviewerGroupSchema).default([]),
   filePatterns: z.array(FilePatternSchema).default([]),

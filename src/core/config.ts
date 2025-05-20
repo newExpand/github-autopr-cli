@@ -29,7 +29,6 @@ const DEFAULT_GLOBAL_CONFIG: GlobalConfig = {
 
 export const DEFAULT_PROJECT_CONFIG: ProjectConfig = {
   defaultReviewers: [],
-  autoPrEnabled: true,
   defaultLabels: [],
   reviewerGroups: [],
   filePatterns: [],

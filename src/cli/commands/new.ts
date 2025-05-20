@@ -811,24 +811,30 @@ export async function newCommand(): Promise<void> {
         log.debug(t("commands.new.info.ai_title_error"), error);
       }
 
+      // PR 설명 생성은 PR 생성 전에 수행 (원래 방식으로 복원)
       log.info(t("commands.new.info.generating_description"));
-      // 변경 시작: AI에게 템플릿과 함께 관련 이슈 정보도 전달
+      // AI에게 템플릿과 함께 관련 이슈 정보도 전달
       const fileContents = await getFileContents(changedFiles);
-      generatedDescription = await ai.reviewPR({
-        prNumber: 0, // 실제 PR 생성 전이므로 0 또는 임시값
-        title: defaultTitle,
-        changedFiles: fileContents,
-        diffContent: diffContent,
-        repoOwner: repoInfo.owner,
-        repoName: repoInfo.repo,
-      });
-      // 변경 끝
+      try {
+        generatedDescription = await ai.reviewPR({
+          prNumber: 0, // 실제 PR 생성 전이므로 0 또는 임시값
+          title: defaultTitle,
+          changedFiles: fileContents,
+          diffContent: diffContent,
+          repoOwner: repoInfo.owner,
+          repoName: repoInfo.repo,
+        });
 
-      // AI가 생성한 설명 표시
-      log.section(t("commands.new.info.generated_description"));
-      log.section(t("commands.new.ui.section_divider"));
-      log.verbose(generatedDescription);
-      log.section(t("commands.new.ui.section_divider"));
+        // AI가 생성한 설명 표시
+        if (generatedDescription) {
+          log.section(t("commands.new.info.generated_description"));
+          log.section(t("commands.new.ui.section_divider"));
+          log.verbose(generatedDescription);
+          log.section(t("commands.new.ui.section_divider"));
+        }
+      } catch (error) {
+        log.warn(t("commands.new.warning.ai_description_failed"), error);
+      }
     } catch (error) {
       log.warn(t("commands.new.warning.ai_initialization_failed"), error);
       ai = null;
@@ -1018,7 +1024,34 @@ ${finalBody}
           );
           log.info(`PR URL: ${existingPR.html_url}`);
 
-          // 기존 PR에 코드 리뷰 추가
+          // 브라우저에서 열기 옵션 추가
+          const { openBrowser } = await inquirer.prompt([
+            {
+              type: "confirm",
+              name: "openBrowser",
+              message: t("commands.new.prompts.open_browser"),
+              default: true,
+            },
+          ]);
+
+          if (openBrowser) {
+            log.info(t("commands.new.info.opening_browser"));
+            // 플랫폼에 따라 적절한 명령어 실행
+            const command =
+              process.platform === "win32"
+                ? `start ${existingPR.html_url}`
+                : process.platform === "darwin"
+                  ? `open ${existingPR.html_url}`
+                  : `xdg-open ${existingPR.html_url}`;
+
+            try {
+              await execAsync(command);
+            } catch (error) {
+              log.warn(t("commands.new.warning.browser_open_failed"));
+            }
+          }
+
+          // 기존 PR에 코드 리뷰 추가 - PR 번호 활용 로직 유지
           if (ai && runCodeReview) {
             const fileContents = await getFileContents(changedFiles);
 
@@ -1077,7 +1110,34 @@ ${finalBody}
       log.info(t("common.success.pr_created"));
       log.info(`PR URL: ${pr.html_url}`);
 
-      // PR이 생성된 후 코드 리뷰를 실행
+      // 브라우저에서 열기 옵션 추가
+      const { openBrowser } = await inquirer.prompt([
+        {
+          type: "confirm",
+          name: "openBrowser",
+          message: t("commands.new.prompts.open_browser"),
+          default: true,
+        },
+      ]);
+
+      if (openBrowser) {
+        log.info(t("commands.new.info.opening_browser"));
+        // 플랫폼에 따라 적절한 명령어 실행
+        const command =
+          process.platform === "win32"
+            ? `start ${pr.html_url}`
+            : process.platform === "darwin"
+              ? `open ${pr.html_url}`
+              : `xdg-open ${pr.html_url}`;
+
+        try {
+          await execAsync(command);
+        } catch (error) {
+          log.warn(t("commands.new.warning.browser_open_failed"));
+        }
+      }
+
+      // PR이 생성된 후 코드 리뷰를 실행 - PR 번호 활용 로직 유지
       if (ai && runCodeReview) {
         const fileContents = await getFileContents(changedFiles);
 
