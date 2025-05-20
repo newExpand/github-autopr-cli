@@ -27,12 +27,12 @@ interface APIResponse<T = any> {
 export class AIClient {
   private baseUrl: string;
 
-  // constructor(baseUrl: string = "https://api.newextend.com/api") {
-  //   this.baseUrl = baseUrl;
-  // }
-  constructor(baseUrl: string = "http://localhost:4000/api") {
+  constructor(baseUrl: string = "https://api.newextend.com/api") {
     this.baseUrl = baseUrl;
   }
+  // constructor(baseUrl: string = "http://localhost:4000/api") {
+  //   this.baseUrl = baseUrl;
+  // }
 
   /**
    * API 엔드포인트를 호출합니다.
