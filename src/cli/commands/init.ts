@@ -10,9 +10,7 @@ import { setupGitHubAppCredentials } from "../../core/github-app.js";
 import { setupOAuthCredentials } from "../../core/oauth.js";
 import { log } from "../../utils/logger.js";
 import { existsSync, renameSync } from "fs";
-import { writeFile } from "fs/promises";
-
-import { Config } from "../../types/config.js";
+import { writeFile, appendFile, readFile } from "fs/promises";
 
 export async function initCommand(): Promise<void> {
   try {
@@ -128,11 +126,29 @@ export async function initCommand(): Promise<void> {
     ]);
 
     try {
-      // 설정 저장
+      // 설정 저장 (githubApp은 이미 저장됨)
       await updateConfig({
         ...globalConfig,
-        defaultReviewers: projectAnswers.defaultReviewers,
+        ...projectAnswers,
       });
+
+      // .autopr.json을 .gitignore에 추가
+      const gitignorePath = ".gitignore";
+      let shouldAppend = true;
+      if (existsSync(gitignorePath)) {
+        const gitignoreContent = (await readFile(gitignorePath, "utf-8")) || "";
+        if (
+          gitignoreContent
+            .split("\n")
+            .some((line: any) => line.trim() === ".autopr.json")
+        ) {
+          shouldAppend = false;
+        }
+      }
+      if (shouldAppend) {
+        await appendFile(gitignorePath, "\n.autopr.json\n");
+        log.info(".autopr.json이 .gitignore에 추가되었습니다.");
+      }
 
       log.info(t("common.success.init"));
     } catch (error) {

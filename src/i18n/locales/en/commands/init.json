@@ -11,7 +11,8 @@
     "oauth_auth_success": "GitHub user authentication completed successfully."
   },
   "error": {
-    "invalid_token": "Invalid GitHub token"
+    "invalid_token": "Invalid GitHub token",
+    "auth_failed": "GitHub App authentication failed: {{error}}"
   },
   "prompts": {
     "update_token": "A GitHub token is already configured. Update it?",

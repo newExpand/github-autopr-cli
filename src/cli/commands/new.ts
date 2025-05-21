@@ -929,6 +929,9 @@ export async function newCommand(): Promise<void> {
       repo: repoInfo.repo,
       head: `${repoInfo.owner}:${headBranch}`,
       state: "open",
+      headers: {
+        "X-GitHub-Api-Version": "2022-11-28",
+      },
     });
 
     // PR 본문 설정 (AI 생성)

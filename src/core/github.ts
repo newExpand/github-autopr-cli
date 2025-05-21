@@ -41,24 +41,30 @@ export async function getOctokit(): Promise<Octokit> {
     // 설정 로드
     const config = await loadConfig();
 
-    // GitHub App 설정이 있으면 시도
+    // GitHub App 설정이 있으면 시도 (이제 project config에서 읽음)
     if (config.githubApp && config.githubApp.installationId) {
       try {
         // 설치 토큰 얻기 - 서버 API를 통해 획득
         const installationToken = await getInstallationToken(
           config.githubApp.installationId,
         );
-        octokit = new Octokit({ auth: installationToken });
+        octokit = new Octokit({
+          auth: installationToken,
+          request: {
+            headers: {
+              "X-GitHub-Api-Version": "2022-11-28",
+            },
+          },
+        });
         return octokit;
       } catch (appError) {
         // GitHub App 인증 실패 시 더 명확한 오류 메시지 제공
         log.error("GitHub App 인증 실패:", appError);
         throw new Error(t("core.github.error.github_app_auth"));
       }
+    } else {
+      throw new Error(t("core.github.error.github_token"));
     }
-
-    // GitHub App 설정이 없는 경우
-    throw new Error(t("core.github.error.github_token"));
   } catch (error) {
     // 인증 정보가 없거나 유효하지 않은 경우
     log.error("GitHub 인증 실패:", error);
@@ -153,7 +159,14 @@ export async function createPullRequest(params: {
   token?: string; // 유저 OAuth 토큰
 }): Promise<PullRequest> {
   const client = params.token
-    ? new Octokit({ auth: params.token })
+    ? new Octokit({
+        auth: params.token,
+        request: {
+          headers: {
+            "X-GitHub-Api-Version": "2022-11-28",
+          },
+        },
+      })
     : await getOctokit();
   try {
     const response = await client.rest.pulls.create({
@@ -208,6 +221,9 @@ export async function listPullRequests(params: {
       state: params.state,
       page,
       per_page,
+      headers: {
+        "X-GitHub-Api-Version": "2022-11-28",
+      },
     });
 
     // PR 데이터 변환
@@ -880,7 +896,12 @@ export async function checkDraftPRAvailability(params: {
 }): Promise<boolean> {
   try {
     const client = await getOctokit();
-    const { data: repository } = await client.rest.repos.get(params);
+    const { data: repository } = await client.rest.repos.get({
+      ...params,
+      headers: {
+        "X-GitHub-Api-Version": "2022-11-28",
+      },
+    });
 
     // private 레포의 경우 draft PR 기능은 유료 기능입니다
     // 일단 private 여부로만 판단

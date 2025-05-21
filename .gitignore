@@ -22,3 +22,4 @@ src/utils/openrouter-provisioning.ts
 !CHANGELOG-kr.md
 !docs
 !docs/**
+.autopr.json
