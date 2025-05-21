@@ -150,8 +150,11 @@ export async function createPullRequest(params: {
   head: string;
   base: string;
   draft?: boolean;
+  token?: string; // 유저 OAuth 토큰
 }): Promise<PullRequest> {
-  const client = await getOctokit();
+  const client = params.token
+    ? new Octokit({ auth: params.token })
+    : await getOctokit();
   try {
     const response = await client.rest.pulls.create({
       ...params,

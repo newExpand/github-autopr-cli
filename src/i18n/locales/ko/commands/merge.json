@@ -7,7 +7,8 @@
     "target_branch": "대상 브랜치: {{branch}}",
     "author": "작성자: {{author}}",
     "checking_conflicts": "충돌 확인 중...",
-    "initialization_success": "AI 기능이 성공적으로 초기화되었습니다"
+    "initialization_success": "AI 기능이 성공적으로 초기화되었습니다",
+    "current_branch": "현재 브랜치: {{branch}}"
   },
   "conflict": {
     "found": "이 풀 리퀘스트에서 충돌이 감지되었습니다",
@@ -51,7 +52,8 @@
     "commit_title": "스쿼시 커밋 제목 입력:",
     "commit_message": "스쿼시 커밋 메시지 입력:",
     "delete_branch": "병합 후 브랜치를 삭제하시겠습니까?",
-    "confirm": "병합을 확인하시겠습니까?"
+    "confirm": "병합을 확인하시겠습니까?",
+    "select_base_with_current": "새 대상 브랜치 선택 (현재 브랜치: {{branch}}):"
   },
   "methods": {
     "merge": "병합 (모든 커밋 보존)",

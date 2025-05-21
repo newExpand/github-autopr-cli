@@ -302,6 +302,15 @@ export async function mergeCommand(prNumber: string): Promise<void> {
 
     const branchNames = branches.map((branch) => branch.name);
 
+    // 현재 브랜치 안내
+    const currentBranch = pr.head.ref;
+    log.info(
+      t("commands.merge.info.current_branch", { branch: currentBranch }),
+    );
+
+    // 현재 브랜치를 리스트에서 제외
+    const filteredBranchNames = branchNames.filter((b) => b !== currentBranch);
+
     // base 브랜치 변경 여부 확인
     const { changeBase } = await inquirer.prompt([
       {
@@ -320,8 +329,10 @@ export async function mergeCommand(prNumber: string): Promise<void> {
         {
           type: "list",
           name: "newBase",
-          message: t("commands.merge.prompts.select_base"),
-          choices: branchNames,
+          message: t("commands.merge.prompts.select_base_with_current", {
+            branch: currentBranch,
+          }),
+          choices: filteredBranchNames,
           default: pr.base.ref,
         },
       ]);

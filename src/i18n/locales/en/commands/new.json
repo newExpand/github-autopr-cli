@@ -3,7 +3,8 @@
   "error": {
     "diff_failed": "Failed to get diff content",
     "files_failed": "Failed to get changed files list",
-    "create_failed": "Failed to create PR: {{error}}"
+    "create_failed": "Failed to create PR: {{error}}",
+    "ai_pr_content_failed": "Failed to generate PR content with AI"
   },
   "warning": {
     "push_failed": "Failed to push branch to remote: {{error}}",
@@ -23,7 +24,8 @@
     "template_list_failed": "Failed to get template list.",
     "issue_fetch_failed": "Failed to fetch issue #{{issueNumber}}. The issue may not exist or you may not have access to it.",
     "issues_list_failed": "Failed to fetch issues list. Please enter issue numbers manually.",
-    "browser_open_failed": "Failed to open browser to view PR."
+    "browser_open_failed": "Failed to open browser to view PR.",
+    "no_github_token_for_pr": "No user authentication token found. PR creation is skipped and only review will proceed. To create a PR, please run autopr init and complete authentication first."
   },
   "info": {
     "creating": "Creating PR...",
@@ -57,7 +59,14 @@
     "recommended": "recommended",
     "running_all_reviews": "Running all types of code reviews (overall review, line-by-line review, PR analysis)",
     "adding_code_review_to_pr": "Adding automatic code review to PR...",
-    "opening_browser": "Opening PR in browser..."
+    "opening_browser": "Opening PR in browser...",
+    "generating_pr_content": "Generating PR content with AI...",
+    "generated_pr_content": "Generated PR content:",
+    "bot_token_acquired": "GitHub App bot token acquired.",
+    "line_by_line_review_comment": "Line-by-line code review",
+    "pr_review_added": "PR review comments added to PR",
+    "current_branch": "Current branch: {{branch}}",
+    "select_base_branch_with_current": "Select target branch for PR (current branch: {{branch}}):"
   },
   "prompts": {
     "title": "PR title:",
@@ -99,6 +108,7 @@
     "pr_updated": "PR #{{number}} updated successfully",
     "cancelled": "PR creation cancelled",
     "code_review_added": "Code review comments added to PR",
+    "line_review_added": "Line-by-line code review comments added to PR",
     "pr_description_updated": "PR description updated with AI-generated content"
   },
   "debug": {

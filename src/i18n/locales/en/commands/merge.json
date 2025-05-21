@@ -7,7 +7,8 @@
     "target_branch": "Target Branch: {{branch}}",
     "author": "Author: {{author}}",
     "checking_conflicts": "Checking for conflicts...",
-    "initialization_success": "AI features initialized successfully"
+    "initialization_success": "AI features initialized successfully",
+    "current_branch": "Current branch: {{branch}}"
   },
   "conflict": {
     "found": "Conflicts detected in this pull request",
@@ -51,7 +52,8 @@
     "commit_title": "Enter squash commit title:",
     "commit_message": "Enter squash commit message:",
     "delete_branch": "Delete branch after merging?",
-    "confirm": "Confirm merge?"
+    "confirm": "Confirm merge?",
+    "select_base_with_current": "Select new target branch (current branch: {{branch}}):"
   },
   "methods": {
     "merge": "Merge (preserve all commits)",

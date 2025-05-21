@@ -11,6 +11,9 @@
     "app_token_error": "Failed to get GitHub App token: {{message}}",
     "installations_missing": "Installation list information is missing",
     "installations_failed": "Failed to get GitHub App installations list",
-    "installations_error": "Failed to get GitHub App installations list: {{message}}"
+    "installations_error": "Failed to get GitHub App installations list: {{message}}",
+    "oauth_client_info_failed": "Failed to get GitHub OAuth client info",
+    "oauth_client_info_error": "Failed to get GitHub OAuth client info: {{message}}",
+    "oauth_client_info_missing": "GitHub OAuth client info is missing"
   }
 }

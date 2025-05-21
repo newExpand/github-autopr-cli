@@ -39,6 +39,9 @@ export const GitHubAppConfigSchema = z.object({
 export type GitHubAppConfig = z.infer<typeof GitHubAppConfigSchema>;
 
 export const GlobalConfigSchema = z.object({
+  // GitHub Token 설정
+  githubToken: z.string().optional(),
+
   // 언어 설정
   language: z.enum(supportedLanguages).default("en"),
 
@@ -50,9 +53,7 @@ export const ProjectConfigSchema = z.object({
   owner: z.string().optional(),
   repo: z.string().optional(),
   defaultReviewers: z.array(z.string()).default([]),
-  defaultLabels: z.array(z.string()).default([]),
   reviewerGroups: z.array(ReviewerGroupSchema).default([]),
-  filePatterns: z.array(FilePatternSchema).default([]),
   branchPatterns: z.array(BranchPatternSchema).default([]),
 });
 

@@ -19,6 +19,7 @@ const GLOBAL_CONFIG_FILE = join(CONFIG_DIR, "config.json");
 const PROJECT_CONFIG_FILE = ".autopr.json";
 
 const DEFAULT_GLOBAL_CONFIG: GlobalConfig = {
+  githubToken: "",
   language: "en",
   githubApp: {
     appId: "",
@@ -29,9 +30,7 @@ const DEFAULT_GLOBAL_CONFIG: GlobalConfig = {
 
 export const DEFAULT_PROJECT_CONFIG: ProjectConfig = {
   defaultReviewers: [],
-  defaultLabels: [],
   reviewerGroups: [],
-  filePatterns: [],
   branchPatterns: [
     {
       pattern: "feat/*",
@@ -107,9 +106,6 @@ export async function loadGlobalConfig(): Promise<GlobalConfig> {
     }
     log.error(t("core.config.global_invalid_notice"));
     process.exit(1);
-    throw new Error(
-      t("core.config.error.load_global_failed", { error: String(error) }),
-    );
   }
 }
 
@@ -214,10 +210,10 @@ export async function updateProjectConfig(
 
 // updateConfig
 export async function updateConfig(updates: Partial<Config>): Promise<Config> {
-  const { language, githubApp, ...projectUpdates } = updates;
+  const { githubToken, language, githubApp, ...projectUpdates } = updates;
 
-  // uc804uc5ed uc124uc815uacfc ud504ub85cuc81dud2b8 uc124uc815uc744 ubd84ub9acud558uc5ec uc5c5ub370uc774ud2b8
   const globalUpdates: Partial<GlobalConfig> = {
+    ...(githubToken && { githubToken }),
     ...(language && { language }),
     ...(githubApp !== undefined && { githubApp }),
   };

@@ -17,7 +17,6 @@ import { exec } from "child_process";
 import { promisify } from "util";
 import {
   findMatchingPattern,
-  generatePRTitle,
   generatePRBody,
 } from "../../core/branch-pattern.js";
 import { readFile } from "fs/promises";
@@ -90,21 +89,23 @@ async function runCodeReviewAndAddComments(params: {
   pull_number: number;
   files: Array<{ path: string; content: string }>;
   ai: AIFeatures;
+  shouldRunPRReview: boolean;
   shouldRunOverallReview: boolean;
   shouldRunLineByLineReview: boolean;
   base_branch?: string;
   base?: string;
+  prTitle?: string;
+  diffContent?: string;
 }): Promise<void> {
   try {
-    // 파일이 없는 경우 빠르게 종료
     if (params.files.length === 0) {
       log.warn(t("commands.new.warning.no_files_for_review"));
       return;
     }
 
-    // 병렬로 실행할 리뷰 작업들을 배열로 준비
     const reviewTasks: Promise<any>[] = [];
     const reviewResults: {
+      prReview: string;
       overallReview: string;
       lineComments: Array<{
         file: string;
@@ -113,36 +114,58 @@ async function runCodeReviewAndAddComments(params: {
         severity?: "info" | "warning" | "error";
       }>;
     } = {
+      prReview: "",
       overallReview: "",
       lineComments: [],
     };
 
-    // 전체 코드 리뷰 실행 준비
+    // PR 리뷰 실행
+    if (params.shouldRunPRReview) {
+      log.info(t("commands.new.info.running_pr_review"));
+      const prReviewTask = (async () => {
+        try {
+          reviewResults.prReview = await params.ai.reviewPR(
+            {
+              prNumber: params.pull_number,
+              title: params.prTitle || "",
+              changedFiles: params.files,
+              diffContent: params.diffContent || "",
+              repoOwner: params.owner,
+              repoName: params.repo,
+            },
+            "ko",
+          );
+          log.info(t("commands.new.info.pr_review_completed"));
+        } catch (error) {
+          log.warn(t("commands.new.warning.ai_pr_review_failed"), error);
+        }
+      })();
+      reviewTasks.push(prReviewTask);
+    }
+
+    // 전체 코드 리뷰 실행
     if (params.shouldRunOverallReview) {
       log.info(t("commands.new.info.running_code_review"));
-
       const codeReviewTask = (async () => {
         try {
           reviewResults.overallReview = await params.ai.reviewCode(
             params.files,
+            "ko",
           );
           log.info(t("commands.new.info.code_review_completed"));
         } catch (error) {
           log.warn(t("commands.new.warning.code_review_failed"), error);
         }
       })();
-
       reviewTasks.push(codeReviewTask);
     }
 
-    // 라인별 코드 리뷰 실행 준비
+    // 라인별 코드 리뷰 실행
     if (params.shouldRunLineByLineReview) {
       log.info(t("commands.new.info.running_line_by_line_review"));
       log.info(t("commands.new.info.pr_analysis_info"));
-
       const lineReviewTask = (async () => {
         try {
-          // PR 컨텍스트 정보 전달
           const comments = await params.ai.lineByLineCodeReview(
             params.files,
             {
@@ -151,12 +174,9 @@ async function runCodeReviewAndAddComments(params: {
               pull_number: params.pull_number,
               baseBranch: params.base_branch || params.base || "main",
             },
-            // 한국어로 설정 (국제화가 필요한 경우 config에서 가져오도록 수정)
             "ko",
           );
-
           reviewResults.lineComments = comments;
-
           if (comments.length > 0) {
             log.info(t("commands.new.info.line_by_line_review_completed"));
           } else {
@@ -166,115 +186,121 @@ async function runCodeReviewAndAddComments(params: {
           log.warn(t("commands.new.warning.line_review_failed"), error);
         }
       })();
-
       reviewTasks.push(lineReviewTask);
     }
 
-    // 모든 리뷰 작업을 병렬로 실행하고 완료될 때까지 대기
     await Promise.all(reviewTasks);
 
-    // 코드 리뷰, PR 리뷰, 라인별 코멘트가 있는 경우에만 PR 리뷰 생성
-    if (reviewResults.overallReview || reviewResults.lineComments.length > 0) {
-      log.info(t("commands.new.info.adding_code_review"));
-
-      // 리뷰 코멘트 준비
-      const reviewComments = [];
-
-      // 라인별 코멘트가 있는 경우 GitHub API에 맞게 변환
-      if (reviewResults.lineComments.length > 0) {
-        // 각 코멘트에 대한 diff 정보 조회도 병렬로 처리
-        const commentTasks = reviewResults.lineComments.map(async (comment) => {
-          try {
-            // 파일의 diff 정보를 가져와 정확한 라인 번호 매핑
-            const diffInfo = await getPullRequestFileDiff({
-              owner: params.owner,
-              repo: params.repo,
-              pull_number: params.pull_number,
-              file_path: comment.file,
-            });
-
-            // 코멘트를 달 라인 찾기 (추가된 라인이나 변경되지 않은 라인에만 코멘트 가능)
-            // 파일의 전체 내용 라인 번호와 diff에서의 라인 번호가 일치하는지 확인
-            const lineInfo = diffInfo.changes.find(
-              (change) =>
-                change.newLineNumber === comment.line &&
-                (change.type === "added" || change.type === "unchanged"),
-            );
-
-            if (lineInfo && lineInfo.newLineNumber) {
-              // 심각도에 따라 이모지 추가
-              let prefix = "";
-              if (comment.severity === "error") {
-                prefix = "🔴 ";
-              } else if (comment.severity === "warning") {
-                prefix = "⚠️ ";
-              } else if (comment.severity === "info") {
-                prefix = "ℹ️ ";
-              }
-
-              return {
-                path: comment.file,
-                line: lineInfo.newLineNumber,
-                side: "RIGHT" as const,
-                body: `${prefix}${comment.comment}`,
-              };
-            } else {
-              // diff에서 해당 라인을 찾지 못한 경우 (PR에 포함되지 않은 파일의 라인)
-              log.warn(
-                t("commands.new.warning.comment_add_failed", {
-                  file: comment.file,
-                  line: comment.line,
-                }),
-              );
-              return null;
-            }
-          } catch (error: any) {
-            log.warn(
-              t("commands.new.debug.line_comment_mapping_failed", {
-                file: comment.file,
-                line: comment.line,
-              }),
-              error,
-            );
-            return null;
-          }
-        });
-
-        // 모든 코멘트 처리가 완료될 때까지 대기하고 유효한 코멘트만 필터링
-        const commentResults = await Promise.all(commentTasks);
-        reviewComments.push(
-          ...commentResults.filter((comment) => comment !== null),
-        );
-      }
-
-      // 코드 리뷰 결과를 PR에 코멘트로 추가
+    // PR 리뷰 별도 코멘트
+    if (reviewResults.prReview) {
       try {
-        let finalReviewBody = "";
-
-        // 코드 리뷰가 있으면 추가
-        if (reviewResults.overallReview) {
-          finalReviewBody += `## 코드 리뷰\n\n${reviewResults.overallReview}`;
-        }
-
-        // 아무 리뷰도 없으면 기본 메시지
-        if (!finalReviewBody) {
-          finalReviewBody = "코드 리뷰가 완료되었습니다.";
-        }
-
         await createPullRequestReview({
           owner: params.owner,
           repo: params.repo,
           pull_number: params.pull_number,
-          body: finalReviewBody,
+          body: `## PR 리뷰\n\n${reviewResults.prReview}`,
           event: "COMMENT",
-          comments: reviewComments,
+          comments: [],
         });
+        log.info(t("commands.new.success.pr_review_added"));
+      } catch (error) {
+        log.warn(t("commands.new.warning.code_review_add_failed"), error);
+      }
+    }
 
+    // 코드 리뷰 별도 코멘트
+    if (reviewResults.overallReview) {
+      try {
+        await createPullRequestReview({
+          owner: params.owner,
+          repo: params.repo,
+          pull_number: params.pull_number,
+          body: `## 코드 리뷰\n\n${reviewResults.overallReview}`,
+          event: "COMMENT",
+          comments: [],
+        });
         log.info(t("commands.new.success.code_review_added"));
       } catch (error) {
         log.warn(t("commands.new.warning.code_review_add_failed"), error);
       }
-    } else {
+    }
+
+    // 라인별 코멘트
+    if (reviewResults.lineComments.length > 0) {
+      const reviewComments = [];
+      const commentTasks = reviewResults.lineComments.map(async (comment) => {
+        try {
+          const diffInfo = await getPullRequestFileDiff({
+            owner: params.owner,
+            repo: params.repo,
+            pull_number: params.pull_number,
+            file_path: comment.file,
+          });
+          const lineInfo = diffInfo.changes.find(
+            (change) =>
+              change.newLineNumber === comment.line &&
+              (change.type === "added" || change.type === "unchanged"),
+          );
+          if (lineInfo && lineInfo.newLineNumber) {
+            let prefix = "";
+            if (comment.severity === "error") {
+              prefix = "🔴 ";
+            } else if (comment.severity === "warning") {
+              prefix = "⚠️ ";
+            } else if (comment.severity === "info") {
+              prefix = "ℹ️ ";
+            }
+            return {
+              path: comment.file,
+              line: lineInfo.newLineNumber,
+              side: "RIGHT" as const,
+              body: `${prefix}${comment.comment}`,
+            };
+          } else {
+            log.warn(
+              t("commands.new.warning.comment_add_failed", {
+                file: comment.file,
+                line: comment.line,
+              }),
+            );
+            return null;
+          }
+        } catch (error: any) {
+          log.warn(
+            t("commands.new.debug.line_comment_mapping_failed", {
+              file: comment.file,
+              line: comment.line,
+            }),
+            error,
+          );
+          return null;
+        }
+      });
+      const commentResults = await Promise.all(commentTasks);
+      reviewComments.push(
+        ...commentResults.filter((comment) => comment !== null),
+      );
+      if (reviewComments.length > 0) {
+        try {
+          await createPullRequestReview({
+            owner: params.owner,
+            repo: params.repo,
+            pull_number: params.pull_number,
+            body: t("commands.new.info.line_by_line_review_comment"),
+            event: "COMMENT",
+            comments: reviewComments,
+          });
+          log.info(t("commands.new.success.line_review_added"));
+        } catch (error) {
+          log.warn(t("commands.new.warning.code_review_add_failed"), error);
+        }
+      }
+    }
+    if (
+      !reviewResults.prReview &&
+      !reviewResults.overallReview &&
+      reviewResults.lineComments.length === 0
+    ) {
       log.info(t("commands.new.info.no_review_comments"));
     }
   } catch (error) {
@@ -453,9 +479,8 @@ export async function newCommand(): Promise<void> {
     const foundPattern = await findMatchingPattern(repoInfo.currentBranch);
     const pattern: BranchPattern | undefined =
       foundPattern === null ? undefined : foundPattern;
-    let defaultTitle = repoInfo.currentBranch;
+    const defaultTitle = repoInfo.currentBranch;
     let defaultBody = "";
-    let generatedTitle = "";
     let selectedTemplate = "";
 
     // selectTemplateImproved 함수 호출 시 인자 전달
@@ -479,6 +504,11 @@ export async function newCommand(): Promise<void> {
       };
       defaultBody = await generatePRBody(dummyPattern);
     }
+
+    // 현재 브랜치 안내
+    log.info(
+      t("commands.new.info.current_branch", { branch: repoInfo.currentBranch }),
+    );
 
     // 사용자에게 대상 브랜치 선택 요청
     let availableBranches: string[] = [];
@@ -505,12 +535,19 @@ export async function newCommand(): Promise<void> {
       availableBranches = ["main", "master", "dev", "develop"];
     }
 
-    // 사용자에게 대상 브랜치 선택 요청
+    // 현재 브랜치를 리스트에서 제외
+    availableBranches = availableBranches.filter(
+      (b) => b !== repoInfo.currentBranch,
+    );
+
+    // 사용자에게 대상 브랜치 선택 요청 (메시지에 현재 브랜치명 포함)
     const { baseBranch } = await inquirer.prompt([
       {
         type: "list",
         name: "baseBranch",
-        message: t("commands.new.prompts.select_base_branch"),
+        message: t("commands.new.prompts.select_base_branch_with_current", {
+          branch: repoInfo.currentBranch,
+        }),
         choices: availableBranches,
         default: availableBranches.includes("main")
           ? "main"
@@ -523,12 +560,6 @@ export async function newCommand(): Promise<void> {
     // 변경사항 수집
     const changedFiles = await getChangedFiles(baseBranch);
     const diffContent = await getDiffContent(baseBranch);
-
-    let generatedDescription = "";
-    let ai: AIFeatures | null = null;
-    let shouldRunCodeReview = false;
-    let shouldRunLineByLineReview = false;
-    let shouldRunPRReview = false;
 
     // 변경 시작: 관련 이슈 정보 입력 받기
     let relatedIssues: string[] = [];
@@ -790,120 +821,32 @@ export async function newCommand(): Promise<void> {
     }
     // 변경 끝
 
-    // AI 인스턴스 생성
+    // === PR 생성 전, AI로 PR 제목 생성 ===
+    log.info(t("commands.new.info.generating_title"));
+    let generatedTitle = "";
     try {
-      ai = new AIFeatures(config.language);
-      log.info(t("commands.new.info.ai_initialized"));
-
-      // AI로 PR 제목 생성
-      try {
-        log.info(t("commands.new.info.generating_title"));
-        generatedTitle = await ai.generatePRTitle(
-          changedFiles,
-          diffContent,
-          pattern || { type: selectedTemplate as any },
-        );
-        log.section(t("commands.new.info.generated_title", { title: "" }));
-        log.verbose(generatedTitle);
-        defaultTitle = generatedTitle || defaultTitle;
-      } catch (error) {
-        log.warn(t("commands.new.warning.ai_title_failed"), error);
-        log.debug(t("commands.new.info.ai_title_error"), error);
-      }
-
-      // PR 설명 생성은 PR 생성 전에 수행 (원래 방식으로 복원)
-      log.info(t("commands.new.info.generating_description"));
-      // AI에게 템플릿과 함께 관련 이슈 정보도 전달
-      const fileContents = await getFileContents(changedFiles);
-      try {
-        generatedDescription = await ai.reviewPR({
-          prNumber: 0, // 실제 PR 생성 전이므로 0 또는 임시값
-          title: defaultTitle,
-          changedFiles: fileContents,
-          diffContent: diffContent,
-          repoOwner: repoInfo.owner,
-          repoName: repoInfo.repo,
-        });
-
-        // AI가 생성한 설명 표시
-        if (generatedDescription) {
-          log.section(t("commands.new.info.generated_description"));
-          log.section(t("commands.new.ui.section_divider"));
-          log.verbose(generatedDescription);
-          log.section(t("commands.new.ui.section_divider"));
-        }
-      } catch (error) {
-        log.warn(t("commands.new.warning.ai_description_failed"), error);
-      }
+      const ai = new AIFeatures(config.language);
+      generatedTitle = await ai.generatePRTitle(
+        changedFiles,
+        diffContent,
+        { type: pattern?.type || selectedTemplate },
+        config.language,
+      );
+      log.section(
+        t("commands.new.info.generated_title", { title: generatedTitle }),
+      );
     } catch (error) {
-      log.warn(t("commands.new.warning.ai_initialization_failed"), error);
-      ai = null;
+      log.warn(t("commands.new.warning.ai_title_failed"), error);
     }
 
-    // 코드 리뷰 실행 여부 물어보기
-    const { runCodeReview } = ai
-      ? await inquirer.prompt([
-          {
-            type: "confirm",
-            name: "runCodeReview",
-            message: t("commands.new.prompts.run_all_code_reviews"),
-            default: true,
-          },
-        ])
-      : { runCodeReview: false };
-
-    // 코드 리뷰 실행이 선택되면 모든 리뷰 유형을 실행
-    if (runCodeReview) {
-      shouldRunCodeReview = true; // 전체 코드 리뷰
-      shouldRunLineByLineReview = true; // 라인별 리뷰
-      shouldRunPRReview = true; // PR 전체 리뷰
-
-      // 사용자에게 어떤 리뷰가 실행될지 안내
-      log.info(t("commands.new.info.running_all_reviews"));
-    } else {
-      shouldRunCodeReview = false;
-      shouldRunLineByLineReview = false;
-      shouldRunPRReview = false;
-    }
-
+    // === PR 생성 전, 제목/리뷰어 입력 프롬프트 ===
     const answers = await inquirer.prompt([
       {
         type: "input",
         name: "title",
         message: t("commands.new.prompts.title"),
-        default: defaultTitle,
+        default: generatedTitle || defaultTitle,
         validate: (value: string) => value.length > 0,
-      },
-      {
-        type: "confirm",
-        name: "useAIDescription",
-        message: t("commands.new.prompts.use_ai_description"),
-        default: true,
-        when: () => !!ai && !!generatedDescription,
-      },
-      {
-        type: "confirm",
-        name: "editAIDescription",
-        message: t("commands.new.prompts.edit_ai_description"),
-        default: false,
-        when: (answers) =>
-          !!ai && !!generatedDescription && answers.useAIDescription,
-      },
-      {
-        type: "editor",
-        name: "body",
-        message: t("commands.new.prompts.body"),
-        default: (answers) => {
-          if (ai && generatedDescription && answers.useAIDescription) {
-            return answers.editAIDescription ? generatedDescription : undefined;
-          }
-          return defaultBody;
-        },
-        when: (answers) =>
-          !ai ||
-          !generatedDescription ||
-          !answers.useAIDescription ||
-          answers.editAIDescription,
       },
       {
         type: "input",
@@ -925,163 +868,103 @@ export async function newCommand(): Promise<void> {
       },
     ]);
 
-    // PR 생성 시작을 알림
-    log.info(t("commands.new.info.creating"));
+    // === 사용자 인증 토큰이 없으면 PR 생성 스킵, 리뷰만 진행 ===
+    const ai = new AIFeatures(config.language);
+    log.info(t("commands.new.info.ai_initialized"));
 
+    // AI로 PR 본문(통합) 생성
+    let generatedPRContent = "";
     try {
-      // head 브랜치 참조 형식 수정
-      const headBranch = repoInfo.currentBranch;
-
-      // draft PR 사용 가능 여부 확인
-      const draftAvailable = await checkDraftPRAvailability({
-        owner: repoInfo.owner,
-        repo: repoInfo.repo,
-      });
-
-      // pattern에서 draft 설정을 가져오되, draft PR 사용 불가능한 경우 false로 설정
-      let isDraft = pattern?.draft ?? false;
-
-      // draft PR 사용 가능한 경우 선택권 제공
-      if (draftAvailable) {
-        const { shouldBeDraft } = await inquirer.prompt([
-          {
-            type: "confirm",
-            name: "shouldBeDraft",
-            message: t("commands.new.prompts.create_as_draft"),
-            default: pattern?.draft ?? false,
-          },
-        ]);
-        isDraft = shouldBeDraft;
+      if (!config.githubToken || config.githubToken.trim() === "") {
+        log.warn(t("commands.new.warning.no_github_token_for_pr"));
       } else {
-        // draft PR 사용 불가능한 경우 강제로 false
-        isDraft = false;
-        if (pattern?.draft) {
-          log.warn(t("commands.new.warning.draft_not_available"));
-        }
-      }
-
-      // PR이 이미 존재하는지 확인
-      const client = await getOctokit();
-      const existingPRs = await client.rest.pulls.list({
-        owner: repoInfo.owner,
-        repo: repoInfo.repo,
-        head: `${repoInfo.owner}:${headBranch}`,
-        state: "open",
-      });
-
-      // PR 본문 설정 (AI 생성 또는 사용자 입력)
-      const finalBody = answers.useAIDescription
-        ? generatedDescription
-        : answers.body || "";
-
-      if (existingPRs.data.length > 0) {
-        const existingPR = existingPRs.data[0];
-        log.info(
-          t("commands.new.info.pr_exists", { number: existingPR.number }),
-        );
-
-        // 기존 PR 업데이트 여부 확인
-        const { updateExisting } = await inquirer.prompt([
+        log.info(t("commands.new.info.generating_pr_content"));
+        generatedPRContent = await ai.generatePRContent(
+          changedFiles,
+          diffContent,
+          pattern?.type || selectedTemplate,
           {
-            type: "confirm",
-            name: "updateExisting",
-            message: t("commands.new.prompts.update_existing"),
-            default: true,
+            relatedIssues: relatedIssuesData,
+            language: config.language,
           },
-        ]);
-
-        if (updateExisting) {
-          // 기존 PR 업데이트
-          const newBody = `
-${t("commands.new.pr_update.previous_content")}
-${existingPR.body || t("commands.new.pr_update.no_content")}
-
-${t("commands.new.pr_update.divider")}
-${t("commands.new.pr_update.updated_content")}
-${finalBody}
-`;
-
-          await updatePullRequest({
-            owner: repoInfo.owner,
-            repo: repoInfo.repo,
-            pull_number: existingPR.number,
-            title: answers.title,
-            body: newBody,
-          });
-
-          // 리뷰어 업데이트
-          if (answers.reviewers.length > 0) {
-            await addReviewers({
-              owner: repoInfo.owner,
-              repo: repoInfo.repo,
-              pull_number: existingPR.number,
-              reviewers: answers.reviewers,
-            });
-          }
-
-          log.info(
-            t("commands.new.success.pr_updated", { number: existingPR.number }),
-          );
-          log.info(`PR URL: ${existingPR.html_url}`);
-
-          // 브라우저에서 열기 옵션 추가
-          const { openBrowser } = await inquirer.prompt([
-            {
-              type: "confirm",
-              name: "openBrowser",
-              message: t("commands.new.prompts.open_browser"),
-              default: true,
-            },
-          ]);
-
-          if (openBrowser) {
-            log.info(t("commands.new.info.opening_browser"));
-            // 플랫폼에 따라 적절한 명령어 실행
-            const command =
-              process.platform === "win32"
-                ? `start ${existingPR.html_url}`
-                : process.platform === "darwin"
-                  ? `open ${existingPR.html_url}`
-                  : `xdg-open ${existingPR.html_url}`;
-
-            try {
-              await execAsync(command);
-            } catch (error) {
-              log.warn(t("commands.new.warning.browser_open_failed"));
-            }
-          }
-
-          // 기존 PR에 코드 리뷰 추가 - PR 번호 활용 로직 유지
-          if (ai && runCodeReview) {
-            const fileContents = await getFileContents(changedFiles);
-
-            if (fileContents.length > 0) {
-              log.info(t("commands.new.info.adding_code_review_to_pr"));
-
-              await runCodeReviewAndAddComments({
-                owner: repoInfo.owner,
-                repo: repoInfo.repo,
-                pull_number: existingPR.number,
-                files: fileContents,
-                ai,
-                shouldRunOverallReview: shouldRunCodeReview,
-                shouldRunLineByLineReview: shouldRunLineByLineReview,
-                base_branch: baseBranch,
-              });
-            } else {
-              log.warn(t("commands.new.warning.no_files_for_review"));
-            }
-          }
-
-          return;
-        } else {
-          log.info(t("commands.new.success.cancelled"));
-          return;
-        }
+        );
+        log.section(t("commands.new.info.generated_pr_content"));
+        log.verbose(generatedPRContent);
       }
+    } catch (error) {
+      log.warn(t("commands.new.warning.ai_pr_content_failed"), error);
+    }
 
-      // 새 PR 생성
-      const pr = await createPullRequest({
+    // head 브랜치 참조 형식 수정
+    const headBranch = repoInfo.currentBranch;
+
+    // draft PR 사용 가능 여부 확인
+    const draftAvailable = await checkDraftPRAvailability({
+      owner: repoInfo.owner,
+      repo: repoInfo.repo,
+    });
+
+    let isDraft = pattern?.draft ?? false;
+    if (draftAvailable) {
+      const { shouldBeDraft } = await inquirer.prompt([
+        {
+          type: "confirm",
+          name: "shouldBeDraft",
+          message: t("commands.new.prompts.create_as_draft"),
+          default: pattern?.draft ?? false,
+        },
+      ]);
+      isDraft = shouldBeDraft;
+    } else {
+      isDraft = false;
+      if (pattern?.draft) {
+        log.warn(t("commands.new.warning.draft_not_available"));
+      }
+    }
+
+    // PR이 이미 존재하는지 확인
+    const client = await getOctokit();
+    const existingPRs = await client.rest.pulls.list({
+      owner: repoInfo.owner,
+      repo: repoInfo.repo,
+      head: `${repoInfo.owner}:${headBranch}`,
+      state: "open",
+    });
+
+    // PR 본문 설정 (AI 생성)
+    const finalBody = generatedPRContent || defaultBody;
+
+    let pr;
+    if (existingPRs.data.length > 0) {
+      const existingPR = existingPRs.data[0];
+      log.info(t("commands.new.info.pr_exists", { number: existingPR.number }));
+      // 기존 PR 업데이트 여부 확인
+      const { updateExisting } = await inquirer.prompt([
+        {
+          type: "confirm",
+          name: "updateExisting",
+          message: t("commands.new.prompts.update_existing"),
+          default: true,
+        },
+      ]);
+      if (updateExisting) {
+        // 기존 PR 업데이트
+        const newBody = `\n${t("commands.new.pr_update.previous_content")}\n${existingPR.body || t("commands.new.pr_update.no_content")}\n\n${t("commands.new.pr_update.divider")}\n${t("commands.new.pr_update.updated_content")}\n${finalBody}\n`;
+        await updatePullRequest({
+          owner: repoInfo.owner,
+          repo: repoInfo.repo,
+          pull_number: existingPR.number,
+          title: answers.title,
+          body: newBody,
+        });
+        pr = existingPR;
+      } else {
+        log.info(t("commands.new.success.cancelled"));
+        return;
+      }
+    } else {
+      // 새 PR 생성 (유저 토큰 사용)
+      pr = await createPullRequest({
         owner: repoInfo.owner,
         repo: repoInfo.repo,
         title: answers.title,
@@ -1089,89 +972,96 @@ ${finalBody}
         head: headBranch,
         base: baseBranch,
         draft: isDraft,
+        token: config.githubToken,
       });
-
-      // 리뷰어 추가 시도
-      if (answers.reviewers.length > 0) {
-        log.debug(t("commands.new.info.adding_reviewers"));
-        await addReviewers({
-          owner: repoInfo.owner,
-          repo: repoInfo.repo,
-          pull_number: pr.number,
-          reviewers: answers.reviewers,
-        });
-        log.verbose(
-          t("commands.new.info.reviewers_added", {
-            reviewers: answers.reviewers.join(", "),
-          }),
-        );
-      }
-
-      log.info(t("common.success.pr_created"));
-      log.info(`PR URL: ${pr.html_url}`);
-
-      // 브라우저에서 열기 옵션 추가
-      const { openBrowser } = await inquirer.prompt([
-        {
-          type: "confirm",
-          name: "openBrowser",
-          message: t("commands.new.prompts.open_browser"),
-          default: true,
-        },
-      ]);
-
-      if (openBrowser) {
-        log.info(t("commands.new.info.opening_browser"));
-        // 플랫폼에 따라 적절한 명령어 실행
-        const command =
-          process.platform === "win32"
-            ? `start ${pr.html_url}`
-            : process.platform === "darwin"
-              ? `open ${pr.html_url}`
-              : `xdg-open ${pr.html_url}`;
-
-        try {
-          await execAsync(command);
-        } catch (error) {
-          log.warn(t("commands.new.warning.browser_open_failed"));
-        }
-      }
-
-      // PR이 생성된 후 코드 리뷰를 실행 - PR 번호 활용 로직 유지
-      if (ai && runCodeReview) {
-        const fileContents = await getFileContents(changedFiles);
-
-        if (fileContents.length > 0) {
-          log.info(t("commands.new.info.adding_code_review_to_pr"));
-
-          await runCodeReviewAndAddComments({
-            owner: repoInfo.owner,
-            repo: repoInfo.repo,
-            pull_number: pr.number,
-            files: fileContents,
-            ai,
-            shouldRunOverallReview: shouldRunCodeReview,
-            shouldRunLineByLineReview: shouldRunLineByLineReview,
-            base_branch: baseBranch,
-          });
-        } else {
-          log.warn(t("commands.new.warning.no_files_for_review"));
-        }
-      }
-    } catch (error: any) {
-      if (error.message?.includes("No commits between")) {
-        log.error(t("common.error.no_commits"));
-      } else if (error.message?.includes("A pull request already exists")) {
-        log.error(t("common.error.pr_exists"));
-      } else if (error.message?.includes("Base branch was modified")) {
-        log.error(t("common.error.base_modified"));
-      } else {
-        log.error(
-          t("commands.new.error.create_failed", { error: String(error) }),
-        );
-      }
-      process.exit(1);
     }
+
+    // 리뷰어 추가
+    if (answers.reviewers.length > 0) {
+      log.debug(t("commands.new.info.adding_reviewers"));
+      await addReviewers({
+        owner: repoInfo.owner,
+        repo: repoInfo.repo,
+        pull_number: pr.number,
+        reviewers: answers.reviewers,
+      });
+      log.verbose(
+        t("commands.new.info.reviewers_added", {
+          reviewers: answers.reviewers.join(", "),
+        }),
+      );
+    }
+
+    // === PR 생성 후, GitHub App(봇) 토큰으로 리뷰 실행 ===
+    // GitHub App 설치 토큰 가져오기
+    let botToken: string | undefined = undefined;
+    if (config.githubApp?.installationId) {
+      const { getInstallationToken } = await import("../../core/github-app.js");
+      try {
+        botToken = await getInstallationToken(config.githubApp.installationId);
+        log.info(t("commands.new.info.bot_token_acquired"));
+      } catch (error) {
+        log.warn(t("commands.new.warning.bot_token_failed"), error);
+      }
+    }
+    // 봇 토큰으로 AI 인스턴스 생성 (필요시)
+    const aiBot = new AIFeatures(config.language);
+    const fileContents = await getFileContents(changedFiles);
+
+    // 코드 리뷰 실행 여부 프롬프트
+    const { shouldRunCodeReview } = await inquirer.prompt([
+      {
+        type: "confirm",
+        name: "shouldRunCodeReview",
+        message: t("commands.new.prompts.run_all_code_reviews"),
+        default: true,
+      },
+    ]);
+
+    if (shouldRunCodeReview) {
+      await runCodeReviewAndAddComments({
+        owner: repoInfo.owner,
+        repo: repoInfo.repo,
+        pull_number: pr.number,
+        files: fileContents,
+        ai: aiBot,
+        shouldRunPRReview: true,
+        shouldRunOverallReview: true,
+        shouldRunLineByLineReview: true,
+        base_branch: baseBranch,
+        prTitle: answers.title,
+        diffContent: diffContent,
+      });
+    } else {
+      log.info(t("commands.new.info.no_review_comments"));
+    }
+
+    // === 모든 자동화가 끝난 후 PR URL/브라우저 안내 ===
+    log.info(t("common.success.pr_created"));
+    log.info(`PR URL: ${pr.html_url}`);
+    const { openBrowser } = await inquirer.prompt([
+      {
+        type: "confirm",
+        name: "openBrowser",
+        message: t("commands.new.prompts.open_browser"),
+        default: true,
+      },
+    ]);
+    if (openBrowser) {
+      log.info(t("commands.new.info.opening_browser"));
+      const command =
+        process.platform === "win32"
+          ? `start ${pr.html_url}`
+          : process.platform === "darwin"
+            ? `open ${pr.html_url}`
+            : `xdg-open ${pr.html_url}`;
+      try {
+        await execAsync(command);
+      } catch (error) {
+        log.warn(t("commands.new.warning.browser_open_failed"));
+      }
+    }
+    return;
   } catch (error) {
     log.error(t("common.error.unknown"), error);
     process.exit(1);

@@ -7,7 +7,8 @@
     "branch_strategy": "Branch strategy set up successfully",
     "production_branch_set": "Production branch set to: {{branch}}",
     "development_branch_set": "Development branch set to: {{branch}}",
-    "github_app_auth_success": "GitHub App authentication successful! Server-based authentication is set up."
+    "github_app_auth_success": "GitHub App authentication successful! Server-based authentication is set up.",
+    "oauth_auth_success": "GitHub user authentication completed successfully."
   },
   "error": {
     "invalid_token": "Invalid GitHub token"
@@ -25,6 +26,11 @@
     "setup_ai": "Set up AI features?",
     "default_branch": "Default (production) branch:",
     "development_branch": "Development branch:",
-    "reviewers": "Default reviewers (comma-separated):"
+    "reviewers": "Default reviewers (comma-separated):",
+    "oauth_authenticate": "Would you like to authenticate with your GitHub user account for PR creation?",
+    "oauth_already_authenticated": "A GitHub user token is already registered. Do you want to re-authenticate?"
+  },
+  "warning": {
+    "oauth_auth_failed": "GitHub user authentication failed."
   }
 }

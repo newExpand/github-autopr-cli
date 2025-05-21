@@ -407,4 +407,43 @@ export class AIFeatures {
       throw error;
     }
   }
+
+  /**
+   * AI 기반 PR 전체 생성(제목, 본문, 주요 코드 구현사항, 릴리즈 노트, 키워드, 이슈 등)
+   * @param files 변경된 파일 목록
+   * @param diffContent diff 내용
+   * @param type PR 타입 (feat, fix 등)
+   * @param options 관련 이슈, 모델, 언어, 커스텀 지시사항 등
+   * @returns 마크다운 string (서버에서 변환)
+   */
+  async generatePRContent(
+    files: string[],
+    diffContent: string,
+    type: string,
+    options?: {
+      relatedIssues?: RelatedIssue[];
+      modelId?: string;
+      language?: SupportedLanguage;
+      customInstructions?: string;
+    },
+  ): Promise<string> {
+    try {
+      const result = await aiClient.callAPI<{ content: string }>(
+        "/ai/google/features/pr-content",
+        {
+          files,
+          diffContent,
+          type,
+          relatedIssues: options?.relatedIssues || [],
+          modelId: options?.modelId,
+          language: options?.language,
+          customInstructions: options?.customInstructions,
+        },
+      );
+      return result.content || "";
+    } catch (error) {
+      log.error(t("core.ai_features.error.pr_content_failed"), error);
+      throw error;
+    }
+  }
 }

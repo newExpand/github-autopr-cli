@@ -27,12 +27,12 @@ interface APIResponse<T = any> {
 export class AIClient {
   private baseUrl: string;
 
-  constructor(baseUrl: string = "https://api.newextend.com/api") {
-    this.baseUrl = baseUrl;
-  }
-  // constructor(baseUrl: string = "http://localhost:4000/api") {
+  // constructor(baseUrl: string = "https://api.newextend.com/api") {
   //   this.baseUrl = baseUrl;
   // }
+  constructor(baseUrl: string = "http://localhost:4000/api") {
+    this.baseUrl = baseUrl;
+  }
 
   /**
    * API 엔드포인트를 호출합니다.
@@ -153,6 +153,32 @@ export class AIClient {
       log.error(t("core.ai_manager.error.installations_failed"), error);
       throw new Error(
         t("core.ai_manager.error.installations_error", {
+          message:
+            error instanceof Error
+              ? error.message
+              : t("core.ai_manager.error.unknown_error"),
+        }),
+      );
+    }
+  }
+
+  /**
+   * GitHub OAuth Client 정보를 가져옵니다.
+   * @returns OAuth Client 정보 (oauthClientId)
+   */
+  public async getGitHubOAuthClientInfo(): Promise<{ oauthClientId: string }> {
+    try {
+      const response = await fetch.get<APIResponse<{ oauthClientId: string }>>(
+        `${this.baseUrl}/github/oauth-client-info`,
+      );
+      if (response.data && response.data.data) {
+        return response.data.data;
+      }
+      throw new Error(t("core.ai_manager.error.oauth_client_info_missing"));
+    } catch (error) {
+      log.error(t("core.ai_manager.error.oauth_client_info_failed"), error);
+      throw new Error(
+        t("core.ai_manager.error.oauth_client_info_error", {
           message:
             error instanceof Error
               ? error.message

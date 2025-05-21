@@ -7,6 +7,7 @@ import {
   DEFAULT_PROJECT_CONFIG,
 } from "../../core/config.js";
 import { setupGitHubAppCredentials } from "../../core/github-app.js";
+import { setupOAuthCredentials } from "../../core/oauth.js";
 import { log } from "../../utils/logger.js";
 import { existsSync, renameSync } from "fs";
 import { writeFile } from "fs/promises";
@@ -27,24 +28,49 @@ export async function initCommand(): Promise<void> {
       log.info(".autopr.json 파일이 백업되고, 새로 초기화되었습니다.");
     }
 
-    // 기존 설정 로드
-    const globalConfig = await loadGlobalConfig();
-    const projectConfig = await loadProjectConfig();
-
-    const answers: Partial<Config> = {};
-
-    // GitHub App 설정
-    log.info(t("commands.init.setup.info"));
-
+    // 1. GitHub App 인증 (필수)
     try {
-      // 디바이스 플로우로 GitHub App 인증 진행
       await setupGitHubAppCredentials();
-
-      // 인증 완료 메시지
       log.info(t("commands.init.info.github_app_auth_success"));
     } catch (error) {
       log.error(t("commands.init.error.auth_failed", { error }));
       process.exit(1);
+    }
+
+    // 2. 유저 OAuth 인증 (선택/권장)
+    const globalConfig = await loadGlobalConfig();
+    let needOAuth = true;
+    if (globalConfig.githubToken) {
+      // 이미 인증된 경우
+      const { reauth } = await inquirer.prompt([
+        {
+          type: "confirm",
+          name: "reauth",
+          // i18n: commands.init.prompts.oauth_already_authenticated
+          message: t("commands.init.prompts.oauth_already_authenticated"),
+          default: false,
+        },
+      ]);
+      needOAuth = reauth;
+    } else {
+      const { doOAuth } = await inquirer.prompt([
+        {
+          type: "confirm",
+          name: "doOAuth",
+          // i18n: commands.init.prompts.oauth_authenticate
+          message: t("commands.init.prompts.oauth_authenticate"),
+          default: true,
+        },
+      ]);
+      needOAuth = doOAuth;
+    }
+    if (needOAuth) {
+      try {
+        await setupOAuthCredentials();
+        log.info(t("commands.init.info.oauth_auth_success"));
+      } catch (error) {
+        log.warn(t("commands.init.warning.oauth_auth_failed"), error);
+      }
     }
 
     // 언어 설정
@@ -70,9 +96,7 @@ export async function initCommand(): Promise<void> {
             default: globalConfig.language,
           },
         ]);
-        answers.language = language;
-      } else {
-        answers.language = globalConfig.language;
+        globalConfig.language = language;
       }
     } else {
       const { language } = await inquirer.prompt([
@@ -84,10 +108,11 @@ export async function initCommand(): Promise<void> {
           default: "en",
         },
       ]);
-      answers.language = language;
+      globalConfig.language = language;
     }
 
     // 프로젝트 설정
+    const projectConfig = await loadProjectConfig();
     const projectAnswers = await inquirer.prompt([
       {
         type: "input",
@@ -105,7 +130,7 @@ export async function initCommand(): Promise<void> {
     try {
       // 설정 저장
       await updateConfig({
-        ...answers,
+        ...globalConfig,
         defaultReviewers: projectAnswers.defaultReviewers,
       });
 

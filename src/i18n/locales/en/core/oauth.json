@@ -1,0 +1,34 @@
+{
+  "device_flow": {
+    "initializing": "Initializing GitHub OAuth device flow...",
+    "client_id": "Using OAuth client ID: {{clientId}}",
+    "request_data": "Requesting device code with data:",
+    "response_status": "Device code response status: {{status}}",
+    "response_headers": "Device code response headers:",
+    "response_data": "Device code response data:",
+    "error_response": "Device code request failed:",
+    "init_failed": "Failed to initialize device flow (status: {{status}}): {{error}}"
+  },
+  "token": {
+    "request_failed": "Failed to request access token (status: {{status}})",
+    "expired": "OAuth device code has expired. Please try again.",
+    "error": "OAuth error: {{error}}",
+    "missing": "No access token received from GitHub."
+  },
+  "auth": {
+    "starting": "Starting GitHub OAuth authentication...",
+    "instructions": "To authenticate, please follow the steps below:",
+    "open_url": "Open the following URL in your browser: {{url}}",
+    "enter_code": "Enter the code: {{code}}",
+    "browser_open_failed": "Failed to open browser automatically. Please open the URL manually.",
+    "waiting": "Waiting for authentication to complete...",
+    "time_limit": "You have about {{minutes}} minutes to complete authentication.",
+    "success": "GitHub OAuth authentication completed successfully!",
+    "failed": "GitHub OAuth authentication failed: {{error}}"
+  },
+  "ui": {
+    "auth_guide_title": "🔐 GitHub Authentication Guide",
+    "auth_steps_title": "📋 Authentication Steps",
+    "auth_waiting_title": "⏳ Waiting for Authentication"
+  }
+}

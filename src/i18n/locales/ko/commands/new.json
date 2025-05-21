@@ -3,7 +3,8 @@
   "error": {
     "diff_failed": "diff 내용을 가져오지 못했습니다",
     "files_failed": "변경된 파일 목록을 가져오지 못했습니다",
-    "create_failed": "PR 생성에 실패했습니다: {{error}}"
+    "create_failed": "PR 생성에 실패했습니다: {{error}}",
+    "ai_pr_content_failed": "AI로 PR 본문을 생성하지 못했습니다"
   },
   "warning": {
     "push_failed": "브랜치를 원격 저장소에 푸시하지 못했습니다: {{error}}",
@@ -23,7 +24,8 @@
     "template_list_failed": "템플릿 목록을 가져오지 못했습니다.",
     "issue_fetch_failed": "이슈 #{{issueNumber}}을(를) 가져오지 못했습니다. 이슈가 존재하지 않거나 접근 권한이 없을 수 있습니다.",
     "issues_list_failed": "이슈 목록을 가져오지 못했습니다. 직접 이슈 번호를 입력해주세요.",
-    "browser_open_failed": "PR을 브라우저에서 열지 못했습니다."
+    "browser_open_failed": "PR을 브라우저에서 열지 못했습니다.",
+    "no_github_token_for_pr": "사용자 인증 토큰이 없어 PR 생성이 스킵되고, 리뷰만 진행됩니다. PR 생성을 원하시면 autopr init을 통해 인증을 먼저 진행해 주세요."
   },
   "info": {
     "creating": "PR 생성 중...",
@@ -57,7 +59,12 @@
     "recommended": "추천",
     "running_all_reviews": "모든 유형의 코드 리뷰를 실행합니다 (전체 코드 리뷰, 라인별 리뷰, PR 전체 분석)",
     "adding_code_review_to_pr": "PR에 자동 코드 리뷰를 추가합니다...",
-    "opening_browser": "PR을 브라우저에서 여는 중..."
+    "opening_browser": "PR을 브라우저에서 여는 중...",
+    "generating_pr_content": "AI로 PR 본문 생성 중...",
+    "generated_pr_content": "생성된 PR 본문:",
+    "bot_token_acquired": "GitHub App 봇 토큰을 획득했습니다.",
+    "line_by_line_review_comment": "라인별 코드 리뷰",
+    "current_branch": "현재 브랜치: {{branch}}"
   },
   "prompts": {
     "title": "PR 제목:",
@@ -93,13 +100,16 @@
     "finish_selection": "선택 완료",
     "page_navigation": "페이지 이동:",
     "open_browser": "PR을 브라우저에서 여시겠습니까?",
-    "update_pr_with_ai_description": "PR 설명을 AI가 생성한 내용으로 업데이트하시겠습니까?"
+    "update_pr_with_ai_description": "PR 설명을 AI가 생성한 내용으로 업데이트하시겠습니까?",
+    "select_base_branch_with_current": "PR 대상(target) 브랜치를 선택하세요 (현재 브랜치: {{branch}})"
   },
   "success": {
     "pr_updated": "PR #{{number}}이(가) 업데이트되었습니다",
     "cancelled": "PR 생성이 취소되었습니다",
     "code_review_added": "PR에 코드 리뷰 코멘트가 추가되었습니다",
-    "pr_description_updated": "PR 설명이 AI 생성 내용으로 업데이트되었습니다"
+    "line_review_added": "PR에 라인별 코드 리뷰 코멘트가 추가되었습니다",
+    "pr_description_updated": "PR 설명이 AI 생성 내용으로 업데이트되었습니다",
+    "pr_review_added": "PR에 PR 리뷰 코멘트가 추가되었습니다"
   },
   "debug": {
     "line_comment_mapping_failed": "라인 코멘트 매핑 실패 ({{file}}:{{line}}):"
