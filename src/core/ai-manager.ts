@@ -1,209 +1,193 @@
-import OpenAI from "openai";
-import { t } from "../i18n/index.js";
+import { createFetch } from "next-type-fetch";
 import { log } from "../utils/logger.js";
-import { OPENROUTER_CONFIG } from "../config/openrouter.js";
-import { ensureKeyActive } from "../utils/openrouter-provisioning.js";
+import { t } from "../i18n/index.js";
 
-const AI_PROVIDERS = ["openai", "openrouter"] as const;
-export type AIProvider = (typeof AI_PROVIDERS)[number];
+// 기본 fetch 인스턴스 생성
+const fetch = createFetch({
+  headers: {
+    "Content-Type": "application/json",
+    "x-ai-api-key": "EnnVP5DatEta2Tv6D0nklXEB",
+    "x-title": "github-autopr",
+  },
+});
 
-export interface AIConfig {
-  provider: AIProvider;
-  apiKey: string;
-  options?: {
-    model?: string;
-    temperature?: number;
-    maxTokens?: number;
-  };
+// 서버 응답 타입 정의
+interface APIResponse<T = any> {
+  success: boolean;
+  statusCode: number;
+  message: string;
+  data?: T;
+  error?: string;
 }
 
-export class AIManager {
-  private static instance: AIManager;
-  private aiConfig: AIConfig | null = null;
-  private openai: OpenAI | null = null;
-  private isInitialized = false;
-  private initializationPromise: Promise<void> | null = null;
-  private lastKeyActivationCheck: number = 0;
-  private readonly KEY_ACTIVATION_CHECK_THRESHOLD = 60 * 60 * 1000; // 1시간 임계값 (60분)
+/**
+ * AI API 클라이언트
+ * 외부 API 서버를 호출하여 AI 기능을 제공합니다.
+ */
+export class AIClient {
+  private baseUrl: string;
 
-  private constructor() {
-    // 인스턴스 생성 시 아무 작업도 하지 않음
+  constructor(baseUrl: string = "https://api.newextend.com/api") {
+    this.baseUrl = baseUrl;
   }
+  // constructor(baseUrl: string = "http://localhost:4000/api") {
+  //   this.baseUrl = baseUrl;
+  // }
 
-  static getInstance(): AIManager {
-    if (!AIManager.instance) {
-      AIManager.instance = new AIManager();
+  /**
+   * API 엔드포인트를 호출합니다.
+   * @param endpoint API 엔드포인트 경로
+   * @param data 요청 데이터
+   * @returns API 응답 데이터
+   */
+  public async callAPI<T>(endpoint: string, data: any): Promise<T> {
+    try {
+      const response = await fetch.post<APIResponse<T>>(
+        `${this.baseUrl}${endpoint}`,
+        data,
+      );
+
+      // 서버 응답 구조 처리
+      // 서버는 { success, statusCode, message, data: { 실제 데이터 }, error } 형식으로 응답
+      if (response.data && response.data.data) {
+        return response.data.data;
+      }
+
+      return response.data as unknown as T;
+    } catch (error) {
+      process.stdout.write(JSON.stringify(error, null, 2));
+      log.error(
+        t("core.ai_manager.error.api_call_failed", { endpoint }),
+        error,
+      );
+      throw new Error(
+        t("core.ai_manager.error.api_call_error", {
+          message:
+            error instanceof Error
+              ? error.message
+              : t("core.ai_manager.error.unknown_error"),
+        }),
+      );
     }
-    return AIManager.instance;
   }
 
   /**
-   * 필요한 경우에만 API 키 상태를 확인합니다.
-   * 마지막 확인 시간으로부터 일정 시간이 지났을 때만 실행됩니다.
+   * GitHub App 기본 정보를 가져옵니다.
+   * @returns GitHub App 정보 (appId, clientId)
    */
-  private async checkKeyStatusIfNeeded(): Promise<void> {
-    // OpenRouter가 아니면 확인하지 않음
-    if (this.aiConfig?.provider !== "openrouter") {
-      return;
-    }
-
-    const now = Date.now();
-    // 마지막 확인 시간으로부터 1시간 이상 지났을 때만 확인
-    if (
-      now - this.lastKeyActivationCheck >
-      this.KEY_ACTIVATION_CHECK_THRESHOLD
-    ) {
-      try {
-        log.debug("API 키 상태 주기적 확인 중...");
-        await ensureKeyActive().catch(() => {
-          // 에러 발생 시 무시하고 계속 진행
-        });
-      } catch (error) {
-        // 에러 로깅 없이 조용히 진행
-      }
-      this.lastKeyActivationCheck = now;
-    }
-  }
-
-  async initialize(config: AIConfig): Promise<void> {
-    if (this.initializationPromise) {
-      return this.initializationPromise;
-    }
-
-    if (this.isInitialized) {
-      if (JSON.stringify(this.aiConfig) === JSON.stringify(config)) {
-        log.debug("AI가 이미 초기화되어 있습니다.");
-        return;
-      }
-      this.reset();
-    }
-
-    this.initializationPromise = this._initialize(config);
-    return this.initializationPromise;
-  }
-
-  private async _initialize(config: AIConfig): Promise<void> {
+  public async getGitHubAppInfo(): Promise<{
+    appId: string;
+    clientId: string;
+  }> {
     try {
-      // OpenRouter인 경우 API 키 상태 확인
-      if (config.provider === "openrouter") {
-        await this.checkOpenRouterKeyStatus();
+      const response = await fetch.get<
+        APIResponse<{ appId: string; clientId: string }>
+      >(`${this.baseUrl}/github/app-info`);
+
+      // 서버 응답 구조 처리
+      if (response.data && response.data.data) {
+        return response.data.data;
       }
 
-      // 제공자별 초기화 함수 매핑
-      const providerInitializers: Record<
-        AIProvider,
-        (config: AIConfig) => void
-      > = {
-        openai: this.initializeOpenAI.bind(this),
-        openrouter: this.initializeOpenRouter.bind(this),
-      };
-
-      const initializer = providerInitializers[config.provider];
-      if (!initializer) {
-        throw new Error(`지원하지 않는 AI 제공자: ${config.provider}`);
-      }
-
-      initializer(config);
-      this.aiConfig = config;
-      this.isInitialized = true;
-      this.initializationPromise = null;
+      throw new Error(t("core.ai_manager.error.github_app_info_missing"));
     } catch (error) {
-      this.reset();
-      log.error(t("ai.initialization.failed"), error);
-      throw error;
+      log.error(t("core.ai_manager.error.github_app_info_failed"), error);
+      throw new Error(
+        t("core.ai_manager.error.github_app_info_error", {
+          message:
+            error instanceof Error
+              ? error.message
+              : t("core.ai_manager.error.unknown_error"),
+        }),
+      );
     }
   }
 
-  private async checkOpenRouterKeyStatus(): Promise<void> {
+  /**
+   * GitHub App 설치 토큰을 획득합니다.
+   * @param installationId GitHub App 설치 ID
+   * @returns 설치 토큰
+   */
+  public async getGitHubAppToken(installationId: number): Promise<string> {
     try {
-      log.debug("OpenRouter API 키 상태 확인 중...");
-      await ensureKeyActive().catch(() => {
-        // 에러가 발생해도 무시하고 계속 진행
-      });
-      // 마지막 확인 시간 업데이트
-      this.lastKeyActivationCheck = Date.now();
+      const response = await fetch.get<APIResponse<{ token: string }>>(
+        `${this.baseUrl}/github/app-token/${installationId}`,
+      );
+
+      // 서버 응답 구조 처리
+      if (response.data && response.data.data && response.data.data.token) {
+        return response.data.data.token;
+      }
+
+      throw new Error(t("core.ai_manager.error.token_missing"));
     } catch (error) {
-      // 에러 로깅 없이 조용히 진행
+      log.error(t("core.ai_manager.error.app_token_failed"), error);
+      throw new Error(
+        t("core.ai_manager.error.app_token_error", {
+          message:
+            error instanceof Error
+              ? error.message
+              : t("core.ai_manager.error.unknown_error"),
+        }),
+      );
     }
   }
 
-  private initializeOpenAI(config: AIConfig): void {
-    this.openai = new OpenAI({
-      apiKey: config.apiKey,
-    });
-  }
+  /**
+   * GitHub App 설치 목록을 조회합니다.
+   * @returns 설치 목록
+   */
+  public async getGitHubAppInstallations<T>(): Promise<T> {
+    try {
+      const response = await fetch.get<APIResponse<T>>(
+        `${this.baseUrl}/github/app-installations`,
+      );
 
-  private initializeOpenRouter(config: AIConfig): void {
-    this.openai = new OpenAI({
-      baseURL: OPENROUTER_CONFIG.BASE_URL,
-      apiKey: config.apiKey || OPENROUTER_CONFIG.API_KEY,
-    });
-    config.options = config.options || {};
-    config.options.model =
-      config.options?.model || OPENROUTER_CONFIG.DEFAULT_MODEL;
-  }
+      // 서버 응답 구조 처리
+      if (response.data && response.data.data) {
+        return response.data.data;
+      }
 
-  private reset(): void {
-    this.openai = null;
-    this.aiConfig = null;
-    this.isInitialized = false;
-    this.initializationPromise = null;
-  }
-
-  isEnabled(): boolean {
-    return this.isInitialized && !!this.aiConfig;
-  }
-
-  getOpenAI(): OpenAI {
-    if (!this.openai) {
-      throw new Error(t("ai.error.not_initialized"));
-    }
-
-    // OpenAI 인스턴스를 가져올 때 필요하면 API 키 상태 확인
-    this.checkKeyStatusIfNeeded();
-
-    return this.openai;
-  }
-
-  getProvider(): AIProvider | null {
-    return this.aiConfig?.provider || null;
-  }
-
-  getModel(): string | undefined {
-    return this.aiConfig?.options?.model;
-  }
-
-  static getDefaultModels(provider: AIProvider): string[] {
-    switch (provider) {
-      case "openai":
-        return ["gpt-4o", "gpt-4o-mini", "gpt-3.5-turbo"];
-      case "openrouter":
-        return [OPENROUTER_CONFIG.DEFAULT_MODEL];
-      default:
-        return [];
+      throw new Error(t("core.ai_manager.error.installations_missing"));
+    } catch (error) {
+      log.error(t("core.ai_manager.error.installations_failed"), error);
+      throw new Error(
+        t("core.ai_manager.error.installations_error", {
+          message:
+            error instanceof Error
+              ? error.message
+              : t("core.ai_manager.error.unknown_error"),
+        }),
+      );
     }
   }
 
-  static getModelDescription(model: string): string {
-    switch (model) {
-      case "claude-3-7-sonnet-latest":
-        return t("ai.models.anthropic.claude_3_7_sonnet_latest.description");
-      case "claude-3-5-sonnet-latest":
-        return t("ai.models.anthropic.claude_3_5_sonnet_latest.description");
-      case "claude-3-5-haiku-latest":
-        return t("ai.models.anthropic.claude_3_5_haiku_latest.description");
-      case "claude-3-opus-latest":
-        return t("ai.models.anthropic.claude_3_opus_latest.description");
-      case "claude-3-haiku-20240307":
-        return t("ai.models.anthropic.claude_3_haiku_20240307.description");
-      case "gpt-4":
-        return t("ai.models.openai.gpt_4.description");
-      case "gpt-3.5-turbo":
-        return t("ai.models.openai.gpt_3_5_turbo.description");
-      case "copilot-chat":
-        return t("ai.models.github_copilot.copilot_chat.description");
-      default:
-        return "";
+  /**
+   * GitHub OAuth Client 정보를 가져옵니다.
+   * @returns OAuth Client 정보 (oauthClientId)
+   */
+  public async getGitHubOAuthClientInfo(): Promise<{ oauthClientId: string }> {
+    try {
+      const response = await fetch.get<APIResponse<{ oauthClientId: string }>>(
+        `${this.baseUrl}/github/oauth-client-info`,
+      );
+      if (response.data && response.data.data) {
+        return response.data.data;
+      }
+      throw new Error(t("core.ai_manager.error.oauth_client_info_missing"));
+    } catch (error) {
+      log.error(t("core.ai_manager.error.oauth_client_info_failed"), error);
+      throw new Error(
+        t("core.ai_manager.error.oauth_client_info_error", {
+          message:
+            error instanceof Error
+              ? error.message
+              : t("core.ai_manager.error.unknown_error"),
+        }),
+      );
     }
   }
 }
+
+// API 클라이언트 기본 인스턴스 생성
+export const aiClient = new AIClient();

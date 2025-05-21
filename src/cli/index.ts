@@ -4,22 +4,17 @@ import { initializeI18n, t } from "../i18n/index.js";
 import { initCommand } from "./commands/init.js";
 import { newCommand } from "./commands/new.js";
 import { listCommand } from "./commands/list.js";
-import { reviewCommand } from "./commands/review.js";
 import { updateCommand } from "./commands/update.js";
 import { mergeCommand } from "./commands/merge.js";
 import { reopenCommand } from "./commands/reopen.js";
 import { createLangCommand } from "./commands/lang.js";
-import { createHookCommand } from "./commands/hook.js";
 import { createCollaboratorCommand } from "./commands/collaborator.js";
 import { commitCommand } from "./commands/commit.js";
 import { loadConfig } from "../core/config.js";
 import { log } from "../utils/logger.js";
 import { createReviewerGroupCommand } from "./commands/reviewer-group.js";
-import { createOpenRouterCommand } from "./commands/openrouter.js";
 import { createDailyReportCommand } from "./commands/daily-report.js";
-
-// 개발 모드 확인 (NODE_ENV가 development인 경우에만 true)
-const isDevelopment = process.env.NODE_ENV === "development";
+import { createTemplateCommand } from "./commands/template.js";
 
 const program = new Command();
 
@@ -30,8 +25,8 @@ async function main() {
 
     program
       .name("autopr")
-      .description(t("common.cli.description"))
-      .version("0.1.23");
+      .description(t("commands.index.program.description"))
+      .version("1.0.0");
 
     // 기본 명령어들
     program
@@ -48,11 +43,6 @@ async function main() {
       .command("list")
       .description(t("commands.list.description"))
       .action(listCommand);
-
-    program
-      .command("review <pr-number>")
-      .description(t("commands.review.description"))
-      .action(reviewCommand);
 
     program
       .command("update <pr-number>")
@@ -104,23 +94,18 @@ async function main() {
     // 언어 설정 명령어
     program.addCommand(createLangCommand());
 
-    // Git 훅 처리 명령어
-    program.addCommand(createHookCommand());
-
     // Collaborator 관리 명령어
     program.addCommand(createCollaboratorCommand());
 
     // 새로운 reviewer-group 명령어 추가
     program.addCommand(createReviewerGroupCommand());
 
-    // OpenRouter 명령어는 개발 모드에서만 추가
-    if (isDevelopment) {
-      program.addCommand(createOpenRouterCommand());
-    }
+    // 템플릿 관리 명령어 추가
+    program.addCommand(createTemplateCommand());
 
     await program.parseAsync();
   } catch (error) {
-    log.error(t("common.error.unknown"), error);
+    log.error(t("commands.index.error.unknown"), error);
     process.exit(1);
   }
 }

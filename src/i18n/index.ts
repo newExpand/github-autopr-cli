@@ -1,5 +1,5 @@
 import i18next from "i18next";
-import { readFileSync, existsSync } from "fs";
+import { existsSync, readFileSync, readdirSync, statSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
 
@@ -23,64 +23,119 @@ const defaultKoTranslation = {
   },
 };
 
-// i18n 파일 경로 설정 - 여러 경로를 시도하여 실제 파일이 있는 곳을 찾습니다
-function findLocalesPath(): string {
-  // 가능한 경로들
-  const possiblePaths = [
-    join(__dirname, "locales"), // dist/i18n/locales (컴파일된 구조)
-    join(__dirname, "..", "i18n", "locales"), // dist/i18n/locales (루트에서의 상대 경로)
-    join(process.cwd(), "dist", "i18n", "locales"), // 현재 작업 디렉토리 기준
-    join(__dirname, "..", "locales"), // dist/locales (추가)
-    join(__dirname, "..", "..", "locales"), // dist의 부모 디렉토리에 locales
-    join(process.cwd(), "dist", "locales"), // 현재 작업 디렉토리 아래 dist/locales
-    join(dirname(dirname(__dirname)), "locales"), // 전역 설치 환경을 위한 경로
-    join(dirname(dirname(dirname(__dirname))), "dist", "locales"), // npm 전역 설치 환경
-  ];
-
-  // 실제 존재하는 경로 찾기
-  for (const path of possiblePaths) {
-    if (existsSync(join(path, "en.json"))) {
-      console.log(`Found locales at: ${path}`);
-      return path;
-    }
-  }
-
-  // 기본 경로 (로그 출력 후 실패할 가능성 있음)
-  console.warn(
-    "Warning: Could not find locales directory. Using default path.",
-  );
-  return join(__dirname, "locales");
-}
-
-function loadLocale(language: string) {
+// JSON 파일을 동적으로 로드하는 함수
+function loadJsonFile(filePath: string) {
   try {
-    const localesPath = findLocalesPath();
-    const filePath = join(localesPath, `${language}.json`);
-    return JSON.parse(readFileSync(filePath, "utf-8"));
+    if (existsSync(filePath)) {
+      const data = readFileSync(filePath, "utf8");
+      return JSON.parse(data);
+    }
+    console.warn(`Warning: JSON file not found: ${filePath}`);
+    return {};
   } catch (error) {
-    console.warn(
-      `Warning: Could not load ${language}.json, using basic default translations.`,
-    );
-    return language === "ko" ? defaultKoTranslation : defaultEnTranslation;
+    console.error(`Error loading JSON file ${filePath}:`, error);
+    return {};
   }
 }
 
-const en = loadLocale("en");
-const ko = loadLocale("ko");
+// 로케일 디렉토리 경로 찾기
+function findLocalesPath(): string | null {
+  // 빌드 후 구조: dist/i18n/locales 또는 dist/locales
+  const localesPath = join(__dirname, "locales");
+  if (existsSync(localesPath)) {
+    return localesPath;
+  }
+  // 혹시 모를 구조 대응 (dist/i18n/locales)
+  const altPath = join(__dirname, "i18n", "locales");
+  if (existsSync(altPath)) {
+    return altPath;
+  }
+  console.warn("Warning: Could not find locales directory.");
+  return null;
+}
 
+// 특정 언어의 모든 번역 로드
+function loadTranslations(lang: string) {
+  const localesPath = findLocalesPath();
+  if (!localesPath) {
+    return lang === "ko" ? defaultKoTranslation : defaultEnTranslation;
+  }
+
+  try {
+    // 기본 common.json 파일 로드
+    const commonPath = join(localesPath, lang, "common.json");
+    const common = loadJsonFile(commonPath);
+
+    // core 디렉토리의 모든 JSON 파일 로드
+    const corePath = join(localesPath, lang, "core");
+    const core = existsSync(corePath) ? loadJsonFiles(corePath) : {};
+
+    // commands 디렉토리의 모든 JSON 파일 로드
+    const commandsPath = join(localesPath, lang, "commands");
+    const commands = existsSync(commandsPath)
+      ? loadJsonFiles(commandsPath)
+      : {};
+
+    return {
+      common,
+      core,
+      commands,
+    };
+  } catch (error) {
+    console.error(`Error loading translations for ${lang}:`, error);
+    return lang === "ko" ? defaultKoTranslation : defaultEnTranslation;
+  }
+}
+
+// 디렉토리 내 모든 JSON 파일 로드
+function loadJsonFiles(dirPath: string) {
+  if (!existsSync(dirPath)) {
+    return {};
+  }
+
+  const result: Record<string, any> = {};
+
+  try {
+    const files = readdirSync(dirPath);
+
+    for (const file of files) {
+      const filePath = join(dirPath, file);
+      const stats = statSync(filePath);
+
+      if (stats.isDirectory()) {
+        // 재귀적으로 하위 디렉토리 처리
+        result[file] = loadJsonFiles(filePath);
+      } else if (file.endsWith(".json")) {
+        // JSON 파일 로드
+        const key = file.replace(".json", "").replace(/-/g, "_");
+        result[key] = loadJsonFile(filePath);
+      }
+    }
+  } catch (error) {
+    console.error(`Error loading files from directory ${dirPath}:`, error);
+  }
+
+  return result;
+}
+
+// 번역 초기화
 export const initializeI18n = async (
   language: string = "en",
 ): Promise<typeof i18next> => {
+  const enTranslations = loadTranslations("en");
+  const koTranslations = loadTranslations("ko");
+
   await i18next.init({
     lng: language,
     fallbackLng: "en",
     resources: {
-      en: { translation: en },
-      ko: { translation: ko },
+      en: { translation: enTranslations },
+      ko: { translation: koTranslations },
     },
     interpolation: {
       escapeValue: false,
     },
+    debug: process.env.NODE_ENV === "development",
   });
 
   return i18next;

@@ -1,0 +1,46 @@
+{
+  "description": "Manage reviewer groups",
+  "add": {
+    "description": "Add a new reviewer group",
+    "argument": {
+      "name": "Name of the reviewer group"
+    },
+    "option": {
+      "members": "Comma-separated list of group members",
+      "strategy": "Rotation strategy (default: round-robin)"
+    },
+    "error": {
+      "duplicate_name": "A reviewer group with the name '{{name}}' already exists"
+    },
+    "success": "Successfully added reviewer group '{{name}}'"
+  },
+  "remove": {
+    "description": "Remove a reviewer group",
+    "argument": {
+      "name": "Name of the reviewer group to remove"
+    },
+    "error": {
+      "not_found": "Reviewer group '{{name}}' not found"
+    },
+    "success": "Successfully removed reviewer group '{{name}}'"
+  },
+  "update": {
+    "description": "Update an existing reviewer group",
+    "argument": {
+      "name": "Name of the reviewer group to update"
+    },
+    "option": {
+      "members": "Comma-separated list of group members",
+      "strategy": "Rotation strategy"
+    },
+    "error": {
+      "not_found": "Reviewer group '{{name}}' not found"
+    },
+    "success": "Successfully updated reviewer group '{{name}}'"
+  },
+  "list": {
+    "description": "List all reviewer groups",
+    "no_groups": "No reviewer groups found",
+    "group_info": "Group: {{name}} | Members: {{members}} | Strategy: {{strategy}}"
+  }
+}

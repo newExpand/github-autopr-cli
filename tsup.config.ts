@@ -1,6 +1,6 @@
 import { defineConfig } from "tsup";
 import { copyFile, mkdir, readFile, writeFile } from "fs/promises";
-import { join } from "path";
+import { join, dirname } from "path";
 import { glob } from "glob";
 
 export default defineConfig({
@@ -54,27 +54,29 @@ export default defineConfig({
       console.error("Error adding shebang:", error);
     }
 
-    // 수동으로 i18n 파일 복사 (최적화: 필수 언어 파일만 복사)
+    // i18n 로케일 파일 복사 - src/i18n/locales/* -> dist/i18n/locales/*
     try {
-      // 단일 경로에만 복사 (dist/locales)
-      await mkdir(join("dist", "locales"), { recursive: true });
+      // 기본 i18n 디렉토리 생성
+      await mkdir(join("dist", "i18n", "locales"), { recursive: true });
 
-      // 소스 파일 직접 지정
-      const sourceFiles = [
-        {
-          src: join("src", "i18n", "locales", "en.json"),
-          dest: join("dist", "locales", "en.json"),
-        },
-        {
-          src: join("src", "i18n", "locales", "ko.json"),
-          dest: join("dist", "locales", "ko.json"),
-        },
-      ];
+      // glob 패턴을 사용하여 모든 JSON 파일 찾기
+      const jsonFiles = await glob("src/i18n/locales/**/*.json", {
+        nodir: true,
+      });
+
+      console.log(`Found ${jsonFiles.length} locale JSON files to copy`);
 
       // 각 파일 복사
-      for (const { src, dest } of sourceFiles) {
-        await copyFile(src, dest);
-        console.log(`Copied: ${src} -> ${dest}`);
+      for (const srcPath of jsonFiles) {
+        // 대상 경로 생성 (src/i18n/locales/... -> dist/i18n/locales/...)
+        const destPath = srcPath.replace("src/", "dist/");
+
+        // 대상 디렉토리 생성
+        await mkdir(dirname(destPath), { recursive: true });
+
+        // 파일 복사
+        await copyFile(srcPath, destPath);
+        console.log(`Copied: ${srcPath} -> ${destPath}`);
       }
 
       console.log("Locale files copied successfully!");

@@ -1,0 +1,55 @@
+{
+  "description": "Manage PR templates",
+  "subcommands": {
+    "list": "List all available templates",
+    "create": "Create a new template",
+    "edit": "Edit an existing template",
+    "delete": "Delete a template",
+    "view": "View a template"
+  },
+  "error": {
+    "directory_create_failed": "Failed to create templates directory",
+    "list_failed": "Failed to list templates",
+    "read_failed": "Failed to read template '{{name}}'",
+    "save_failed": "Failed to save template '{{name}}'",
+    "delete_failed": "Failed to delete template '{{name}}'",
+    "create_failed": "Failed to create template '{{name}}'",
+    "edit_failed": "Failed to edit template '{{name}}'",
+    "view_failed": "Failed to view template '{{name}}'",
+    "template_not_found": "Template '{{name}}' not found",
+    "template_name_required": "Template name is required"
+  },
+  "info": {
+    "directory_created": "Created templates directory: {{dir}}",
+    "no_templates": "No templates available. Create one with 'autopr template create'",
+    "available_templates": "Available templates:",
+    "opening_editor": "Opening editor: {{editor}}",
+    "template_content": "Content of template '{{name}}':",
+    "no_changes": "No changes made to the template",
+    "delete_cancelled": "Template deletion cancelled"
+  },
+  "success": {
+    "saved": "Template '{{name}}' saved successfully",
+    "deleted": "Template '{{name}}' deleted successfully"
+  },
+  "prompts": {
+    "enter_name": "Enter template name:",
+    "select_template": "Select a template:",
+    "select_delete": "Select template to delete:",
+    "select_view": "Select template to view:",
+    "confirm_delete": "Are you sure you want to delete template '{{name}}'?"
+  },
+  "validation": {
+    "name_required": "Template name is required"
+  },
+  "help": {
+    "examples": "Examples",
+    "list": "List all available templates",
+    "create": "Create a new template (interactive)",
+    "create_named": "Create a template named 'feature-2'",
+    "edit": "Edit a template (select from list)",
+    "edit_named": "Edit the 'bugfix' template",
+    "delete": "Delete a template (select from list)",
+    "view": "View a template (select from list)"
+  }
+} 

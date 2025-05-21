@@ -1,0 +1,82 @@
+{
+  "description": "Merge a pull request",
+  "info": {
+    "title": "Pull Request Information",
+    "branch_info": "Branch Information",
+    "pr_branch": "PR Branch: {{branch}}",
+    "target_branch": "Target Branch: {{branch}}",
+    "author": "Author: {{author}}",
+    "checking_conflicts": "Checking for conflicts...",
+    "initialization_success": "AI features initialized successfully",
+    "current_branch": "Current branch: {{branch}}"
+  },
+  "conflict": {
+    "found": "Conflicts detected in this pull request",
+    "none": "No conflicts detected",
+    "resolve_guide": "Conflict Resolution Guide",
+    "files_with_conflicts": "Files with conflicts ({{count}})",
+    "git_commands": "Git Commands for Conflict Resolution",
+    "resolution_steps": "Follow these steps to resolve the conflicts:\n1. Edit each conflicting file to resolve the conflicts\n2. After resolving all conflicts, stage the changes with 'git add'\n3. Commit the resolution with 'git commit'\n4. Push the changes with 'git push'\n5. Run 'autopr merge' command again",
+    "marker_explanation": "Understanding conflict markers:",
+    "your_changes": "Your changes (current branch)",
+    "divider": "Divider between versions",
+    "incoming_changes": "Incoming changes (target branch)",
+    "after_resolving": "After resolving all conflicts, run these commands:",
+    "stage_changes": "Stage all resolved files",
+    "commit_resolution": "Commit the resolution",
+    "push_changes": "Push the changes",
+    "retry_merge": "Retry the merge operation",
+    "help_resources": "Additional resources for resolving conflicts:",
+    "no_actual_conflicts": "No actual conflicts found, proceeding with merge",
+    "ai_suggestion_start": "Analyzing conflicts with AI to provide resolution suggestions...",
+    "ai_suggestions": "AI Suggestions for Conflict Resolution:",
+    "use_ai_suggestions": "Would you like to follow these AI suggestions?",
+    "manual_resolution": "Proceeding with manual conflict resolution",
+    "ai_suggestion_failed": "Failed to generate AI suggestions for conflicts"
+  },
+  "error": {
+    "branch_checkout_failed": "Failed to checkout PR branch",
+    "conflict_check_failed": "Failed to check conflict in {{file}}: {{error}}",
+    "base_change_failed": "Failed to change base branch",
+    "cleanup_failed": "Failed to clean up after merge: {{error}}",
+    "manual_cleanup": "Please clean up branches manually",
+    "pr_closed": "This pull request is closed or merged",
+    "not_mergeable": "This pull request cannot be merged",
+    "merge_conflict": "Merge conflict detected"
+  },
+  "prompts": {
+    "change_base": "Current target branch is {{branch}}. Would you like to change it?",
+    "select_base": "Select new target branch:",
+    "confirm_base_change": "Change target branch from {{from}} to {{to}}?",
+    "merge_method": "Select merge method:",
+    "commit_title": "Enter squash commit title:",
+    "commit_message": "Enter squash commit message:",
+    "delete_branch": "Delete branch after merging?",
+    "confirm": "Confirm merge?",
+    "select_base_with_current": "Select new target branch (current branch: {{branch}}):"
+  },
+  "methods": {
+    "merge": "Merge (preserve all commits)",
+    "squash": "Squash (combine all commits)",
+    "rebase": "Rebase (replay commits on target)"
+  },
+  "success": {
+    "cancelled": "Operation cancelled",
+    "base_changed": "Target branch changed to {{branch}}",
+    "merged": "Pull request successfully merged"
+  },
+  "cleanup": {
+    "start": "Cleaning up after merge...",
+    "updating_base_branch": "Updating base branch {{branch}}",
+    "switching_to_base": "Switching to base branch {{branch}}",
+    "deleting_branch": "Deleting local branch {{branch}}",
+    "branch_deleted": "Local branch deleted",
+    "branch_already_deleted": "Branch already deleted",
+    "deleting_remote_branch": "Deleting remote branch",
+    "syncing_with_remote": "Syncing with remote",
+    "complete": "Cleanup complete"
+  },
+  "warning": {
+    "base_branch_not_found": "Base branch {{branch}} not found locally"
+  }
+}

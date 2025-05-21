@@ -1,0 +1,10 @@
+{
+  "error": {
+    "load_global_failed": "전역 설정을 불러오는 데 실패했습니다: {{error}}",
+    "load_project_failed": "프로젝트 설정을 불러오는 데 실패했습니다: {{error}}",
+    "save_global_failed": "전역 설정을 저장하는 데 실패했습니다: {{error}}",
+    "save_project_failed": "프로젝트 설정을 저장하는 데 실패했습니다: {{error}}",
+    "auto_override_notice": ".autopr.json 파일이 호환되지 않아 자동으로 초기화되었습니다. 기존 파일은 .bak으로 백업되었습니다.",
+    "global_invalid_notice": "전역 설정 파일이 호환되지 않습니다. 'autopr init'을 실행해 초기화해 주세요."
+  }
+}

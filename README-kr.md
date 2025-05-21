@@ -68,15 +68,6 @@ autopr new
 # PR 목록 조회하기 (대화형 선택 기능 포함)
 autopr list
 
-# PR 리뷰하기
-autopr review <pr-번호>
-# 가능한 리뷰 작업:
-# - PR 내용 보기
-# - AI 코드 리뷰 실행
-# - 승인/변경 요청/코멘트
-# - 브랜치 체크아웃
-# - GitHub에서 PR 열기
-
 # PR 업데이트하기
 autopr update <pr-번호>
 # 업데이트 가능 항목:

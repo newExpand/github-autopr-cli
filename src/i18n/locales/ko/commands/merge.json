@@ -1,0 +1,82 @@
+{
+  "description": "풀 리퀘스트 병합",
+  "info": {
+    "title": "풀 리퀘스트 정보",
+    "branch_info": "브랜치 정보",
+    "pr_branch": "PR 브랜치: {{branch}}",
+    "target_branch": "대상 브랜치: {{branch}}",
+    "author": "작성자: {{author}}",
+    "checking_conflicts": "충돌 확인 중...",
+    "initialization_success": "AI 기능이 성공적으로 초기화되었습니다",
+    "current_branch": "현재 브랜치: {{branch}}"
+  },
+  "conflict": {
+    "found": "이 풀 리퀘스트에서 충돌이 감지되었습니다",
+    "none": "충돌이 감지되지 않았습니다",
+    "resolve_guide": "충돌 해결 가이드",
+    "files_with_conflicts": "충돌이 있는 파일 ({{count}}개)",
+    "git_commands": "충돌 해결을 위한 Git 명령어",
+    "resolution_steps": "다음 단계에 따라 충돌을 해결하세요:\n1. 각 충돌 파일을 편집하여 충돌을 해결합니다\n2. 모든 충돌을 해결한 후 'git add'로 변경사항을 스테이징합니다\n3. 'git commit'으로 해결 사항을 커밋합니다\n4. 'git push'로 변경사항을 푸시합니다\n5. 'autopr merge' 명령어를 다시 실행합니다",
+    "marker_explanation": "충돌 마커 이해하기:",
+    "your_changes": "당신의 변경사항 (현재 브랜치)",
+    "divider": "버전 사이의 구분선",
+    "incoming_changes": "들어오는 변경사항 (대상 브랜치)",
+    "after_resolving": "모든 충돌을 해결한 후, 다음 명령어를 실행하세요:",
+    "stage_changes": "모든 해결된 파일 스테이징",
+    "commit_resolution": "해결 사항 커밋",
+    "push_changes": "변경사항 푸시",
+    "retry_merge": "병합 작업 다시 시도",
+    "help_resources": "충돌 해결을 위한 추가 리소스:",
+    "no_actual_conflicts": "실제 충돌이 발견되지 않았습니다. 병합을 진행합니다",
+    "ai_suggestion_start": "AI를 사용하여 충돌을 분석하고 해결 제안을 제공 중...",
+    "ai_suggestions": "충돌 해결을 위한 AI 제안:",
+    "use_ai_suggestions": "이 AI 제안을 따르시겠습니까?",
+    "manual_resolution": "수동 충돌 해결을 진행합니다",
+    "ai_suggestion_failed": "충돌에 대한 AI 제안 생성에 실패했습니다"
+  },
+  "error": {
+    "branch_checkout_failed": "PR 브랜치 체크아웃에 실패했습니다",
+    "conflict_check_failed": "{{file}} 파일의 충돌 확인에 실패했습니다: {{error}}",
+    "base_change_failed": "베이스 브랜치 변경에 실패했습니다",
+    "cleanup_failed": "병합 후 정리에 실패했습니다: {{error}}",
+    "manual_cleanup": "수동으로 브랜치를 정리해주세요",
+    "pr_closed": "이 풀 리퀘스트는 닫혔거나 병합되었습니다",
+    "not_mergeable": "이 풀 리퀘스트는 병합할 수 없습니다",
+    "merge_conflict": "병합 충돌이 감지되었습니다"
+  },
+  "prompts": {
+    "change_base": "현재 대상 브랜치는 {{branch}}입니다. 변경하시겠습니까?",
+    "select_base": "새 대상 브랜치 선택:",
+    "confirm_base_change": "대상 브랜치를 {{from}}에서 {{to}}(으)로 변경하시겠습니까?",
+    "merge_method": "병합 방법 선택:",
+    "commit_title": "스쿼시 커밋 제목 입력:",
+    "commit_message": "스쿼시 커밋 메시지 입력:",
+    "delete_branch": "병합 후 브랜치를 삭제하시겠습니까?",
+    "confirm": "병합을 확인하시겠습니까?",
+    "select_base_with_current": "새 대상 브랜치 선택 (현재 브랜치: {{branch}}):"
+  },
+  "methods": {
+    "merge": "병합 (모든 커밋 보존)",
+    "squash": "스쿼시 (모든 커밋 결합)",
+    "rebase": "리베이스 (대상에 커밋 재배치)"
+  },
+  "success": {
+    "cancelled": "작업이 취소되었습니다",
+    "base_changed": "대상 브랜치가 {{branch}}(으)로 변경되었습니다",
+    "merged": "풀 리퀘스트가 성공적으로 병합되었습니다"
+  },
+  "cleanup": {
+    "start": "병합 후 정리 중...",
+    "updating_base_branch": "베이스 브랜치 {{branch}} 업데이트 중",
+    "switching_to_base": "베이스 브랜치 {{branch}}(으)로 전환 중",
+    "deleting_branch": "로컬 브랜치 {{branch}} 삭제 중",
+    "branch_deleted": "로컬 브랜치가 삭제되었습니다",
+    "branch_already_deleted": "브랜치가 이미 삭제되었습니다",
+    "deleting_remote_branch": "원격 브랜치 삭제 중",
+    "syncing_with_remote": "원격과 동기화 중",
+    "complete": "정리가 완료되었습니다"
+  },
+  "warning": {
+    "base_branch_not_found": "베이스 브랜치 {{branch}}를 로컬에서 찾을 수 없습니다"
+  }
+}

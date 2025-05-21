@@ -1,0 +1,14 @@
+{
+  "description": "언어 설정 변경 또는 확인",
+  "argument": {
+    "language_code": "언어 코드 (예: en, ko)"
+  },
+  "error": {
+    "unsupported": "지원되지 않는 언어: {{language}}",
+    "supported_list": "지원되는 언어 목록: {{languages}}"
+  },
+  "success": {
+    "changed": "언어가 {{language}}(으)로 변경되었습니다",
+    "current": "현재 언어: {{language}}"
+  }
+}

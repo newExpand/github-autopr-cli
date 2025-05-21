@@ -1,0 +1,26 @@
+{
+  "description": "Update a pull request",
+  "info": {
+    "title": "Pull Request Information",
+    "current_status": "Current Status: {{status}}"
+  },
+  "prompts": {
+    "action": "What would you like to update?",
+    "new_title": "Enter new title:",
+    "new_body": "Enter new description:",
+    "new_status": "Select new status:"
+  },
+  "actions": {
+    "title": "Title",
+    "body": "Description",
+    "status": "Status"
+  },
+  "status": {
+    "draft": "Draft",
+    "ready": "Ready for review"
+  },
+  "success": {
+    "cancelled": "Update cancelled",
+    "all": "Pull request updated successfully"
+  }
+}

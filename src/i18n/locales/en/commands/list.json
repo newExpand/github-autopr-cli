@@ -1,0 +1,55 @@
+{
+  "description": "List pull requests",
+  "open_prs": "Open Pull Requests:",
+  "closed_prs": "Closed Pull Requests:",
+  "all_prs": "All Pull Requests:",
+  "no_prs": "No pull requests found",
+  "author": "Author: @{{login}}",
+  "status": "Status: {{status}}",
+  "merge_status": "Merge status: {{status}}",
+  "state": "State: {{state}}",
+  "merged_info": "This PR was merged",
+  "url": "URL: {{url}}",
+  "loading_more": "Loading more PRs (page {{page}})...",
+  "max_pages_reached": "Maximum page limit reached (10 pages)",
+  "no_more_prs": "No more pull requests found",
+  "states": {
+    "open": "Open",
+    "closed": "Closed",
+    "all": "All",
+    "merged": "Merged"
+  },
+  "status": {
+    "draft": "Draft",
+    "ready": "Ready for review",
+    "checking": "Checking",
+    "conflicting": "Conflicts",
+    "mergeable": "Ready to merge",
+    "unknown": "Unknown"
+  },
+  "actions": {
+    "review": "Review",
+    "merge": "Merge",
+    "update": "Update",
+    "reopen": "Reopen",
+    "open": "Open in Browser",
+    "cancel": "Cancel"
+  },
+  "prompts": {
+    "select_state": "Select PR state to display:",
+    "select_count": "How many PRs do you want to see?",
+    "try_another_state": "No PRs found with this state. Would you like to try another state?",
+    "load_more": "There might be more PRs. Load more?",
+    "load_more_again": "Would you like to load more PRs?",
+    "want_to_select": "Would you like to select a PR for an action?",
+    "select_pr": "Select a PR:",
+    "action": "What would you like to do with this PR?"
+  },
+  "success": {
+    "cancelled": "Operation cancelled",
+    "opened": "PR opened in browser"
+  },
+  "error": {
+    "browser_open_failed": "Failed to open browser: {{error}}"
+  }
+}

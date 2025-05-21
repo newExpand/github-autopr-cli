@@ -1,6 +1,8 @@
 import { homedir } from "os";
 import { join } from "path";
 import { readFile, writeFile, mkdir } from "fs/promises";
+import { existsSync, renameSync } from "fs";
+import { log } from "../utils/logger.js";
 import { t } from "../i18n/index.js";
 import {
   Config,
@@ -19,16 +21,16 @@ const PROJECT_CONFIG_FILE = ".autopr.json";
 const DEFAULT_GLOBAL_CONFIG: GlobalConfig = {
   githubToken: "",
   language: "en",
+  githubApp: {
+    appId: "",
+    clientId: "",
+    installationId: 0,
+  },
 };
 
-const DEFAULT_PROJECT_CONFIG: ProjectConfig = {
-  defaultBranch: "main",
-  developmentBranch: "dev",
+export const DEFAULT_PROJECT_CONFIG: ProjectConfig = {
   defaultReviewers: [],
-  autoPrEnabled: true,
-  defaultLabels: [],
   reviewerGroups: [],
-  filePatterns: [],
   branchPatterns: [
     {
       pattern: "feat/*",
@@ -90,16 +92,6 @@ const DEFAULT_PROJECT_CONFIG: ProjectConfig = {
       reviewers: [],
       reviewerGroups: [],
     },
-    {
-      pattern: "release/*",
-      type: "release" as const,
-      draft: false,
-      labels: ["release"],
-      template: "release",
-      autoAssignReviewers: true,
-      reviewers: [],
-      reviewerGroups: [],
-    },
   ],
 };
 
@@ -112,9 +104,8 @@ export async function loadGlobalConfig(): Promise<GlobalConfig> {
     if ((error as NodeJS.ErrnoException).code === "ENOENT") {
       return DEFAULT_GLOBAL_CONFIG;
     }
-    throw new Error(
-      t("config.error.load_global_failed", { error: String(error) }),
-    );
+    log.error(t("core.config.global_invalid_notice"));
+    process.exit(1);
   }
 }
 
@@ -134,8 +125,18 @@ export async function loadProjectConfig(): Promise<ProjectConfig> {
     if ((error as NodeJS.ErrnoException).code === "ENOENT") {
       return DEFAULT_PROJECT_CONFIG;
     }
+    if (existsSync(PROJECT_CONFIG_FILE)) {
+      const backupFile = PROJECT_CONFIG_FILE + ".bak";
+      renameSync(PROJECT_CONFIG_FILE, backupFile);
+      await writeFile(
+        PROJECT_CONFIG_FILE,
+        JSON.stringify(DEFAULT_PROJECT_CONFIG, null, 2),
+      );
+      log.info(t("core.config.auto_override_notice"));
+      return DEFAULT_PROJECT_CONFIG;
+    }
     throw new Error(
-      t("config.error.load_project_failed", { error: String(error) }),
+      t("core.config.error.load_project_failed", { error: String(error) }),
     );
   }
 }
@@ -158,7 +159,7 @@ export async function saveGlobalConfig(config: GlobalConfig): Promise<void> {
     await writeFile(GLOBAL_CONFIG_FILE, JSON.stringify(config, null, 2));
   } catch (error) {
     throw new Error(
-      t("config.error.save_global_failed", { error: String(error) }),
+      t("core.config.error.save_global_failed", { error: String(error) }),
     );
   }
 }
@@ -168,7 +169,7 @@ export async function saveProjectConfig(config: ProjectConfig): Promise<void> {
     await writeFile(PROJECT_CONFIG_FILE, JSON.stringify(config, null, 2));
   } catch (error) {
     throw new Error(
-      t("config.error.save_project_failed", { error: String(error) }),
+      t("core.config.error.save_project_failed", { error: String(error) }),
     );
   }
 }
@@ -207,14 +208,14 @@ export async function updateProjectConfig(
   return validatedConfig;
 }
 
-// 기존 updateConfig는 호환성을 위해 유지
+// updateConfig
 export async function updateConfig(updates: Partial<Config>): Promise<Config> {
-  const { githubToken, language, ...projectUpdates } = updates;
+  const { githubToken, language, githubApp, ...projectUpdates } = updates;
 
-  // 전역 설정과 프로젝트 설정을 분리하여 업데이트
   const globalUpdates: Partial<GlobalConfig> = {
     ...(githubToken && { githubToken }),
     ...(language && { language }),
+    ...(githubApp !== undefined && { githubApp }),
   };
 
   if (Object.keys(globalUpdates).length > 0) {

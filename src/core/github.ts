@@ -9,6 +9,7 @@ import {
 } from "../types/github.js";
 import { t } from "../i18n/index.js";
 import { log } from "../utils/logger.js";
+import { getInstallationToken } from "./github-app.js";
 
 let octokit: Octokit | null = null;
 const prStatusCache = new Map<
@@ -32,28 +33,36 @@ const collaboratorsCache = new Map<
   { data: Collaborator[]; timestamp: number }
 >();
 
-export async function getOctokit(token?: string): Promise<Octokit> {
-  if (token) {
-    // 새로운 토큰으로 인스턴스 생성
-    octokit = new Octokit({ auth: token });
-  } else if (!octokit) {
-    // 기존 설정에서 토큰 가져오기
-    const config = await loadConfig();
-    if (!config?.githubToken) {
-      throw new Error(t("common.error.github_token"));
-    }
-    octokit = new Octokit({ auth: config.githubToken });
-  }
-  return octokit;
-}
+export async function getOctokit(): Promise<Octokit> {
+  // 캐시된 Octokit 인스턴스가 있으면 반환
+  if (octokit) return octokit;
 
-export async function validateGitHubToken(token: string): Promise<boolean> {
   try {
-    const client = new Octokit({ auth: token });
-    await client.rest.users.getAuthenticated();
-    return true;
+    // 설정 로드
+    const config = await loadConfig();
+
+    // GitHub App 설정이 있으면 시도
+    if (config.githubApp && config.githubApp.installationId) {
+      try {
+        // 설치 토큰 얻기 - 서버 API를 통해 획득
+        const installationToken = await getInstallationToken(
+          config.githubApp.installationId,
+        );
+        octokit = new Octokit({ auth: installationToken });
+        return octokit;
+      } catch (appError) {
+        // GitHub App 인증 실패 시 더 명확한 오류 메시지 제공
+        log.error("GitHub App 인증 실패:", appError);
+        throw new Error(t("core.github.error.github_app_auth"));
+      }
+    }
+
+    // GitHub App 설정이 없는 경우
+    throw new Error(t("core.github.error.github_token"));
   } catch (error) {
-    return false;
+    // 인증 정보가 없거나 유효하지 않은 경우
+    log.error("GitHub 인증 실패:", error);
+    throw error;
   }
 }
 
@@ -141,8 +150,11 @@ export async function createPullRequest(params: {
   head: string;
   base: string;
   draft?: boolean;
+  token?: string; // 유저 OAuth 토큰
 }): Promise<PullRequest> {
-  const client = await getOctokit();
+  const client = params.token
+    ? new Octokit({ auth: params.token })
+    : await getOctokit();
   try {
     const response = await client.rest.pulls.create({
       ...params,
@@ -458,31 +470,36 @@ export async function mergePullRequest({
   const client = await getOctokit();
 
   // PR 상태 확인
-  log.info(`[DEBUG] PR #${pull_number} 병합 시작`);
-  log.info(`[DEBUG] 소유자: ${owner}, 저장소: ${repo}`);
-  log.info(`[DEBUG] 병합 방법: ${merge_method}`);
+  log.info(t("core.github.info.debug.pr_merge_start", { number: pull_number }));
+  log.info(t("core.github.info.debug.owner_repo", { owner, repo }));
+  log.info(t("core.github.info.debug.merge_method", { method: merge_method }));
 
   const pr = await getPullRequest({ owner, repo, pull_number });
-  log.info(`[DEBUG] PR 상태: ${pr.state}`);
-  log.info(`[DEBUG] PR 제목: ${pr.title}`);
-  log.info(`[DEBUG] PR 브랜치: ${pr.head.ref} -> ${pr.base.ref}`);
+  log.info(t("core.github.info.debug.pr_state", { state: pr.state }));
+  log.info(t("core.github.info.debug.pr_title", { title: pr.title }));
+  log.info(
+    t("core.github.info.debug.pr_branch", {
+      head: pr.head.ref,
+      base: pr.base.ref,
+    }),
+  );
 
   if (pr.state !== "open") {
-    log.error(`[DEBUG] PR이 열려있지 않음: ${pr.state}`);
-    throw new Error(t("commands.merge.error.pr_closed"));
+    log.error(t("core.github.info.debug.pr_not_open", { state: pr.state }));
+    throw new Error(t("core.github.error.pr_closed"));
   }
 
   // 병합 가능 상태 확인
   const status = await getPullRequestStatus({ owner, repo, pull_number });
-  log.info(`[DEBUG] 병합 가능 상태: ${status}`);
+  log.info(t("core.github.info.debug.merge_status", { status }));
 
   if (status !== "MERGEABLE") {
-    log.error(`[DEBUG] PR을 병합할 수 없음: ${status}`);
-    throw new Error(t("commands.merge.error.not_mergeable"));
+    log.error(t("core.github.info.debug.pr_not_mergeable", { status }));
+    throw new Error(t("core.github.error.not_mergeable"));
   }
 
   // 병합 실행
-  log.info("[DEBUG] 병합 시도 중...");
+  log.info(t("core.github.info.debug.merge_attempt"));
   try {
     await client.rest.pulls.merge({
       owner,
@@ -492,29 +509,37 @@ export async function mergePullRequest({
       commit_title,
       commit_message,
     });
-    log.info("[DEBUG] 병합 성공");
+    log.info(t("core.github.info.debug.merge_success"));
   } catch (error) {
     log.error(
-      `[DEBUG] 병합 실패: ${error instanceof Error ? error.message : String(error)}`,
+      t("core.github.info.debug.merge_failed", {
+        error: error instanceof Error ? error.message : String(error),
+      }),
     );
     throw error;
   }
 
   // 브랜치 삭제
   if (delete_branch) {
-    log.info(`[DEBUG] 브랜치 삭제 시도: ${pr.head.ref}`);
+    log.info(
+      t("core.github.info.debug.branch_delete_attempt", {
+        branch: pr.head.ref,
+      }),
+    );
     try {
       await client.rest.git.deleteRef({
         owner,
         repo,
         ref: `heads/${pr.head.ref}`,
       });
-      log.info("[DEBUG] 브랜치 삭제 성공");
+      log.info(t("core.github.info.debug.branch_delete_success"));
     } catch (error) {
       log.warn(
-        `[DEBUG] 브랜치 삭제 실패: ${error instanceof Error ? error.message : String(error)}`,
+        t("core.github.info.debug.branch_delete_failed", {
+          error: error instanceof Error ? error.message : String(error),
+        }),
       );
-      log.warn(t("commands.merge.warning.branch_delete_failed"));
+      log.warn(t("core.github.warning.branch_delete_failed"));
     }
   }
 }
@@ -571,7 +596,7 @@ export async function validateReviewers(params: {
 
   if (invalid.length > 0) {
     log.warn(
-      t("common.warning.invalid_reviewers", {
+      t("core.github.warning.invalid_reviewers", {
         reviewers: invalid.join(", "),
       }),
     );
@@ -861,8 +886,180 @@ export async function checkDraftPRAvailability(params: {
     // 일단 private 여부로만 판단
     return !repository.private;
   } catch (error) {
-    // 에러 발생 시 false를 반환하여 안전하게 처리
-    log.error("Failed to check draft PR availability:", error);
+    // 인증 오류가 발생하거나 다른 이유로 확인할 수 없는 경우
+    // false를 반환하여 일반 PR로 진행하도록 함
+    log.warn("Draft PR 기능 확인 실패, 일반 PR로 진행합니다:", error);
     return false;
+  }
+}
+
+/**
+ * PR에 코드 리뷰 코멘트를 추가합니다.
+ * @param params PR 정보 및 리뷰 내용
+ * @returns 리뷰 결과
+ */
+export async function createPullRequestReview(params: {
+  owner: string;
+  repo: string;
+  pull_number: number;
+  body?: string;
+  event?: "APPROVE" | "REQUEST_CHANGES" | "COMMENT";
+  comments?: Array<{
+    path: string;
+    position?: number;
+    line?: number;
+    side?: "LEFT" | "RIGHT";
+    body: string;
+  }>;
+}): Promise<{ id: number; url: string }> {
+  const client = await getOctokit();
+
+  try {
+    // GitHub API의 파라미터 형식에 맞게 변환
+    const apiParams: any = {
+      owner: params.owner,
+      repo: params.repo,
+      pull_number: params.pull_number,
+      body: params.body || "",
+      event: params.event || "COMMENT",
+    };
+
+    // 라인 코멘트가 있는 경우
+    if (params.comments && params.comments.length > 0) {
+      // GitHub API 요구사항에 맞게 코멘트 변환
+      // line이 있으면 position 대신 line을 사용하는 새 API 형식으로 처리
+      apiParams.comments = params.comments.map((comment) => {
+        const apiComment: any = {
+          path: comment.path,
+          body: comment.body,
+        };
+
+        // line이 있으면 새 API 형식으로 처리
+        if (comment.line) {
+          apiComment.line = comment.line;
+          apiComment.side = comment.side || "RIGHT"; // RIGHT는 PR 브랜치 코드, LEFT는 베이스 브랜치 코드
+        } else if (comment.position) {
+          apiComment.position = comment.position;
+        }
+
+        return apiComment;
+      });
+    }
+
+    // PR 리뷰 생성 API 호출
+    const response = await client.rest.pulls.createReview(apiParams);
+
+    return {
+      id: response.data.id,
+      url: response.data.html_url,
+    };
+  } catch (error) {
+    log.error("PR 리뷰 생성 실패:", error);
+    throw new Error(
+      t("commands.review.error.submit_failed", {
+        error: error instanceof Error ? error.message : String(error),
+      }),
+    );
+  }
+}
+
+/**
+ * 코드 라인 정보를 가져오기 위한 특정 파일의 PR diff 내용을 가져옵니다.
+ * @param params PR 및 파일 정보
+ * @returns 파일의 diff 정보 (가능한 경우 라인 번호 포함)
+ */
+export async function getPullRequestFileDiff(params: {
+  owner: string;
+  repo: string;
+  pull_number: number;
+  file_path: string;
+}): Promise<{
+  patch?: string;
+  changes: Array<{
+    oldLineNumber?: number;
+    newLineNumber?: number;
+    content: string;
+    type: "added" | "removed" | "unchanged";
+  }>;
+}> {
+  const client = await getOctokit();
+
+  try {
+    // 파일 내용 가져오기
+    const response = await client.rest.pulls.listFiles({
+      owner: params.owner,
+      repo: params.repo,
+      pull_number: params.pull_number,
+    });
+
+    // 해당 파일 찾기
+    const fileData = response.data.find(
+      (file) => file.filename === params.file_path,
+    );
+    if (!fileData || !fileData.patch) {
+      return { changes: [] };
+    }
+
+    // patch 정보 파싱하여 라인 번호 정보 추출
+    const changes: Array<{
+      oldLineNumber?: number;
+      newLineNumber?: number;
+      content: string;
+      type: "added" | "removed" | "unchanged";
+    }> = [];
+
+    // patch 파싱 (단순화된 방식으로 구현)
+    const lines = fileData.patch.split("\n");
+    let oldLineNumber = 0;
+    let newLineNumber = 0;
+
+    for (const line of lines) {
+      if (line.startsWith("@@")) {
+        // diff 헤더 파싱하여 시작 라인 번호 추출
+        // 예: @@ -1,7 +1,7 @@ 형식에서 숫자 추출
+        const match = line.match(/@@ -(\d+)(?:,\d+)? \+(\d+)(?:,\d+)? @@/);
+        if (match) {
+          oldLineNumber = parseInt(match[1], 10) - 1;
+          newLineNumber = parseInt(match[2], 10) - 1;
+        }
+        continue;
+      }
+
+      if (line.startsWith("-")) {
+        // 삭제된 라인
+        oldLineNumber++;
+        changes.push({
+          oldLineNumber,
+          content: line.substring(1),
+          type: "removed",
+        });
+      } else if (line.startsWith("+")) {
+        // 추가된 라인
+        newLineNumber++;
+        changes.push({
+          newLineNumber,
+          content: line.substring(1),
+          type: "added",
+        });
+      } else {
+        // 변경되지 않은 라인
+        oldLineNumber++;
+        newLineNumber++;
+        changes.push({
+          oldLineNumber,
+          newLineNumber,
+          content: line.startsWith(" ") ? line.substring(1) : line,
+          type: "unchanged",
+        });
+      }
+    }
+
+    return {
+      patch: fileData.patch,
+      changes,
+    };
+  } catch (error) {
+    log.error("PR 파일 diff 가져오기 실패:", error);
+    return { changes: [] };
   }
 }

@@ -1,0 +1,45 @@
+{
+  "description": "일일 커밋 보고서 생성",
+  "title": "일일 커밋 보고서",
+  "date_single": "날짜: {{date}}",
+  "date_range": "기간: {{from}} ~ {{to}}",
+  "user": "사용자: {{username}}",
+  "ai_summary": "AI 요약",
+  "summary": "요약",
+  "total_commits": "총 커밋 수: {{count}}개",
+  "files_changed": "변경된 파일 수: {{count}}개",
+  "lines_added": "추가된 줄 수: {{count}}줄",
+  "lines_deleted": "삭제된 줄 수: {{count}}줄",
+  "hourly_distribution": "시간대별 분포",
+  "branch_distribution": "브랜치별 분포",
+  "file_types": "파일 유형별 분포",
+  "fetching_commit_dates": "커밋 날짜 가져오는 중...",
+  "no_commit_dates": "커밋 날짜를 찾을 수 없습니다",
+  "select_date": "날짜 선택:",
+  "fetching": "{{date}} 날짜의 {{username}} 커밋 가져오는 중...",
+  "report_saved": "보고서가 저장되었습니다: {{path}}",
+  "options": {
+    "username": "GitHub 사용자 이름 지정",
+    "format": "출력 형식 (console, json, markdown)",
+    "date": "날짜 지정 (YYYY-MM-DD)",
+    "output": "보고서를 파일로 저장"
+  },
+  "info": {
+    "initialization_success": "AI 기능이 성공적으로 초기화되었습니다",
+    "ai_not_available": "AI 요약을 생성하지 못했습니다. 자세한 내용은 로그를 확인하세요."
+  },
+  "error": {
+    "commit_dates_failed": "커밋 날짜를 가져오지 못했습니다",
+    "user_not_found": "사용자를 찾을 수 없습니다",
+    "local_commits_failed": "로컬 커밋을 가져오지 못했습니다",
+    "ai_generation_failed": "AI 요약 생성에 실패했습니다",
+    "ai_fallback": "AI 요약 생성에 실패했습니다. 자세한 내용은 로그를 확인하세요.",
+    "ai_init_failed": "AI 초기화에 실패했습니다",
+    "ai_required": "이 기능은 AI가 필요합니다"
+  },
+  "debug": {
+    "using_github_user": "GitHub 사용자 이름 사용: {{username}}",
+    "github_user_failed": "GitHub 사용자 이름을 가져오지 못했습니다",
+    "using_git_user": "Git 사용자 이름 사용: {{username}}"
+  }
+}

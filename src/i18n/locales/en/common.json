@@ -1,0 +1,25 @@
+{
+  "success": {
+    "init": "Initialization complete",
+    "pr_created": "Pull request created successfully",
+    "review_submitted": "Review submitted successfully"
+  },
+  "error": {
+    "github_token": "GitHub token is not configured. Please run 'autopr init' to configure GitHub authentication.",
+    "not_git_repo": "Current directory is not a git repository or unable to get repository information.",
+    "unknown": "An unexpected error occurred: {{error}}",
+    "no_commits": "There are no commits between the branches. Please make changes before creating a PR.",
+    "pr_exists": "A pull request already exists for this branch.",
+    "base_modified": "Base branch was modified. Please update your branch with the latest changes.",
+    "config_load_failed": "Failed to load configuration.",
+    "get_invitation_status": "Failed to get invitation status: {{error}}",
+    "get_invitation_statuses": "Failed to get invitation statuses: {{error}}",
+    "get_conflicts": "Failed to get PR conflicts: {{error}}"
+  },
+  "warning": {
+    "merge_conflict": "There might be merge conflicts that need to be resolved",
+    "merge_status_unknown": "GitHub is still calculating merge status",
+    "invalid_reviewers": "The following reviewers are not valid collaborators and will be skipped: {{reviewers}}",
+    "draft_not_available": "Draft PR feature is not available for this repository. Creating a regular PR instead."
+  }
+} 

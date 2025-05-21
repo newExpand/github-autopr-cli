@@ -1,0 +1,26 @@
+{
+  "description": "풀 리퀘스트 업데이트",
+  "info": {
+    "title": "풀 리퀘스트 정보",
+    "current_status": "현재 상태: {{status}}"
+  },
+  "prompts": {
+    "action": "무엇을 업데이트하시겠습니까?",
+    "new_title": "새 제목 입력:",
+    "new_body": "새 설명 입력:",
+    "new_status": "새 상태 선택:"
+  },
+  "actions": {
+    "title": "제목",
+    "body": "설명",
+    "status": "상태"
+  },
+  "status": {
+    "draft": "초안",
+    "ready": "리뷰 준비됨"
+  },
+  "success": {
+    "cancelled": "업데이트가 취소되었습니다",
+    "all": "풀 리퀘스트가 성공적으로 업데이트되었습니다"
+  }
+}

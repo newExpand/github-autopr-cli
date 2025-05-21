@@ -1,0 +1,44 @@
+{
+  "description": "Manage collaborators for the repository",
+  "invite": {
+    "description": "Invite a collaborator to the repository"
+  },
+  "list": {
+    "description": "List all collaborators of the repository",
+    "title": "Collaborators:",
+    "item": "- @{{username}} ({{permission}})"
+  },
+  "remove": {
+    "description": "Remove collaborators from the repository"
+  },
+  "status": {
+    "description": "Check invitation status for a collaborator",
+    "no_invitation": "No invitation found for @{{username}}",
+    "no_invitations": "No pending invitations found",
+    "info": "@{{username}}: {{status}} (invited: {{invitedAt}}, expires: {{expiresAt}})",
+    "all_title": "Invitation statuses:",
+    "pending": "Pending",
+    "accepted": "Accepted",
+    "expired": "Expired"
+  },
+  "status_all": {
+    "description": "Check all invitation statuses"
+  },
+  "no_collaborators": "No collaborators found for this repository",
+  "prompts": {
+    "permission": "Select permission level:",
+    "select_to_remove": "Select collaborators to remove:",
+    "confirm_remove_multiple": "Remove {{count}} selected collaborator(s)?"
+  },
+  "permissions": {
+    "pull": "Read",
+    "push": "Write",
+    "admin": "Admin"
+  },
+  "success": {
+    "invited": "Successfully invited @{{username}} as a collaborator",
+    "removed": "Successfully removed @{{username}} as a collaborator",
+    "all_removed": "Successfully removed all selected collaborators",
+    "cancelled": "Operation cancelled"
+  }
+}

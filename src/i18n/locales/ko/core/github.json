@@ -1,0 +1,46 @@
+{
+  "error": {
+    "github_token": "GitHub 토큰을 찾을 수 없습니다. 'autopr init'을 먼저 실행하세요",
+    "not_git_repo": "Git 저장소가 아닙니다",
+    "no_commits": "브랜치 간 커밋을 찾을 수 없습니다",
+    "pr_exists": "이 브랜치에 대한 풀 리퀘스트가 이미 존재합니다",
+    "base_modified": "기본 브랜치가 수정되었습니다. 최신 변경사항을 가져오세요",
+    "base_change_failed": "베이스 브랜치 변경에 실패했습니다",
+    "merge_conflict": "병합 충돌이 감지되었습니다",
+    "pr_closed": "이 풀 리퀘스트는 닫혔거나 병합되었습니다",
+    "not_mergeable": "이 풀 리퀘스트는 병합할 수 없습니다",
+    "submit_failed": "리뷰 제출에 실패했습니다",
+    "get_invitation_status": "초대 상태 확인에 실패했습니다: {{error}}",
+    "get_invitation_statuses": "초대 상태 목록 확인에 실패했습니다: {{error}}",
+    "get_conflicts": "풀 리퀘스트 충돌 정보 가져오기에 실패했습니다: {{error}}",
+    "github_app_auth": "GitHub API 인증 실패: 서버를 통한 GitHub App 토큰 획득에 실패했습니다. 네트워크 연결 또는 서버 상태를 확인하세요.",
+    "app_info": "앱 정보를 가져오지 못했습니다. 기본값을 사용합니다"
+  },
+  "warning": {
+    "merge_conflict": "이 풀 리퀘스트에서 병합 충돌이 감지되었습니다",
+    "merge_status_unknown": "병합 상태를 알 수 없습니다. 나중에 다시 확인해 주세요",
+    "branch_delete_failed": "원격 브랜치 삭제에 실패했습니다. 수동으로 삭제해야 할 수 있습니다",
+    "invalid_reviewers": "다음 리뷰어는 유효하지 않습니다: {{reviewers}}",
+    "draft_pr_check_failed": "Draft PR 기능 확인에 실패했습니다. 일반 PR로 진행합니다"
+  },
+  "info": {
+    "debug": {
+      "pr_merge_start": "[DEBUG] PR #{{number}} 병합 시작",
+      "owner_repo": "[DEBUG] 소유자: {{owner}}, 저장소: {{repo}}",
+      "merge_method": "[DEBUG] 병합 방법: {{method}}",
+      "pr_state": "[DEBUG] PR 상태: {{state}}",
+      "pr_title": "[DEBUG] PR 제목: {{title}}",
+      "pr_branch": "[DEBUG] PR 브랜치: {{head}} -> {{base}}",
+      "pr_not_open": "[DEBUG] PR이 열려있지 않음: {{state}}",
+      "merge_status": "[DEBUG] 병합 가능 상태: {{status}}",
+      "pr_not_mergeable": "[DEBUG] PR을 병합할 수 없음: {{status}}",
+      "merge_attempt": "[DEBUG] 병합 시도 중...",
+      "merge_success": "[DEBUG] 병합 성공",
+      "merge_failed": "[DEBUG] 병합 실패: {{error}}",
+      "branch_delete_attempt": "[DEBUG] 브랜치 삭제 시도: {{branch}}",
+      "branch_delete_success": "[DEBUG] 브랜치 삭제 성공",
+      "branch_delete_failed": "[DEBUG] 브랜치 삭제 실패: {{error}}"
+    },
+    "update_review": "GraphQL API를 사용하여 PR 리뷰 상태 업데이트 중..."
+  }
+}

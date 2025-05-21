@@ -14,7 +14,6 @@ import { log } from "../../utils/logger.js";
 import { execSync } from "child_process";
 import { existsSync } from "fs";
 import { resolve } from "path";
-import os from "os";
 import { getOctokit } from "../../core/github.js";
 
 interface ConflictFile {
@@ -30,73 +29,66 @@ async function handleConflicts(
   conflicts: ConflictFile[],
   baseBranch: string,
 ): Promise<void> {
-  let aiEnabled = false;
   let ai: AIFeatures | null = null;
 
-  // AI 기능이 설정되어 있는 경우에만 AI 관련 기능 활성화
-  if (config.aiConfig?.enabled) {
-    try {
-      ai = new AIFeatures();
-      await ai.initialize();
-      aiEnabled = ai.isEnabled();
+  // AI 인스턴스 생성
+  try {
+    ai = new AIFeatures(config.language || "ko");
+    log.info(t("commands.merge.info.initialization_success"));
 
-      if (aiEnabled) {
-        log.info(t("commands.merge.conflict.ai_suggestion_start"));
+    log.info(t("commands.merge.conflict.ai_suggestion_start"));
 
-        // PR의 전체 컨텍스트를 가져옵니다
-        const client = await getOctokit();
-        const { data: pr } = await client.rest.pulls.get({
-          owner,
-          repo,
-          pull_number: prNumber,
-        });
+    // PR의 전체 컨텍스트를 가져옵니다
+    const client = await getOctokit();
+    const { data: pr } = await client.rest.pulls.get({
+      owner,
+      repo,
+      pull_number: prNumber,
+    });
 
-        // PR의 변경사항 정보를 가져옵니다
-        const { data: files } = await client.rest.pulls.listFiles({
-          owner,
-          repo,
-          pull_number: prNumber,
-        });
+    // PR의 변경사항 정보를 가져옵니다
+    const { data: files } = await client.rest.pulls.listFiles({
+      owner,
+      repo,
+      pull_number: prNumber,
+    });
 
-        // AI에 전달할 추가 컨텍스트를 구성합니다
-        const prContext = {
-          title: pr.title,
-          description: pr.body || "",
-          changedFiles: files.map((f) => ({
-            filename: f.filename,
-            additions: f.additions,
-            deletions: f.deletions,
-            changes: f.changes,
-          })),
-        };
+    // AI에 전달할 추가 컨텍스트를 구성합니다
+    const prContext = {
+      title: pr.title,
+      description: pr.body || "",
+      changedFiles: files.map((f) => ({
+        filename: f.filename,
+        additions: f.additions,
+        deletions: f.deletions,
+        changes: f.changes,
+      })),
+    };
 
-        const suggestions = await ai.suggestConflictResolution(
-          conflicts,
-          prContext,
-        );
+    const suggestions = await ai.suggestConflictResolution(
+      conflicts,
+      prContext,
+    );
 
-        log.info("\n" + t("commands.merge.conflict.ai_suggestions"));
-        log.info("-------------------");
-        log.info(suggestions);
+    log.info("\n" + t("commands.merge.conflict.ai_suggestions"));
+    log.info("-------------------");
+    log.info(suggestions);
 
-        const { useAiSuggestions } = await inquirer.prompt([
-          {
-            type: "confirm",
-            name: "useAiSuggestions",
-            message: t("commands.merge.conflict.use_ai_suggestions"),
-            default: true,
-          },
-        ]);
+    const { useAiSuggestions } = await inquirer.prompt([
+      {
+        type: "confirm",
+        name: "useAiSuggestions",
+        message: t("commands.merge.conflict.use_ai_suggestions"),
+        default: true,
+      },
+    ]);
 
-        if (!useAiSuggestions) {
-          log.info(t("commands.merge.conflict.manual_resolution"));
-        }
-      }
-    } catch (error) {
-      log.warn(t("commands.merge.conflict.ai_suggestion_failed"));
-      aiEnabled = false;
-      ai = null;
+    if (!useAiSuggestions) {
+      log.info(t("commands.merge.conflict.manual_resolution"));
     }
+  } catch (error) {
+    log.warn(t("commands.merge.conflict.ai_suggestion_failed"));
+    ai = null;
   }
 
   // 간소화된 충돌 해결 가이드 표시
@@ -310,6 +302,15 @@ export async function mergeCommand(prNumber: string): Promise<void> {
 
     const branchNames = branches.map((branch) => branch.name);
 
+    // 현재 브랜치 안내
+    const currentBranch = pr.head.ref;
+    log.info(
+      t("commands.merge.info.current_branch", { branch: currentBranch }),
+    );
+
+    // 현재 브랜치를 리스트에서 제외
+    const filteredBranchNames = branchNames.filter((b) => b !== currentBranch);
+
     // base 브랜치 변경 여부 확인
     const { changeBase } = await inquirer.prompt([
       {
@@ -328,8 +329,10 @@ export async function mergeCommand(prNumber: string): Promise<void> {
         {
           type: "list",
           name: "newBase",
-          message: t("commands.merge.prompts.select_base"),
-          choices: branchNames,
+          message: t("commands.merge.prompts.select_base_with_current", {
+            branch: currentBranch,
+          }),
+          choices: filteredBranchNames,
           default: pr.base.ref,
         },
       ]);

@@ -1,0 +1,36 @@
+{
+  "description": "autopr 설정 초기화",
+  "setup": {
+    "info": "GitHub App 인증 설정 중"
+  },
+  "info": {
+    "branch_strategy": "브랜치 전략이 성공적으로 설정되었습니다",
+    "production_branch_set": "프로덕션 브랜치 설정: {{branch}}",
+    "development_branch_set": "개발 브랜치 설정: {{branch}}",
+    "github_app_auth_success": "GitHub App 인증이 완료되었습니다. 서버를 통해 자동 인증됩니다.",
+    "oauth_auth_success": "GitHub 사용자 인증이 성공적으로 완료되었습니다."
+  },
+  "error": {
+    "invalid_token": "유효하지 않은 GitHub 토큰입니다"
+  },
+  "prompts": {
+    "update_token": "GitHub 토큰이 이미 설정되어 있습니다. 업데이트하시겠습니까?",
+    "auth_method": "GitHub에 어떤 방식으로 인증하시겠습니까?",
+    "auth_choices": {
+      "oauth": "OAuth 사용 (브라우저 기반 인증)",
+      "manual": "토큰 수동 입력"
+    },
+    "token": "GitHub 토큰을 입력하세요:",
+    "update_language": "현재 언어는 {{language}}입니다. 업데이트하시겠습니까?",
+    "language": "언어 선택:",
+    "setup_ai": "AI 기능을 설정하시겠습니까?",
+    "default_branch": "기본(프로덕션) 브랜치:",
+    "development_branch": "개발 브랜치:",
+    "reviewers": "기본 리뷰어 (쉼표로 구분):",
+    "oauth_authenticate": "PR 생성을 위해 GitHub 사용자 계정으로 인증하시겠습니까?",
+    "oauth_already_authenticated": "GitHub 사용자 토큰이 이미 등록되어 있습니다. 다시 인증하시겠습니까?"
+  },
+  "warning": {
+    "oauth_auth_failed": "GitHub 사용자 인증에 실패했습니다."
+  }
+}

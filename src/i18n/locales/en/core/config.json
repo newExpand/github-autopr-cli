@@ -1,0 +1,10 @@
+{
+  "error": {
+    "load_global_failed": "Failed to load global configuration: {{error}}",
+    "load_project_failed": "Failed to load project configuration: {{error}}",
+    "save_global_failed": "Failed to save global configuration: {{error}}",
+    "save_project_failed": "Failed to save project configuration: {{error}}",
+    "auto_override_notice": "The .autopr.json file was incompatible and has been automatically reset to default. The previous file was backed up as .bak.",
+    "global_invalid_notice": "The global configuration is incompatible. Please run 'autopr init' to reinitialize."
+  }
+}

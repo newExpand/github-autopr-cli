@@ -1,0 +1,44 @@
+{
+  "description": "저장소 협업자 관리",
+  "invite": {
+    "description": "저장소에 협업자 초대"
+  },
+  "list": {
+    "description": "저장소의 모든 협업자 목록 조회",
+    "title": "협업자 목록:",
+    "item": "- @{{username}} ({{permission}})"
+  },
+  "remove": {
+    "description": "저장소에서 협업자 제거"
+  },
+  "status": {
+    "description": "협업자의 초대 상태 확인",
+    "no_invitation": "@{{username}}에 대한 초대가 없습니다",
+    "no_invitations": "대기 중인 초대가 없습니다",
+    "info": "@{{username}}: {{status}} (초대일: {{invitedAt}}, 만료일: {{expiresAt}})",
+    "all_title": "초대 상태 목록:",
+    "pending": "대기 중",
+    "accepted": "수락됨",
+    "expired": "만료됨"
+  },
+  "status_all": {
+    "description": "모든 초대 상태 확인"
+  },
+  "no_collaborators": "이 저장소에 협업자가 없습니다",
+  "prompts": {
+    "permission": "권한 수준 선택:",
+    "select_to_remove": "제거할 협업자 선택:",
+    "confirm_remove_multiple": "선택한 {{count}}명의 협업자를 제거하시겠습니까?"
+  },
+  "permissions": {
+    "pull": "읽기 권한",
+    "push": "쓰기 권한",
+    "admin": "관리자 권한"
+  },
+  "success": {
+    "invited": "@{{username}}님을 협업자로 성공적으로 초대했습니다",
+    "removed": "@{{username}}님을 협업자에서 성공적으로 제거했습니다",
+    "all_removed": "선택한 모든 협업자를 성공적으로 제거했습니다",
+    "cancelled": "작업이 취소되었습니다"
+  }
+}

@@ -3,9 +3,9 @@ import { promisify } from "util";
 import { updateConfig } from "./config.js";
 import { t } from "../i18n/index.js";
 import { log } from "../utils/logger.js";
+import { aiClient } from "./ai-manager.js";
 
 const execAsync = promisify(exec);
-const CLIENT_ID = "Ov23liOUU5SAXrmM5NAS";
 
 interface DeviceCodeResponse {
   device_code: string;
@@ -20,16 +20,16 @@ interface AccessTokenResponse {
   error?: string;
 }
 
-async function getDeviceCode(): Promise<DeviceCodeResponse> {
-  log.info(t("oauth.device_flow.initializing"));
-  log.debug(t("oauth.device_flow.client_id", { clientId: CLIENT_ID }));
+async function getDeviceCode(CLIENT_ID: string): Promise<DeviceCodeResponse> {
+  log.info(t("core.oauth.device_flow.initializing"));
+  log.debug(t("core.oauth.device_flow.client_id", { clientId: CLIENT_ID }));
 
   const requestBody = {
     client_id: CLIENT_ID,
     scope: "repo read:user user:email",
   };
   log.debug(
-    t("oauth.device_flow.request_data"),
+    t("core.oauth.device_flow.request_data"),
     JSON.stringify(requestBody, null, 2),
   );
 
@@ -44,17 +44,17 @@ async function getDeviceCode(): Promise<DeviceCodeResponse> {
     body: JSON.stringify(requestBody),
   });
 
-  log.debug(t("oauth.device_flow.response_status"), response.status);
+  log.debug(t("core.oauth.device_flow.response_status"), response.status);
   log.debug(
-    t("oauth.device_flow.response_headers"),
+    t("core.oauth.device_flow.response_headers"),
     JSON.stringify(Object.fromEntries(response.headers.entries()), null, 2),
   );
 
   if (!response.ok) {
     const errorText = await response.text();
-    log.error(t("oauth.device_flow.error_response"), errorText);
+    log.error(t("core.oauth.device_flow.error_response"), errorText);
     throw new Error(
-      t("oauth.device_flow.init_failed", {
+      t("core.oauth.device_flow.init_failed", {
         status: response.status,
         error: errorText,
       }),
@@ -63,13 +63,14 @@ async function getDeviceCode(): Promise<DeviceCodeResponse> {
 
   const data = await response.json();
   log.debug(
-    t("oauth.device_flow.response_data"),
+    t("core.oauth.device_flow.response_data"),
     JSON.stringify(data, null, 2),
   );
   return data as DeviceCodeResponse;
 }
 
 async function pollForToken(
+  CLIENT_ID: string,
   deviceCode: string,
   interval: number,
   expiresIn: number,
@@ -99,7 +100,7 @@ async function pollForToken(
 
       if (!response.ok) {
         throw new Error(
-          t("oauth.token.request_failed", { status: response.status }),
+          t("core.oauth.token.request_failed", { status: response.status }),
         );
       }
 
@@ -107,24 +108,22 @@ async function pollForToken(
 
       if (data.error) {
         if (data.error === "authorization_pending") {
-          // 사용자가 아직 인증을 완료하지 않음
           await new Promise((resolve) => setTimeout(resolve, interval * 1000));
           continue;
         }
         if (data.error === "slow_down") {
-          // GitHub가 요청 속도를 늦추라고 요청
           interval += 5;
           await new Promise((resolve) => setTimeout(resolve, interval * 1000));
           continue;
         }
         if (data.error === "expired_token") {
-          throw new Error(t("oauth.token.expired"));
+          throw new Error(t("core.oauth.token.expired"));
         }
-        throw new Error(t("oauth.token.error", { error: data.error }));
+        throw new Error(t("core.oauth.token.error", { error: data.error }));
       }
 
       if (!data.access_token) {
-        throw new Error(t("oauth.token.missing"));
+        throw new Error(t("core.oauth.token.missing"));
       }
 
       return data.access_token;
@@ -132,33 +131,32 @@ async function pollForToken(
       if (error instanceof Error && error.message.includes("expired")) {
         throw error;
       }
-      // 네트워크 오류 등은 재시도
       await new Promise((resolve) => setTimeout(resolve, interval * 1000));
     }
   }
 
-  throw new Error(t("oauth.token.expired"));
+  throw new Error(t("core.oauth.token.expired"));
 }
 
 export async function setupOAuthCredentials(): Promise<void> {
   try {
-    log.info("\n" + t("oauth.auth.starting"));
+    log.info("\n" + t("core.oauth.auth.starting"));
 
-    // Device Flow 초기화
-    const deviceCode = await getDeviceCode();
+    const { oauthClientId } = await aiClient.getGitHubOAuthClientInfo();
 
-    // 사용자에게 인증 방법 안내
-    log.section("🔐 GitHub 인증 안내");
-    log.info(t("oauth.auth.instructions"));
-    log.section("📋 인증 단계");
+    const deviceCode = await getDeviceCode(oauthClientId);
+
+    log.section(t("core.oauth.ui.auth_guide_title"));
+    log.info(t("core.oauth.auth.instructions"));
+    log.section(t("core.oauth.ui.auth_steps_title"));
     log.step(
-      "1️⃣ " + t("oauth.auth.open_url", { url: deviceCode.verification_uri }),
+      "1️⃣ " +
+        t("core.oauth.auth.open_url", { url: deviceCode.verification_uri }),
     );
     log.step(
-      "2️⃣ " + t("oauth.auth.enter_code", { code: deviceCode.user_code }),
+      "2️⃣ " + t("core.oauth.auth.enter_code", { code: deviceCode.user_code }),
     );
 
-    // 브라우저 자동 실행
     try {
       if (process.platform === "darwin") {
         await execAsync(`open "${deviceCode.verification_uri}"`);
@@ -168,34 +166,30 @@ export async function setupOAuthCredentials(): Promise<void> {
         await execAsync(`xdg-open "${deviceCode.verification_uri}"`);
       }
     } catch (error) {
-      // 브라우저를 열지 못해도 계속 진행 (사용자가 수동으로 URL을 열 수 있음)
-      log.warn(t("oauth.auth.browser_open_failed"));
+      log.warn(t("core.oauth.auth.browser_open_failed"));
     }
 
-    log.section("⏳ 인증 대기 중");
-    log.info(t("oauth.auth.waiting"));
+    log.section(t("core.oauth.ui.auth_waiting_title"));
+    log.info(t("core.oauth.auth.waiting"));
     log.info(
-      t("oauth.auth.time_limit", {
+      t("core.oauth.auth.time_limit", {
         minutes: Math.floor(deviceCode.expires_in / 60),
       }),
     );
 
-    // 토큰을 받을 때까지 폴링
     const token = await pollForToken(
+      oauthClientId,
       deviceCode.device_code,
       deviceCode.interval,
       deviceCode.expires_in,
     );
 
-    // 설정 업데이트
-    await updateConfig({
-      githubToken: token,
-    });
+    await updateConfig({ githubToken: token });
 
-    log.info("\n" + t("oauth.auth.success"));
+    log.info("\n" + t("core.oauth.auth.success"));
   } catch (error: unknown) {
     if (error instanceof Error) {
-      throw new Error(t("oauth.auth.failed", { error: error.message }));
+      throw new Error(t("core.oauth.auth.failed", { error: error.message }));
     }
     throw error;
   }

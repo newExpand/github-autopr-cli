@@ -1,0 +1,65 @@
+{
+  "description": "AI 지원으로 커밋 생성",
+  "args": {
+    "subcommand": "실행할 서브커맨드 (improve)",
+    "message": "커밋 메시지 또는 개선할 메시지"
+  },
+  "options": {
+    "all_with_push": "모든 변경사항을 스테이징하고 커밋 후 푸시",
+    "patch": "스테이징에 패치 모드 사용",
+    "select": "스테이징할 파일 선택",
+    "select_with_push": "스테이징할 파일을 선택하고 커밋 후 푸시"
+  },
+  "help": {
+    "examples": "예시",
+    "default": "대화형 커밋",
+    "all_with_push": "모든 변경사항 스테이징 및 푸시",
+    "select": "스테이징할 파일 선택",
+    "select_with_push": "파일 선택, 커밋 및 푸시",
+    "improve_last": "마지막 커밋 메시지 개선",
+    "improve_message": "제공된 커밋 메시지 개선",
+    "improve_all_with_push": "메시지 개선, 모든 파일 스테이징 및 푸시",
+    "improve_select_with_push": "메시지 개선, 파일 선택 및 푸시"
+  },
+  "error": {
+    "staging_failed": "변경사항 스테이징에 실패했습니다",
+    "files_failed": "변경된 파일 목록을 가져오지 못했습니다",
+    "file_selection_failed": "파일 선택에 실패했습니다",
+    "diff_failed": "스테이지된 변경사항 내용을 가져오지 못했습니다",
+    "get_branch_failed": "현재 브랜치 정보를 가져오지 못했습니다",
+    "no_staged_changes": "스테이지된 변경사항이 없습니다",
+    "no_commit_message": "커밋 메시지를 찾을 수 없습니다",
+    "invalid_subcommand": "잘못된 서브커맨드입니다",
+    "push_failed": "푸시 실패: {{error}}",
+    "commit_failed": "커밋에 실패했습니다",
+    "not_initialized": "AI 기능이 초기화되지 않았습니다"
+  },
+  "info": {
+    "patch_mode": "패치 모드로 실행 중입니다. 'git add -p'를 수동으로 실행해 주세요",
+    "no_unstaged_files": "스테이지되지 않은 파일이 없습니다",
+    "no_files_selected": "선택된 파일이 없습니다",
+    "run_patch_mode": "변경사항을 스테이징하려면 'git add -p'를 수동으로 실행해 주세요",
+    "improving_message": "커밋 메시지 개선 중...",
+    "analyzing_changes": "변경사항 분석 중...",
+    "suggested_message": "제안된 커밋 메시지:",
+    "operation_cancelled": "작업이 취소되었습니다",
+    "pr_creation_guide": "변경사항에 대한 PR을 생성하려면:",
+    "run_new_command": "'autopr new' 명령어를 실행하여 새 PR을 생성하세요",
+    "initialization_success": "AI 기능이 성공적으로 초기화되었습니다",
+    "branch_not_on_remote": "{{branch}} 브랜치가 원격 저장소에 존재하지 않습니다. 새로 생성합니다.",
+    "creating_remote_branch": "{{branch}} 브랜치를 원격 저장소에 생성합니다."
+  },
+  "success": {
+    "files_staged": "{{count}}개 파일이 스테이징되었습니다",
+    "pushed": "{{branch}} 브랜치에 성공적으로 푸시되었습니다",
+    "committed": "변경사항이 성공적으로 커밋되었습니다"
+  },
+  "warning": {
+    "pr_check_failed": "기존 PR 확인에 실패했습니다"
+  },
+  "prompts": {
+    "select_files": "스테이징할 파일 선택:",
+    "use_message": "이 커밋 메시지를 사용하시겠습니까?",
+    "edit_message": "커밋 메시지 편집:"
+  }
+}

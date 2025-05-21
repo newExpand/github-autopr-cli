@@ -1,0 +1,102 @@
+{
+  "description": "GitHub App 설정 관리",
+  "auth": {
+    "description": "GitHub App 인증 관리",
+    "initializing": "GitHub App 디바이스 플로우 초기화 중",
+    "instructions": "다음 단계를 따라 GitHub App 인증을 완료해주세요:",
+    "open_url": "브라우저에서 다음 URL을 열어주세요: {{url}}",
+    "enter_code": "다음 코드를 입력해주세요: {{code}}",
+    "waiting": "브라우저에서 인증을 완료하면 자동으로 다음 단계로 진행됩니다...",
+    "time_limit": "(제한 시간: {{minutes}}분)",
+    "browser_open_failed": "브라우저를 자동으로 열지 못했습니다. URL을 수동으로 열어주세요.",
+    "starting": "GitHub App 인증 프로세스 시작",
+    "success": "GitHub App 인증 성공!",
+    "failed": "GitHub App 인증 실패: {{error}}"
+  },
+  "setup": {
+    "description": "GitHub App 인증 설정",
+    "private_key_prompt": "개인 키 파일 경로를 입력하세요 (건너뛰려면 엔터)",
+    "starting": "GitHub App 설정 중",
+    "info": "GitHub App 인증 설정 중",
+    "multiple_installations": "여러 GitHub App 설치가 발견되었습니다.",
+    "success": "GitHub App 설정이 성공적으로 저장되었습니다",
+    "auto_complete": "GitHub App 설정이 자동으로 완료되었습니다."
+  },
+  "info": {
+    "description": "GitHub App 설정 정보 표시",
+    "title": "GitHub App 설정",
+    "app_id": "App ID: {{id}}",
+    "installation_id": "설치 ID: {{id}}",
+    "has_private_key": "개인 키 있음: {{hasKey}}",
+    "not_configured": "GitHub App이 아직 설정되지 않았습니다. 먼저 'autopr github-app setup'을 실행하세요",
+    "success": "GitHub App 정보를 성공적으로 가져왔습니다",
+    "failed": "GitHub App 정보 가져오기 실패: {{error}}"
+  },
+  "reset": {
+    "description": "GitHub App 설정 초기화",
+    "confirm": "정말로 GitHub App 설정을 초기화하시겠습니까? 모든 GitHub App 설정이 삭제됩니다.",
+    "confirm_true": "예, 초기화합니다",
+    "success": "GitHub App 설정이 성공적으로 초기화되었습니다",
+    "failed": "GitHub App 설정 초기화 실패: {{error}}"
+  },
+  "private_key": {
+    "description": "GitHub App용 개인 키 파일 가져오기",
+    "prompt": "개인 키 파일 경로를 입력하세요:",
+    "success": "개인 키가 성공적으로 등록되었습니다",
+    "failed": "개인 키 등록 실패: {{error}}",
+    "no_config": "GitHub App이 아직 설정되지 않았습니다. 먼저 'autopr github-app setup'을 실행하세요"
+  },
+  "device_flow": {
+    "client_id": "Client ID: {{clientId}}",
+    "request_data": "요청 데이터:",
+    "response_status": "응답 상태:",
+    "response_headers": "응답 헤더:",
+    "error_response": "에러 응답 내용:",
+    "response_data": "응답 데이터:",
+    "init_failed": "디바이스 플로우 초기화 실패: {{status}} - {{error}}",
+    "initializing": "GitHub App 디바이스 플로우 초기화 중"
+  },
+  "token": {
+    "error": "토큰 오류: {{error}}",
+    "expired": "인증 토큰이 만료되었습니다. 다시 시도해주세요.",
+    "missing": "토큰을 찾을 수 없습니다",
+    "request_failed": "토큰 요청 실패: {{status}}",
+    "success": "서버를 통해 GitHub App 토큰을 가져왔습니다.",
+    "failed": "서버에서 GitHub App 토큰을 가져오지 못했습니다."
+  },
+  "error": {
+    "missing_config": "GitHub App 설정이 없습니다",
+    "missing_installation_id": "GitHub App 설치 ID가 없습니다",
+    "token_request_failed": "설치 토큰 요청 실패: {{status}}",
+    "token_missing": "설치 토큰 응답에 토큰이 없습니다",
+    "list_installations_failed": "설치 목록을 가져오는데 실패했습니다: {{status}}",
+    "no_installations": "GitHub App 설치가 발견되지 않았습니다",
+    "app_info_failed": "GitHub App 정보를 가져오는데 실패했습니다: {{status}}",
+    "installation_verification_failed": "GitHub App 설치 확인에 실패했습니다",
+    "installation_cancelled": "GitHub App 설치가 취소되었습니다",
+    "private_key_required": "이 작업에는 GitHub App 개인 키가 필요합니다. 'autopr github-app setup' 명령어를 실행하여 개인 키를 설정하세요.",
+    "unknown": "알 수 없는 오류",
+    "auth_failed": "GitHub App 인증 실패: {{error}}"
+  },
+  "installations": {
+    "fetching": "인증 정보를 가져오는 중...",
+    "not_found": "앱 설치 정보를 찾을 수 없습니다. 앱 정보를 확인 중...",
+    "success": "GitHub App 설치가 확인되었습니다!",
+    "verification": "설치 정보를 다시 확인합니다...",
+    "fetch_failed": "서버에서 GitHub App 설치 목록을 가져오지 못했습니다."
+  },
+  "ui": {
+    "auth_guide_title": "🔐 GitHub 인증 안내",
+    "auth_steps_title": "📋 인증 단계",
+    "auth_waiting_title": "⏳ 인증 대기 중",
+    "install_required_title": "⚠️ GitHub App 설치 필요",
+    "install_not_found": "이 GitHub App이 계정에 설치되어 있지 않습니다.",
+    "install_steps": "다음 단계를 따라 GitHub App을 설치해주세요:",
+    "install_browser_step": "1️⃣ 브라우저에서 GitHub App 설치 페이지를 엽니다",
+    "install_url_step": "2️⃣ 다음 URL을 방문하세요: {{url}}",
+    "install_select_step": "3️⃣ 앱을 설치할 계정을 선택하고 권한을 설정하세요",
+    "install_completion_title": "⏳ 앱 설치 완료 후 진행",
+    "install_confirm": "GitHub App 설치를 완료하셨나요?",
+    "multiple_installations": "여러 설치가 발견되었습니다. 사용할 것을 선택하세요:"
+  }
+}

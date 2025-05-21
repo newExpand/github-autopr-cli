@@ -16,7 +16,7 @@ export const FilePatternSchema = z.object({
 
 export const BranchPatternSchema = z.object({
   pattern: z.string(),
-  type: z.enum(["feat", "fix", "refactor", "docs", "chore", "test", "release"]),
+  type: z.enum(["feat", "fix", "refactor", "docs", "chore", "test"]),
   draft: z.boolean().default(true),
   labels: z.array(z.string()).default([]),
   template: z.string().optional(),
@@ -25,53 +25,41 @@ export const BranchPatternSchema = z.object({
   reviewerGroups: z.array(z.string()).default([]),
 });
 
-export const AIConfigSchema = z.object({
-  enabled: z.boolean().default(false),
-  provider: z.enum(["openai", "openrouter"]),
-  apiKey: z.string().optional(),
-  options: z
-    .object({
-      model: z.string().optional(),
-      temperature: z.number().optional(),
-      maxTokens: z.number().optional(),
-    })
-    .optional(),
-});
-
 export type BranchPattern = z.infer<typeof BranchPatternSchema>;
 
-export const GlobalConfigSchema = z.object({
-  githubToken: z.string().optional(),
-  language: z.enum(supportedLanguages).default("en"),
+// GitHub App 설정 스키마
+export const GitHubAppConfigSchema = z.object({
+  appId: z.string(),
+  clientId: z.string(),
+  installationId: z.number(),
+  clientSecret: z.string().optional(),
+  webhookSecret: z.string().optional(),
 });
 
-export const BranchStrategySchema = z.object({
-  developmentBranch: z.string().default("dev"),
-  releasePRTitle: z.string().default("Release: {development} to {production}"),
-  releasePRBody: z
-    .string()
-    .default("Merge {development} branch into {production} for release"),
+export type GitHubAppConfig = z.infer<typeof GitHubAppConfigSchema>;
+
+export const GlobalConfigSchema = z.object({
+  // GitHub Token 설정
+  githubToken: z.string().optional(),
+
+  // 언어 설정
+  language: z.enum(supportedLanguages).default("en"),
+
+  // GitHub App 설정
+  githubApp: GitHubAppConfigSchema,
 });
 
 export const ProjectConfigSchema = z.object({
   owner: z.string().optional(),
   repo: z.string().optional(),
-  defaultBranch: z.string().default("main"),
-  developmentBranch: z.string().default("dev"),
-  releasePRTitle: z.string().optional(),
-  releasePRBody: z.string().optional(),
   defaultReviewers: z.array(z.string()).default([]),
-  autoPrEnabled: z.boolean().default(true),
-  defaultLabels: z.array(z.string()).default([]),
   reviewerGroups: z.array(ReviewerGroupSchema).default([]),
-  filePatterns: z.array(FilePatternSchema).default([]),
   branchPatterns: z.array(BranchPatternSchema).default([]),
-  aiConfig: AIConfigSchema.optional(),
 });
 
 export type GlobalConfig = z.infer<typeof GlobalConfigSchema>;
 export type ProjectConfig = z.infer<typeof ProjectConfigSchema>;
 
-// 기존 Config 타입은 호환성을 위해 유지
+// 통합 Config 스키마
 export const ConfigSchema = GlobalConfigSchema.merge(ProjectConfigSchema);
 export type Config = z.infer<typeof ConfigSchema>;

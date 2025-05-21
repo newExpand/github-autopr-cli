@@ -120,8 +120,8 @@ export async function listCommand(): Promise<void> {
       log.verbose(
         t("commands.list.status", {
           status: pr.draft
-            ? t("commands.review.status.draft")
-            : t("commands.review.status.ready"),
+            ? t("commands.list.status.draft")
+            : t("commands.list.status.ready"),
         }),
       );
 
@@ -135,12 +135,12 @@ export async function listCommand(): Promise<void> {
 
         const statusText =
           status === "CHECKING"
-            ? t("commands.review.status.checking")
+            ? t("commands.list.status.checking")
             : status === "CONFLICTING"
-              ? t("commands.review.status.conflicting")
+              ? t("commands.list.status.conflicting")
               : status === "MERGEABLE"
-                ? t("commands.review.status.mergeable")
-                : t("commands.review.status.unknown");
+                ? t("commands.list.status.mergeable")
+                : t("commands.list.status.unknown");
 
         log.info(
           `   ${t("commands.list.merge_status", { status: statusText })}`,
@@ -303,10 +303,10 @@ export async function listCommand(): Promise<void> {
         choices: [
           ...(isOpenPr
             ? [
-                {
-                  name: t("commands.list.actions.review") || "Review",
-                  value: "review",
-                },
+                // {
+                //   name: t("commands.list.actions.review") || "Review",
+                //   value: "review",
+                // },
                 {
                   name: t("commands.list.actions.merge") || "Merge",
                   value: "merge",
@@ -338,9 +338,9 @@ export async function listCommand(): Promise<void> {
 
     // Execute the selected action
     switch (action) {
-      case "review":
-        await execAsync(`autopr review ${selectedPr.number}`);
-        break;
+      // case "review":
+      //   await execAsync(`autopr review ${selectedPr.number}`);
+      //   break;
       case "merge":
         await execAsync(`autopr merge ${selectedPr.number}`);
         break;
@@ -358,10 +358,10 @@ export async function listCommand(): Promise<void> {
       case "open":
         try {
           await execAsync(`open ${selectedPr.html_url}`);
-          log.info(t("commands.review.success.opened"));
+          log.info(t("commands.list.success.opened"));
         } catch (error) {
           log.error(
-            t("commands.review.error.browser_open_failed", {
+            t("commands.list.error.browser_open_failed", {
               error: String(error),
             }),
           );
