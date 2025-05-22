@@ -482,7 +482,7 @@ export async function commitCommand(
       process.exit(1);
     }
   } catch (error) {
-    log.error(t("common.error.unknown"), error);
+    log.error(t("common.error.unknown", { error }));
     process.exit(1);
   }
 }

@@ -1066,7 +1066,7 @@ export async function newCommand(): Promise<void> {
     }
     return;
   } catch (error) {
-    log.error(t("common.error.unknown"), error);
+    log.error(t("common.error.unknown", { error }));
     process.exit(1);
   }
 }

@@ -143,7 +143,7 @@ export async function updateCommand(prNumber: string): Promise<void> {
       process.exit(1);
     }
   } catch (error: any) {
-    log.error(t("common.error.unknown"), error.message);
+    log.error(t("common.error.unknown", { error }));
     if (error.response) {
       log.error("API Response:", JSON.stringify(error.response.data, null, 2));
     }

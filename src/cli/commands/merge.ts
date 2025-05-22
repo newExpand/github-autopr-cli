@@ -571,16 +571,14 @@ export async function mergeCommand(prNumber: string): Promise<void> {
 
       log.info(t("commands.merge.cleanup.complete"));
     } catch (error) {
-      log.warn(
-        t("commands.merge.error.cleanup_failed", { error: String(error) }),
-      );
+      log.warn(t("commands.merge.error.cleanup_failed", { error }));
       log.warn(t("commands.merge.error.manual_cleanup"));
     }
   } catch (error) {
     if (error instanceof Error) {
       log.error(error.message);
     } else {
-      log.error(t("common.error.unknown"), String(error));
+      log.error(t("common.error.unknown", { error }));
     }
     process.exit(1);
   }

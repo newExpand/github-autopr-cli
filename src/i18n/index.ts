@@ -145,7 +145,7 @@ export const setLanguage = async (language: string): Promise<void> => {
   await i18next.changeLanguage(language);
 };
 
-export const t = i18next.t.bind(i18next);
+export const t = (...args: Parameters<typeof i18next.t>) => i18next.t(...args);
 
 export const supportedLanguages = ["en", "ko"] as const;
 export type SupportedLanguage = (typeof supportedLanguages)[number];

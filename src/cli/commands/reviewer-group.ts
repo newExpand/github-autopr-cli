@@ -51,7 +51,7 @@ export function createReviewerGroupCommand(): Command {
 
           log.info(t("commands.reviewer_group.add.success", { name }));
         } catch (error) {
-          log.error(t("common.error.unknown"), String(error));
+          log.error(t("common.error.unknown", { error }));
           process.exit(1);
         }
       },
@@ -80,7 +80,7 @@ export function createReviewerGroupCommand(): Command {
 
         log.info(t("commands.reviewer_group.remove.success", { name }));
       } catch (error) {
-        log.error(t("common.error.unknown"), String(error));
+        log.error(t("common.error.unknown", { error }));
         process.exit(1);
       }
     });
@@ -133,7 +133,7 @@ export function createReviewerGroupCommand(): Command {
 
           log.info(t("commands.reviewer_group.update.success", { name }));
         } catch (error) {
-          log.error(t("common.error.unknown"), String(error));
+          log.error(t("common.error.unknown", { error }));
           process.exit(1);
         }
       },
@@ -162,7 +162,7 @@ export function createReviewerGroupCommand(): Command {
           );
         }
       } catch (error) {
-        log.error(t("common.error.unknown"), String(error));
+        log.error(t("common.error.unknown", { error }));
         process.exit(1);
       }
     });

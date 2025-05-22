@@ -1,4 +1,13 @@
 {
+  "info": {
+    "no_token": "No token found. Requesting a new token...",
+    "token_expiring_soon": "Token is about to expire. Refreshing...",
+    "token_acquired": "Token acquired successfully.",
+    "token_refreshed_retrying": "Token refreshed. Retrying request..."
+  },
+  "warning": {
+    "token_expired_retrying": "Token expired. Refreshing and retrying..."
+  },
   "error": {
     "api_call_failed": "API call failed ({{endpoint}})",
     "api_call_error": "API call failed: {{message}}",
@@ -14,6 +23,9 @@
     "installations_error": "Failed to get GitHub App installations list: {{message}}",
     "oauth_client_info_failed": "Failed to get GitHub OAuth client info",
     "oauth_client_info_error": "Failed to get GitHub OAuth client info: {{message}}",
-    "oauth_client_info_missing": "GitHub OAuth client info is missing"
+    "oauth_client_info_missing": "GitHub OAuth client info is missing",
+    "no_valid_token": "No valid token available.",
+    "authentication_required": "Authentication required. Please re-initialize or check your token.",
+    "token_acquisition_failed": "Failed to acquire token: {{error}}"
   }
 }
