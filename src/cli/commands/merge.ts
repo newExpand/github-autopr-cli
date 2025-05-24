@@ -143,6 +143,12 @@ async function handleConflicts(
 
 export async function mergeCommand(prNumber: string): Promise<void> {
   try {
+    log.info(
+      t("commands.merge.auth.why", {
+        fallback:
+          "이 작업을 위해 GitHub 인증이 필요합니다. 인증하지 않으면 병합 기능을 사용할 수 없습니다.",
+      }),
+    );
     const config = await loadConfig();
     if (!config) {
       log.error(t("common.error.github_token"));

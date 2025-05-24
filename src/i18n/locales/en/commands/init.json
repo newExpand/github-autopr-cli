@@ -4,32 +4,28 @@
     "info": "Setting up GitHub App authentication"
   },
   "info": {
-    "branch_strategy": "Branch strategy set up successfully",
-    "production_branch_set": "Production branch set to: {{branch}}",
-    "development_branch_set": "Development branch set to: {{branch}}",
     "github_app_auth_success": "GitHub App authentication successful! Server-based authentication is set up.",
-    "oauth_auth_success": "GitHub user authentication completed successfully."
+    "oauth_auth_success": "GitHub user authentication completed successfully.",
+    "github_app_auth_why": "This authentication is required for automatic PR creation. Without it, key features will not be available.",
+    "github_app_auth_failed_why": "You must complete GitHub App authentication to use automatic PR features.",
+    "github_app_auth_skipped_why": "If you skip GitHub App authentication, some features such as automatic PR creation will be limited.",
+    "ai_token_why": "To use AI features (code review, auto description, etc.), a token is required. You can use basic features without authentication.",
+    "ai_token_failed_why": "AI token issuance failed, so AI features (code review, auto description, etc.) will not be available.",
+    "oauth_why": "Some features, such as PR creation, require this authentication. If you skip, some features will be limited.",
+    "oauth_skipped_why": "If you skip OAuth authentication, some features such as PR creation will be limited.",
+    "oauth_failed_why": "If OAuth authentication fails, you will not be able to use features such as PR creation."
   },
   "error": {
-    "invalid_token": "Invalid GitHub token",
     "auth_failed": "GitHub App authentication failed: {{error}}"
   },
   "prompts": {
-    "update_token": "A GitHub token is already configured. Update it?",
-    "auth_method": "How would you like to authenticate with GitHub?",
-    "auth_choices": {
-      "oauth": "Use OAuth (browser-based authentication)",
-      "manual": "Enter token manually"
-    },
-    "token": "Enter your GitHub token:",
     "update_language": "Current language is {{language}}. Update it?",
     "language": "Select language:",
-    "setup_ai": "Set up AI features?",
-    "default_branch": "Default (production) branch:",
-    "development_branch": "Development branch:",
     "reviewers": "Default reviewers (comma-separated):",
     "oauth_authenticate": "Would you like to authenticate with your GitHub user account for PR creation?",
-    "oauth_already_authenticated": "A GitHub user token is already registered. Do you want to re-authenticate?"
+    "oauth_already_authenticated": "A GitHub user token is already registered. Do you want to re-authenticate?",
+    "project_already_initialized": "A project configuration already exists. Would you like to initialize (backup and create new)?",
+    "github_app_already_authenticated": "GitHub App is already authenticated. Do you want to re-authenticate?"
   },
   "warning": {
     "oauth_auth_failed": "GitHub user authentication failed."

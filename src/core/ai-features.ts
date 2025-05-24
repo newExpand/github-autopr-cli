@@ -1,4 +1,4 @@
-import { aiClient } from "./ai-manager.js";
+import { getAIClient } from "./ai-manager.js";
 import { log } from "../utils/logger.js";
 import { t } from "../i18n/index.js";
 
@@ -78,7 +78,7 @@ export class AIFeatures {
   ): Promise<string> {
     try {
       const lang = language || this.defaultLanguage;
-      const result = await aiClient.callAPI<PRDescriptionResponse>(
+      const result = await getAIClient().callAPI<PRDescriptionResponse>(
         "/ai/google/features/pr-description",
         {
           files,
@@ -112,7 +112,7 @@ export class AIFeatures {
   ): Promise<string> {
     try {
       const lang = language || this.defaultLanguage;
-      const result = await aiClient.callAPI<PRTitleResponse>(
+      const result = await getAIClient().callAPI<PRTitleResponse>(
         "/ai/google/features/pr-title",
         {
           files,
@@ -142,7 +142,7 @@ export class AIFeatures {
   ): Promise<string> {
     try {
       const lang = language || this.defaultLanguage;
-      const result = await aiClient.callAPI<CodeReviewResponse>(
+      const result = await getAIClient().callAPI<CodeReviewResponse>(
         "/ai/google/features/code-review",
         {
           files,
@@ -238,7 +238,7 @@ export class AIFeatures {
         );
       }
 
-      const result = await aiClient.callAPI<LineByLineReviewResponse>(
+      const result = await getAIClient().callAPI<LineByLineReviewResponse>(
         "/ai/google/features/line-by-line-review",
         requestPayload,
       );
@@ -272,7 +272,7 @@ export class AIFeatures {
     language: SupportedLanguage = "ko",
   ): Promise<string> {
     try {
-      const result = await aiClient.callAPI<ConflictResolutionResponse>(
+      const result = await getAIClient().callAPI<ConflictResolutionResponse>(
         "/ai/google/features/conflict-resolution",
         {
           conflicts,
@@ -303,7 +303,7 @@ export class AIFeatures {
     language: SupportedLanguage = "ko",
   ): Promise<string> {
     try {
-      const result = await aiClient.callAPI<CommitMessageResponse>(
+      const result = await getAIClient().callAPI<CommitMessageResponse>(
         "/ai/google/features/improve-commit-message",
         {
           message,
@@ -353,7 +353,7 @@ export class AIFeatures {
     language: SupportedLanguage = "ko",
   ): Promise<string> {
     try {
-      const result = await aiClient.callAPI<DailyCommitSummaryResponse>(
+      const result = await getAIClient().callAPI<DailyCommitSummaryResponse>(
         "/ai/google/features/daily-commit-summary",
         {
           commits,
@@ -393,7 +393,7 @@ export class AIFeatures {
   ): Promise<string> {
     try {
       // 서버측 DTO의 PRReviewDto 및 PRReviewContextDto와 호환되는 구조로 전송
-      const result = await aiClient.callAPI<PRReviewResponse>(
+      const result = await getAIClient().callAPI<PRReviewResponse>(
         "/ai/google/features/pr-review",
         {
           context,
@@ -428,7 +428,7 @@ export class AIFeatures {
     },
   ): Promise<string> {
     try {
-      const result = await aiClient.callAPI<{ content: string }>(
+      const result = await getAIClient().callAPI<{ content: string }>(
         "/ai/google/features/pr-content",
         {
           files,

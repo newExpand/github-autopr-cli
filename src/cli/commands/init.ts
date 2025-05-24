@@ -12,7 +12,7 @@ import { setupOAuthCredentials } from "../../core/oauth.js";
 import { log } from "../../utils/logger.js";
 import { existsSync, renameSync } from "fs";
 import { writeFile, appendFile, readFile } from "fs/promises";
-import { aiClient } from "../../core/ai-manager.js";
+import { getAIClient } from "../../core/ai-manager.js";
 
 export async function initCommand(): Promise<void> {
   try {
@@ -101,11 +101,23 @@ export async function initCommand(): Promise<void> {
 
     // GitHub App 인증 (필요한 경우에만)
     if (needGithubAppAuth) {
+      log.info(
+        t("commands.init.info.github_app_auth_why", {
+          fallback:
+            "이 인증은 자동 PR 생성을 위해 필수입니다. 인증하지 않으면 주요 기능을 사용할 수 없습니다.",
+        }),
+      );
       try {
         await setupGitHubAppCredentials();
         log.info(t("commands.init.info.github_app_auth_success"));
       } catch (error) {
         log.error(t("commands.init.error.auth_failed", { error }));
+        log.error(
+          t("commands.init.info.github_app_auth_failed_why", {
+            fallback:
+              "GitHub App 인증이 완료되어야만 자동 PR 기능을 사용할 수 있습니다.",
+          }),
+        );
         process.exit(1);
       }
     } else {
@@ -114,24 +126,52 @@ export async function initCommand(): Promise<void> {
           fallback: "GitHub App 인증을 건너뛰었습니다.",
         }),
       );
+      log.info(
+        t("commands.init.info.github_app_auth_skipped_why", {
+          fallback:
+            "GitHub App 인증을 건너뛰면 자동 PR 생성 등 일부 기능이 제한됩니다.",
+        }),
+      );
     }
 
     // 2. AI API JWT 토큰 발급 (누구나 가능)
+    log.info(
+      t("commands.init.info.ai_token_why", {
+        fallback:
+          "AI 기능(코드 리뷰, 자동 설명 등)을 사용하려면 토큰이 필요합니다. 인증하지 않아도 기본 기능은 사용 가능합니다.",
+      }),
+    );
     try {
       log.info(t("commands.init.info.acquiring_ai_token"));
-      const tokenSuccess = await aiClient.getAuthToken();
+      const tokenSuccess = await getAIClient().getAuthToken();
       if (tokenSuccess) {
         log.info(t("commands.init.info.ai_token_success"));
       } else {
         log.warn(t("commands.init.warning.ai_token_failed"));
-        log.warn(t("commands.init.warning.ai_features_unavailable"));
+        log.warn(
+          t("commands.init.info.ai_token_failed_why", {
+            fallback:
+              "AI 토큰 발급에 실패하여 AI 관련 기능(코드 리뷰, 자동 설명 등)을 사용할 수 없습니다.",
+          }),
+        );
       }
     } catch (error) {
       log.warn(t("commands.init.warning.ai_token_error"), error);
-      log.warn(t("commands.init.warning.ai_features_unavailable"));
+      log.warn(
+        t("commands.init.info.ai_token_failed_why", {
+          fallback:
+            "AI 토큰 발급에 실패하여 AI 관련 기능(코드 리뷰, 자동 설명 등)을 사용할 수 없습니다.",
+        }),
+      );
     }
 
     // 4. 유저 OAuth 인증 (선택/권장)
+    log.info(
+      t("commands.init.info.oauth_why", {
+        fallback:
+          "PR 생성 등 일부 기능을 위해 필요합니다. 인증하지 않으면 일부 기능이 제한됩니다.",
+      }),
+    );
     let needOAuth = true;
     if (globalConfig.githubToken) {
       // 이미 인증된 경우
@@ -163,7 +203,19 @@ export async function initCommand(): Promise<void> {
         log.info(t("commands.init.info.oauth_auth_success"));
       } catch (error) {
         log.warn(t("commands.init.warning.oauth_auth_failed"), error);
+        log.warn(
+          t("commands.init.info.oauth_failed_why", {
+            fallback:
+              "OAuth 인증에 실패하면 PR 생성 등 일부 기능을 사용할 수 없습니다.",
+          }),
+        );
       }
+    } else {
+      log.info(
+        t("commands.init.info.oauth_skipped_why", {
+          fallback: "OAuth 인증을 건너뛰면 PR 생성 등 일부 기능이 제한됩니다.",
+        }),
+      );
     }
 
     // 언어 설정

@@ -465,6 +465,12 @@ async function handleCustomTemplateSelection(
 
 export async function newCommand(): Promise<void> {
   try {
+    log.info(
+      t("commands.new.auth.why", {
+        fallback:
+          "이 작업을 위해 GitHub 인증이 필요합니다. 인증하지 않으면 PR 생성 기능을 사용할 수 없습니다.",
+      }),
+    );
     const config = await loadConfig();
     if (!config) {
       log.error(t("common.error.github_token"));
@@ -870,6 +876,14 @@ export async function newCommand(): Promise<void> {
 
     // === 사용자 인증 토큰이 없으면 PR 생성 스킵, 리뷰만 진행 ===
     const ai = new AIFeatures(config.language);
+    if (!config.githubToken || config.githubToken.trim() === "") {
+      log.info(
+        t("commands.new.auth.why", {
+          fallback:
+            "이 작업을 위해 GitHub 인증이 필요합니다. 인증하지 않으면 PR 생성 기능을 사용할 수 없습니다.",
+        }),
+      );
+    }
     log.info(t("commands.new.info.ai_initialized"));
 
     // AI로 PR 본문(통합) 생성

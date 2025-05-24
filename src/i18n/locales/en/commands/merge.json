@@ -78,5 +78,8 @@
   },
   "warning": {
     "base_branch_not_found": "Base branch {{branch}} not found locally"
+  },
+  "auth": {
+    "why": "GitHub authentication is required for this operation. Without authentication, merge functionality will not be available."
   }
 }

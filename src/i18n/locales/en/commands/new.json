@@ -122,5 +122,8 @@
   },
   "ui": {
     "section_divider": "-------------------"
+  },
+  "auth": {
+    "why": "GitHub authentication is required for this operation. Without authentication, PR creation functionality will not be available."
   }
 }

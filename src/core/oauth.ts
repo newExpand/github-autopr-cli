@@ -3,7 +3,7 @@ import { promisify } from "util";
 import { updateConfig } from "./config.js";
 import { t } from "../i18n/index.js";
 import { log } from "../utils/logger.js";
-import { aiClient } from "./ai-manager.js";
+import { getAIClient } from "./ai-manager.js";
 
 const execAsync = promisify(exec);
 
@@ -142,7 +142,7 @@ export async function setupOAuthCredentials(): Promise<void> {
   try {
     log.info("\n" + t("core.oauth.auth.starting"));
 
-    const { oauthClientId } = await aiClient.getGitHubOAuthClientInfo();
+    const { oauthClientId } = await getAIClient().getGitHubOAuthClientInfo();
 
     const deviceCode = await getDeviceCode(oauthClientId);
 

@@ -3,6 +3,8 @@
     "no_token": "No token found. Requesting a new token...",
     "token_expiring_soon": "Token is about to expire. Refreshing...",
     "token_acquired": "Token acquired successfully.",
+    "token_saved": "Token saved successfully.",
+    "token_loaded": "Token loaded successfully.",
     "token_refreshed_retrying": "Token refreshed. Retrying request..."
   },
   "warning": {
