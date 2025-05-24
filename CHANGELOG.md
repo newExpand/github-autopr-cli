@@ -1,5 +1,29 @@
 # Change Log
 
+## 1.0.0
+
+- **Complete CLI Command & Option Overhaul**
+  - Unified and standardized all major commands (init, PR create/list/update/merge/reopen, commit, daily-report, reviewer group, collaborator, template, language, etc.)
+  - Documented all options/shortcuts for each command in tables
+  - Improved and unified interactive prompt UX
+- **Advanced AI Features & Enhanced Security Notice**
+  - Full support for AI-powered commit message, PR description, code review, conflict resolution, daily report, and more
+  - AI token is automatically issued and reissued on expiration/error (no user action required)
+  - AI analysis data is NOT stored on the server; only API request/error logs are kept (actual code/PR/commit content is never logged)
+  - AI results are clearly marked as Google AI (Gemini, etc.) based
+- **New Security & Privacy Notice**
+  - Clearly documented data flow, storage policy, and open source status for AI features
+  - Emphasized that GitHub authentication/tokens and sensitive info are stored only locally
+- **Configuration Structure & Customization Improvements**
+  - Standardized global/project config (.autopr.json) structure with examples
+  - Enhanced customization for branch patterns, PR templates, reviewer groups, etc.
+- **Documentation (README) Overhaul**
+  - Updated and expanded both Korean/English README with detailed commands/options/security/FAQ/config examples
+  - Improved FAQ, system requirements, license, and changelog sections
+- **Other Improvements**
+  - Added guidance and solution for hooks undefined error when switching branches
+  - Improved workflow for commit/PR/reviewer automation, daily report, template management, and more
+
 ## 0.1.23
 
 - Updated OpenRouter Free AI Model

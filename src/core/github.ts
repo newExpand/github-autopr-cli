@@ -487,13 +487,13 @@ export async function mergePullRequest({
 
   // PR 상태 확인
   log.info(t("core.github.info.debug.pr_merge_start", { number: pull_number }));
-  log.info(t("core.github.info.debug.owner_repo", { owner, repo }));
-  log.info(t("core.github.info.debug.merge_method", { method: merge_method }));
+  log.debug(t("core.github.info.debug.owner_repo", { owner, repo }));
+  log.debug(t("core.github.info.debug.merge_method", { method: merge_method }));
 
   const pr = await getPullRequest({ owner, repo, pull_number });
   log.info(t("core.github.info.debug.pr_state", { state: pr.state }));
   log.info(t("core.github.info.debug.pr_title", { title: pr.title }));
-  log.info(
+  log.debug(
     t("core.github.info.debug.pr_branch", {
       head: pr.head.ref,
       base: pr.base.ref,
@@ -507,7 +507,7 @@ export async function mergePullRequest({
 
   // 병합 가능 상태 확인
   const status = await getPullRequestStatus({ owner, repo, pull_number });
-  log.info(t("core.github.info.debug.merge_status", { status }));
+  log.debug(t("core.github.info.debug.merge_status", { status }));
 
   if (status !== "MERGEABLE") {
     log.error(t("core.github.info.debug.pr_not_mergeable", { status }));
@@ -515,7 +515,7 @@ export async function mergePullRequest({
   }
 
   // 병합 실행
-  log.info(t("core.github.info.debug.merge_attempt"));
+  log.debug(t("core.github.info.debug.merge_attempt"));
   try {
     await client.rest.pulls.merge({
       owner,
@@ -537,7 +537,7 @@ export async function mergePullRequest({
 
   // 브랜치 삭제
   if (delete_branch) {
-    log.info(
+    log.debug(
       t("core.github.info.debug.branch_delete_attempt", {
         branch: pr.head.ref,
       }),
@@ -548,7 +548,7 @@ export async function mergePullRequest({
         repo,
         ref: `heads/${pr.head.ref}`,
       });
-      log.info(t("core.github.info.debug.branch_delete_success"));
+      log.debug(t("core.github.info.debug.branch_delete_success"));
     } catch (error) {
       log.warn(
         t("core.github.info.debug.branch_delete_failed", {

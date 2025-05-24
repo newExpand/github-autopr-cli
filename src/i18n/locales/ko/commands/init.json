@@ -1,8 +1,5 @@
 {
   "description": "autopr 설정 초기화",
-  "setup": {
-    "info": "GitHub App 인증 설정 중"
-  },
   "info": {
     "github_app_auth_success": "GitHub App 인증이 완료되었습니다. 서버를 통해 자동 인증됩니다.",
     "github_app_auth_why": "이 인증은 자동 PR 생성을 위해 필수입니다. 인증하지 않으면 주요 기능을 사용할 수 없습니다.",
