@@ -695,7 +695,7 @@ export async function dailyReportCommand(
         break;
     }
   } catch (error) {
-    log.error(t("common.error.unknown"), error);
+    log.error(t("common.error.unknown", { error }));
     process.exit(1);
   }
 }

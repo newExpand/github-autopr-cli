@@ -28,7 +28,7 @@ export function createLangCommand(): Command {
         await setLanguage(language);
         log.info(t("commands.lang.success.changed", { language }));
       } catch (error) {
-        log.error(t("common.error.unknown"), error);
+        log.error(t("common.error.unknown", { error }));
         process.exit(1);
       }
     });
@@ -45,7 +45,7 @@ export function createLangCommand(): Command {
           }),
         );
       } catch (error) {
-        log.error(t("common.error.unknown"), error);
+        log.error(t("common.error.unknown", { error }));
         process.exit(1);
       }
     });

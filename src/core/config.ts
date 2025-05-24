@@ -21,14 +21,14 @@ const PROJECT_CONFIG_FILE = ".autopr.json";
 const DEFAULT_GLOBAL_CONFIG: GlobalConfig = {
   githubToken: "",
   language: "en",
+};
+
+export const DEFAULT_PROJECT_CONFIG: ProjectConfig = {
   githubApp: {
     appId: "",
     clientId: "",
     installationId: 0,
   },
-};
-
-export const DEFAULT_PROJECT_CONFIG: ProjectConfig = {
   defaultReviewers: [],
   reviewerGroups: [],
   branchPatterns: [
@@ -208,14 +208,12 @@ export async function updateProjectConfig(
   return validatedConfig;
 }
 
-// updateConfig
 export async function updateConfig(updates: Partial<Config>): Promise<Config> {
-  const { githubToken, language, githubApp, ...projectUpdates } = updates;
+  const { githubToken, language, ...projectUpdates } = updates;
 
   const globalUpdates: Partial<GlobalConfig> = {
     ...(githubToken && { githubToken }),
     ...(language && { language }),
-    ...(githubApp !== undefined && { githubApp }),
   };
 
   if (Object.keys(globalUpdates).length > 0) {

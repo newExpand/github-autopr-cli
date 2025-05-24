@@ -5,7 +5,7 @@ import { t } from "../i18n/index.js";
 import { log } from "../utils/logger.js";
 import { loadConfig } from "./config.js";
 import inquirer from "inquirer";
-import { aiClient } from "./ai-manager.js";
+import { getAIClient } from "./ai-manager.js";
 
 const execAsync = promisify(exec);
 
@@ -41,7 +41,7 @@ export async function getInstallationToken(
 ): Promise<string> {
   try {
     // 서버 API를 통해 토큰 획득
-    const token = await aiClient.getGitHubAppToken(installationId);
+    const token = await getAIClient().getGitHubAppToken(installationId);
     log.debug(t("core.github_app.token.success"));
     return token;
   } catch (error) {
@@ -61,7 +61,7 @@ export async function listInstallations(): Promise<Installation[]> {
   try {
     // 서버 API를 통해 설치 목록 요청
     const installations =
-      await aiClient.getGitHubAppInstallations<Installation[]>();
+      await getAIClient().getGitHubAppInstallations<Installation[]>();
     return installations;
   } catch (error) {
     // 서버 API 실패 시 오류 전달
@@ -81,7 +81,7 @@ async function getDeviceCode(): Promise<DeviceCodeResponse> {
 
   try {
     // 서버에서 GitHub App 정보(clientId) 가져오기
-    const appInfo = await aiClient.getGitHubAppInfo();
+    const appInfo = await getAIClient().getGitHubAppInfo();
 
     const requestBody = {
       client_id: appInfo.clientId,
@@ -145,7 +145,7 @@ async function pollForToken(
   const expiresAt = startTime + expiresIn * 1000;
 
   // 서버에서 GitHub App 정보(clientId) 가져오기
-  const appInfo = await aiClient.getGitHubAppInfo();
+  const appInfo = await getAIClient().getGitHubAppInfo();
   const clientId = appInfo.clientId;
 
   while (Date.now() < expiresAt) {
@@ -312,7 +312,7 @@ export async function setupGitHubAppCredentials(): Promise<void> {
       log.step(t("core.github_app.ui.install_browser_step"));
 
       // 서버에서 GitHub App 정보 가져오기
-      const appInfo = await aiClient.getGitHubAppInfo();
+      const appInfo = await getAIClient().getGitHubAppInfo();
       let appId = appInfo.appId;
       let installUrl = `https://github.com/apps/new-autopr-bot/installations/new`;
 
@@ -431,7 +431,7 @@ export async function setupGitHubAppCredentials(): Promise<void> {
     // 설치 정보에서 앱 ID 추출
     const appId = installations[0].app_id
       ? installations[0].app_id.toString()
-      : (await aiClient.getGitHubAppInfo()).appId;
+      : (await getAIClient().getGitHubAppInfo()).appId;
 
     // 여러 설치가 있는 경우 사용자에게 선택 요청
     if (installations.length > 1) {
@@ -460,7 +460,7 @@ export async function setupGitHubAppCredentials(): Promise<void> {
     }
 
     // 서버에서 GitHub App 정보 가져오기
-    const appInfo = await aiClient.getGitHubAppInfo();
+    const appInfo = await getAIClient().getGitHubAppInfo();
 
     // 설정 저장
     await updateConfig({

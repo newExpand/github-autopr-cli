@@ -1,5 +1,19 @@
 {
+  "info": {
+    "no_token": "토큰이 없습니다. 새 토큰을 요청합니다...",
+    "token_expiring_soon": "토큰이 곧 만료됩니다. 갱신 중...",
+    "token_acquired": "토큰을 성공적으로 획득했습니다.",
+    "token_saved": "토큰을 성공적으로 저장했습니다.",
+    "token_loaded": "토큰을 성공적으로 로드했습니다.",
+    "token_refreshed_retrying": "토큰이 갱신되었습니다. 요청을 재시도합니다..."
+  },
+  "warning": {
+    "token_expired_retrying": "토큰이 만료되었습니다. 갱신 후 재시도합니다..."
+  },
   "error": {
+    "no_valid_token": "유효한 토큰이 없습니다.",
+    "authentication_required": "인증이 필요합니다. 다시 초기화하거나 토큰을 확인하세요.",
+    "token_acquisition_failed": "토큰 획득에 실패했습니다: {{error}}",
     "api_call_failed": "API 호출 실패 ({{endpoint}})",
     "api_call_error": "API 호출 실패: {{message}}",
     "unknown_error": "알 수 없는 오류",

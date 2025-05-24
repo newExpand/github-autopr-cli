@@ -72,7 +72,7 @@ export function createCollaboratorCommand(): Command {
         if (error instanceof Error) {
           log.error(error.message);
         } else {
-          log.error(t("common.error.unknown"), String(error));
+          log.error(t("common.error.unknown", { error }));
         }
         process.exit(1);
       }
@@ -120,7 +120,7 @@ export function createCollaboratorCommand(): Command {
           );
         }
       } catch (error) {
-        log.error(t("common.error.unknown"), String(error));
+        log.error(t("common.error.unknown", { error }));
         process.exit(1);
       }
     });
@@ -212,7 +212,7 @@ export function createCollaboratorCommand(): Command {
         if (error instanceof Error) {
           log.error(error.message);
         } else {
-          log.error(t("common.error.unknown"), String(error));
+          log.error(t("common.error.unknown", { error }));
         }
         process.exit(1);
       }
@@ -268,7 +268,7 @@ export function createCollaboratorCommand(): Command {
         if (error instanceof Error) {
           log.error(error.message);
         } else {
-          log.error(t("common.error.unknown"), String(error));
+          log.error(t("common.error.unknown", { error }));
         }
         process.exit(1);
       }
@@ -323,7 +323,7 @@ export function createCollaboratorCommand(): Command {
         if (error instanceof Error) {
           log.error(error.message);
         } else {
-          log.error(t("common.error.unknown"), String(error));
+          log.error(t("common.error.unknown", { error }));
         }
         process.exit(1);
       }

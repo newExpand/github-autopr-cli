@@ -1,15 +1,19 @@
 import { createFetch } from "next-type-fetch";
 import { log } from "../utils/logger.js";
 import { t } from "../i18n/index.js";
+import fs from "fs";
+import path from "path";
+import os from "os";
 
-// 기본 fetch 인스턴스 생성
-const fetch = createFetch({
-  headers: {
-    "Content-Type": "application/json",
-    "x-ai-api-key": "EnnVP5DatEta2Tv6D0nklXEB",
-    "x-title": "github-autopr",
-  },
-});
+// 설정 및 토큰 저장 경로
+const CONFIG_DIR = path.join(os.homedir(), ".autopr");
+const TOKEN_FILE = path.join(CONFIG_DIR, "token.json");
+
+// 토큰 인터페이스
+interface TokenData {
+  token: string;
+  expiresAt: number; // UNIX timestamp (milliseconds)
+}
 
 // 서버 응답 타입 정의
 interface APIResponse<T = any> {
@@ -26,13 +30,95 @@ interface APIResponse<T = any> {
  */
 export class AIClient {
   private baseUrl: string;
+  private tokenData: TokenData | null = null;
+  private fetch;
 
-  constructor(baseUrl: string = "https://api.newextend.com/api") {
+  constructor(baseUrl: string = "http://localhost:4000/api") {
     this.baseUrl = baseUrl;
+    this.loadToken();
+    // fetch 인스턴스 한 번만 생성 (authRetry 옵션 적용)
+    this.fetch = createFetch({
+      authRetry: {
+        statusCodes: [401, 403],
+        handler: async () => {
+          const ok = await this.getAuthToken();
+          return ok;
+        },
+      },
+    });
+    // 요청 인터셉터: 토큰 만료/갱신 로직 제거, 항상 현재 토큰만 헤더에 주입
+    this.fetch.interceptors.request.use(async (config) => {
+      config.headers = config.headers || {};
+      config.headers["x-ai-api-key"] = this.tokenData?.token || "";
+      config.headers["x-title"] = "github-autopr";
+      return config;
+    });
   }
-  // constructor(baseUrl: string = "http://localhost:4000/api") {
-  //   this.baseUrl = baseUrl;
-  // }
+
+  /**
+   * 토큰 파일에서 JWT 토큰을 로드합니다.
+   */
+  private loadToken(): void {
+    try {
+      if (fs.existsSync(TOKEN_FILE)) {
+        const data = JSON.parse(fs.readFileSync(TOKEN_FILE, "utf-8"));
+        if (data && data.token && data.expiresAt > Date.now()) {
+          this.tokenData = data;
+          log.debug(t("core.ai_manager.info.token_loaded"));
+        } else {
+          log.debug(t("core.ai_manager.warning.token_expired_retrying"));
+          this.tokenData = null;
+        }
+      }
+    } catch (error) {
+      log.error(t("core.ai_manager.error.token_load_failed"), error);
+      this.tokenData = null;
+    }
+  }
+
+  /**
+   * 토큰을 파일에 저장합니다.
+   */
+  private saveToken(tokenData: TokenData): void {
+    try {
+      if (!fs.existsSync(CONFIG_DIR)) {
+        fs.mkdirSync(CONFIG_DIR, { recursive: true });
+      }
+      fs.writeFileSync(TOKEN_FILE, JSON.stringify(tokenData, null, 2), "utf-8");
+      log.debug(t("core.ai_manager.info.token_saved"));
+    } catch (error) {
+      log.error(t("core.ai_manager.error.token_save_failed"), error);
+    }
+  }
+
+  /**
+   * 서버에서 JWT 토큰을 발급받습니다.
+   * @param title 클라이언트 식별용 타이틀
+   */
+  public async getAuthToken(title: string = "github-autopr"): Promise<boolean> {
+    try {
+      const tempFetch = createFetch();
+      const response = await tempFetch.post<
+        APIResponse<{ token: string; expiresIn: number }>
+      >(`${this.baseUrl}/ai/google/auth/token`, {
+        title,
+      });
+      if (response.data?.success && response.data?.data?.token) {
+        const { token, expiresIn } = response.data.data;
+        this.tokenData = {
+          token,
+          expiresAt: Date.now() + expiresIn * 1000,
+        };
+        this.saveToken(this.tokenData);
+        log.info(t("core.ai_manager.info.token_acquired"));
+        return true;
+      }
+      return false;
+    } catch (error) {
+      log.error(t("core.ai_manager.error.token_acquisition_failed"), error);
+      return false;
+    }
+  }
 
   /**
    * API 엔드포인트를 호출합니다.
@@ -41,34 +127,21 @@ export class AIClient {
    * @returns API 응답 데이터
    */
   public async callAPI<T>(endpoint: string, data: any): Promise<T> {
-    try {
-      const response = await fetch.post<APIResponse<T>>(
-        `${this.baseUrl}${endpoint}`,
-        data,
-      );
+    return await this.executeRequest<T>(endpoint, data);
+  }
 
-      // 서버 응답 구조 처리
-      // 서버는 { success, statusCode, message, data: { 실제 데이터 }, error } 형식으로 응답
-      if (response.data && response.data.data) {
-        return response.data.data;
-      }
-
-      return response.data as unknown as T;
-    } catch (error) {
-      process.stdout.write(JSON.stringify(error, null, 2));
-      log.error(
-        t("core.ai_manager.error.api_call_failed", { endpoint }),
-        error,
-      );
-      throw new Error(
-        t("core.ai_manager.error.api_call_error", {
-          message:
-            error instanceof Error
-              ? error.message
-              : t("core.ai_manager.error.unknown_error"),
-        }),
-      );
+  /**
+   * 실제 API 요청을 실행합니다. (토큰 갱신 로직에서 재사용)
+   */
+  private async executeRequest<T>(endpoint: string, data: any): Promise<T> {
+    const response = await this.fetch.post<APIResponse<T>>(
+      `${this.baseUrl}${endpoint}`,
+      data,
+    );
+    if (response.data && response.data.data) {
+      return response.data.data;
     }
+    return response.data as unknown as T;
   }
 
   /**
@@ -80,26 +153,16 @@ export class AIClient {
     clientId: string;
   }> {
     try {
-      const response = await fetch.get<
+      const response = await this.fetch.get<
         APIResponse<{ appId: string; clientId: string }>
       >(`${this.baseUrl}/github/app-info`);
-
-      // 서버 응답 구조 처리
       if (response.data && response.data.data) {
         return response.data.data;
       }
-
       throw new Error(t("core.ai_manager.error.github_app_info_missing"));
-    } catch (error) {
+    } catch (error: unknown) {
       log.error(t("core.ai_manager.error.github_app_info_failed"), error);
-      throw new Error(
-        t("core.ai_manager.error.github_app_info_error", {
-          message:
-            error instanceof Error
-              ? error.message
-              : t("core.ai_manager.error.unknown_error"),
-        }),
-      );
+      throw error;
     }
   }
 
@@ -110,26 +173,16 @@ export class AIClient {
    */
   public async getGitHubAppToken(installationId: number): Promise<string> {
     try {
-      const response = await fetch.get<APIResponse<{ token: string }>>(
+      const response = await this.fetch.get<APIResponse<{ token: string }>>(
         `${this.baseUrl}/github/app-token/${installationId}`,
       );
-
-      // 서버 응답 구조 처리
       if (response.data && response.data.data && response.data.data.token) {
         return response.data.data.token;
       }
-
       throw new Error(t("core.ai_manager.error.token_missing"));
-    } catch (error) {
+    } catch (error: unknown) {
       log.error(t("core.ai_manager.error.app_token_failed"), error);
-      throw new Error(
-        t("core.ai_manager.error.app_token_error", {
-          message:
-            error instanceof Error
-              ? error.message
-              : t("core.ai_manager.error.unknown_error"),
-        }),
-      );
+      throw error;
     }
   }
 
@@ -139,26 +192,16 @@ export class AIClient {
    */
   public async getGitHubAppInstallations<T>(): Promise<T> {
     try {
-      const response = await fetch.get<APIResponse<T>>(
+      const response = await this.fetch.get<APIResponse<T>>(
         `${this.baseUrl}/github/app-installations`,
       );
-
-      // 서버 응답 구조 처리
       if (response.data && response.data.data) {
         return response.data.data;
       }
-
       throw new Error(t("core.ai_manager.error.installations_missing"));
-    } catch (error) {
+    } catch (error: unknown) {
       log.error(t("core.ai_manager.error.installations_failed"), error);
-      throw new Error(
-        t("core.ai_manager.error.installations_error", {
-          message:
-            error instanceof Error
-              ? error.message
-              : t("core.ai_manager.error.unknown_error"),
-        }),
-      );
+      throw error;
     }
   }
 
@@ -168,26 +211,25 @@ export class AIClient {
    */
   public async getGitHubOAuthClientInfo(): Promise<{ oauthClientId: string }> {
     try {
-      const response = await fetch.get<APIResponse<{ oauthClientId: string }>>(
-        `${this.baseUrl}/github/oauth-client-info`,
-      );
+      const response = await this.fetch.get<
+        APIResponse<{ oauthClientId: string }>
+      >(`${this.baseUrl}/github/oauth-client-info`);
       if (response.data && response.data.data) {
         return response.data.data;
       }
       throw new Error(t("core.ai_manager.error.oauth_client_info_missing"));
-    } catch (error) {
+    } catch (error: unknown) {
       log.error(t("core.ai_manager.error.oauth_client_info_failed"), error);
-      throw new Error(
-        t("core.ai_manager.error.oauth_client_info_error", {
-          message:
-            error instanceof Error
-              ? error.message
-              : t("core.ai_manager.error.unknown_error"),
-        }),
-      );
+      throw error;
     }
   }
 }
 
-// API 클라이언트 기본 인스턴스 생성
-export const aiClient = new AIClient();
+let aiClientInstance: AIClient | null = null;
+
+export function getAIClient(): AIClient {
+  if (!aiClientInstance) {
+    aiClientInstance = new AIClient();
+  }
+  return aiClientInstance;
+}

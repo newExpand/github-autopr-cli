@@ -44,14 +44,12 @@ export const GlobalConfigSchema = z.object({
 
   // 언어 설정
   language: z.enum(supportedLanguages).default("en"),
-
-  // GitHub App 설정
-  githubApp: GitHubAppConfigSchema,
 });
 
 export const ProjectConfigSchema = z.object({
   owner: z.string().optional(),
   repo: z.string().optional(),
+  githubApp: GitHubAppConfigSchema,
   defaultReviewers: z.array(z.string()).default([]),
   reviewerGroups: z.array(ReviewerGroupSchema).default([]),
   branchPatterns: z.array(BranchPatternSchema).default([]),

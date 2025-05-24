@@ -1,4 +1,6 @@
 import winston from "winston";
+import dotenv from "dotenv";
+dotenv.config();
 
 // 로그 레벨 타입 정의
 type LogLevel =
@@ -48,41 +50,33 @@ const getLogSymbol = (level: string): string => {
   return logConfig[level as LogLevel]?.symbol || "•";
 };
 
-// 로그 포맷 정의
-const format = winston.format.combine(
-  winston.format.timestamp({ format: "HH:mm:ss" }),
-  winston.format.printf((info) => {
-    const symbol = getLogSymbol(info.level);
-    // section과 step 레벨일 때는 타임스탬프와 레벨명을 표시하지 않음
-    if (info.level === "section" || info.level === "step") {
-      return `${symbol} ${info.message}`;
-    }
-    return `${symbol} ${info.timestamp} ${info.level}: ${info.message}`;
-  }),
-  winston.format.colorize({ all: true }),
-);
+const isDebugMode =
+  process.env.LOG_LEVEL === "debug" ||
+  process.env.DEBUG === "1" ||
+  process.env.DEBUG === "true";
+
+const filterDebug = winston.format((info) => {
+  if (info.level === "debug" && !isDebugMode) return false;
+  return info;
+});
 
 // 로거 생성
 const logger = winston.createLogger({
   levels,
-  level: "step", // 모든 레벨의 로그가 출력되도록 가장 높은 레벨로 설정
-  format,
-  transports: [
-    new winston.transports.Console({
-      format: winston.format.combine(
-        winston.format.timestamp({ format: "HH:mm:ss" }),
-        winston.format.printf((info) => {
-          const symbol = getLogSymbol(info.level);
-          // section과 step 레벨일 때는 타임스탬프와 레벨명을 표시하지 않음
-          if (info.level === "section" || info.level === "step") {
-            return `${symbol} ${info.message}`;
-          }
-          return `${symbol} ${info.timestamp} ${info.level}: ${info.message}`;
-        }),
-        winston.format.colorize({ all: true }),
-      ),
+  level: "step", // 가장 낮은 레벨로 설정하여 모든 로그를 허용
+  format: winston.format.combine(
+    filterDebug(),
+    winston.format.timestamp({ format: "HH:mm:ss" }),
+    winston.format.printf((info) => {
+      const symbol = getLogSymbol(info.level);
+      if (info.level === "section" || info.level === "step") {
+        return `${symbol} ${info.message}`;
+      }
+      return `${symbol} ${info.timestamp} ${info.level}: ${info.message}`;
     }),
-  ],
+    winston.format.colorize({ all: true }),
+  ),
+  transports: [new winston.transports.Console()],
 });
 
 // 편의를 위한 래퍼 함수들
