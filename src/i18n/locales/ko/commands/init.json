@@ -2,19 +2,21 @@
   "description": "autopr 설정 초기화",
   "info": {
     "github_app_auth_success": "GitHub App 인증이 완료되었습니다. 서버를 통해 자동 인증됩니다.",
-    "github_app_auth_why": "이 인증은 자동 PR 생성을 위해 필수입니다. 인증하지 않으면 주요 기능을 사용할 수 없습니다.",
-    "github_app_auth_failed_why": "GitHub App 인증이 완료되어야만 자동 PR 기능을 사용할 수 있습니다.",
-    "github_app_auth_skipped_why": "GitHub App 인증을 건너뛰면 자동 PR 생성 등 일부 기능이 제한됩니다.",
+    "github_app_auth_why": "AI 리뷰 등 고급 기능을 위해 필요합니다. 인증하지 않아도 기본 기능(커밋, PR, 머지)은 사용 가능합니다.",
+    "github_app_auth_failed_why": "GitHub App 인증이 완료되어야만 AI 리뷰 등 고급 기능을 사용할 수 있습니다.",
+    "github_app_auth_skipped_why": "GitHub App 인증을 건너뛰면 AI 리뷰 등 일부 고급 기능이 제한됩니다.",
+    "github_app_auth_skipped": "GitHub App 인증을 건너뛰었습니다.",
+    "github_app_auth_later": "나중에 'autopr auth github-app' 명령어로 언제든 인증할 수 있습니다.",
+    "github_app_auth_failed": "GitHub App 인증에 실패했습니다: {{error}}",
     "oauth_auth_success": "GitHub 사용자 인증이 성공적으로 완료되었습니다.",
-    "oauth_why": "PR 생성 등 일부 기능을 위해 필요합니다. 인증하지 않으면 일부 기능이 제한됩니다.",
-    "oauth_skipped_why": "OAuth 인증을 건너뛰면 PR 생성 등 일부 기능이 제한됩니다.",
-    "oauth_failed_why": "OAuth 인증에 실패하면 PR 생성 등 일부 기능을 사용할 수 없습니다.",
+    "oauth_why": "PR 생성, 머지 등 기본 기능을 위해 필요합니다. 인증하지 않으면 주요 기능을 사용할 수 없습니다.",
+    "oauth_skipped_why": "OAuth 인증을 건너뛰면 PR 생성, 머지 등 주요 기능을 사용할 수 없습니다.",
+    "oauth_failed_why": "OAuth 인증에 실패하면 PR 생성, 머지 등 주요 기능을 사용할 수 없습니다.",
+    "oauth_required_exit": "GitHub 사용자 인증이 필요합니다. 초기화를 종료합니다.",
     "acquiring_ai_token": "AI API 토큰을 발급받는 중입니다...",
     "ai_token_success": "AI API 토큰 발급에 성공했습니다.",
     "ai_token_why": "AI 기능(코드 리뷰, 자동 설명 등)을 사용하려면 토큰이 필요합니다. 인증하지 않아도 기본 기능은 사용 가능합니다.",
-    "ai_token_failed_why": "AI 토큰 발급에 실패하여 AI 관련 기능(코드 리뷰, 자동 설명 등)을 사용할 수 없습니다.",
-    "github_app_auth_skipped": "GitHub App 인증을 건너뛰었습니다.",
-    "github_app_auth_failed": "GitHub App 인증에 실패했습니다: {{error}}"
+    "ai_token_failed_why": "AI 토큰 발급에 실패하여 AI 관련 기능(코드 리뷰, 자동 설명 등)을 사용할 수 없습니다."
   },
   "error": {
     "auth_failed": "GitHub App 인증에 실패했습니다: {{error}}"
@@ -23,10 +25,11 @@
     "update_language": "현재 언어는 {{language}}입니다. 업데이트하시겠습니까?",
     "language": "언어 선택:",
     "reviewers": "기본 리뷰어 (쉼표로 구분):",
-    "oauth_authenticate": "PR 생성을 위해 GitHub 사용자 계정으로 인증하시겠습니까?",
+    "oauth_authenticate": "PR, 머지 등 기본 기능을 위해 GitHub 사용자 계정으로 인증하시겠습니까? (필수)",
     "oauth_already_authenticated": "GitHub 사용자 토큰이 이미 등록되어 있습니다. 다시 인증하시겠습니까?",
     "project_already_initialized": "기존 설정이 있습니다. 초기화(백업 후 새로 생성) 하시겠습니까?",
-    "github_app_already_authenticated": "GitHub App이 이미 인증되어 있습니다. 다시 인증하시겠습니까?"
+    "github_app_already_authenticated": "GitHub App이 이미 인증되어 있습니다. 다시 인증하시겠습니까?",
+    "github_app_authenticate": "AI 리뷰 등 고급 기능을 위해 GitHub App 인증을 하시겠습니까? (선택)"
   },
   "warning": {
     "oauth_auth_failed": "GitHub 사용자 인증에 실패했습니다.",

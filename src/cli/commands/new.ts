@@ -148,8 +148,16 @@ async function runCodeReviewAndAddComments(params: {
       log.info(t("commands.new.info.running_code_review"));
       const codeReviewTask = (async () => {
         try {
+          // 파일 내용을 라인별로 변환
+          const lineFiles = params.files.map((f) => ({
+            path: f.path,
+            content: f.content.split("\n").map((text, idx) => ({
+              line: idx + 1,
+              text,
+            })),
+          }));
           reviewResults.overallReview = await params.ai.reviewCode(
-            params.files,
+            lineFiles,
             "ko",
           );
           log.info(t("commands.new.info.code_review_completed"));

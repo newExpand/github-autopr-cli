@@ -137,19 +137,21 @@ export class AIFeatures {
    * @returns 코드 리뷰 결과
    */
   async reviewCode(
-    files: Array<{ path: string; content: string }>,
+    files: Array<{
+      path: string;
+      content: Array<{ line: number; text: string }>;
+    }>,
     language?: SupportedLanguage,
   ): Promise<string> {
     try {
       const lang = language || this.defaultLanguage;
-      const result = await getAIClient().callAPI<CodeReviewResponse>(
-        "/ai/google/features/code-review",
+      const result = await getAIClient().callAPI<{ review: string }>(
+        "/ai/google/features/code-review-lines",
         {
           files,
           language: lang,
         },
       );
-
       return result.review || "";
     } catch (error) {
       log.error(t("core.ai_features.error.code_review_failed"), error);
