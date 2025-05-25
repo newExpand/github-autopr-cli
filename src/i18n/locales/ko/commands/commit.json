@@ -1,26 +1,4 @@
 {
-  "description": "AI 지원으로 커밋 생성",
-  "args": {
-    "subcommand": "실행할 서브커맨드 (improve)",
-    "message": "커밋 메시지 또는 개선할 메시지"
-  },
-  "options": {
-    "all_with_push": "모든 변경사항을 스테이징하고 커밋 후 푸시",
-    "patch": "스테이징에 패치 모드 사용",
-    "select": "스테이징할 파일 선택",
-    "select_with_push": "스테이징할 파일을 선택하고 커밋 후 푸시"
-  },
-  "help": {
-    "examples": "예시",
-    "default": "대화형 커밋",
-    "all_with_push": "모든 변경사항 스테이징 및 푸시",
-    "select": "스테이징할 파일 선택",
-    "select_with_push": "파일 선택, 커밋 및 푸시",
-    "improve_last": "마지막 커밋 메시지 개선",
-    "improve_message": "제공된 커밋 메시지 개선",
-    "improve_all_with_push": "메시지 개선, 모든 파일 스테이징 및 푸시",
-    "improve_select_with_push": "메시지 개선, 파일 선택 및 푸시"
-  },
   "error": {
     "staging_failed": "변경사항 스테이징에 실패했습니다",
     "files_failed": "변경된 파일 목록을 가져오지 못했습니다",
@@ -53,9 +31,6 @@
     "files_staged": "{{count}}개 파일이 스테이징되었습니다",
     "pushed": "{{branch}} 브랜치에 성공적으로 푸시되었습니다",
     "committed": "변경사항이 성공적으로 커밋되었습니다"
-  },
-  "warning": {
-    "pr_check_failed": "기존 PR 확인에 실패했습니다"
   },
   "prompts": {
     "select_files": "스테이징할 파일 선택:",

@@ -1,19 +1,22 @@
 {
   "description": "Initialize autopr configuration",
-  "setup": {
-    "info": "Setting up GitHub App authentication"
-  },
   "info": {
     "github_app_auth_success": "GitHub App authentication successful! Server-based authentication is set up.",
+    "github_app_auth_why": "This authentication is required for AI review and advanced features. You can use basic features (commit, PR, merge) without it.",
+    "github_app_auth_failed_why": "You must complete GitHub App authentication to use AI review and advanced features.",
+    "github_app_auth_skipped_why": "If you skip GitHub App authentication, some advanced features such as AI review will be limited.",
+    "github_app_auth_skipped": "GitHub App authentication skipped.",
+    "github_app_auth_later": "You can authenticate later anytime with the 'autopr auth github-app' command.",
+    "github_app_auth_failed": "GitHub App authentication failed: {{error}}",
     "oauth_auth_success": "GitHub user authentication completed successfully.",
-    "github_app_auth_why": "This authentication is required for automatic PR creation. Without it, key features will not be available.",
-    "github_app_auth_failed_why": "You must complete GitHub App authentication to use automatic PR features.",
-    "github_app_auth_skipped_why": "If you skip GitHub App authentication, some features such as automatic PR creation will be limited.",
+    "oauth_why": "This is required for basic features such as PR creation and merge. Without authentication, you cannot use key features.",
+    "oauth_skipped_why": "If you skip OAuth authentication, you cannot use key features such as PR creation and merge.",
+    "oauth_failed_why": "If OAuth authentication fails, you cannot use key features such as PR creation and merge.",
+    "oauth_required_exit": "GitHub user authentication is required. Initialization will exit.",
+    "acquiring_ai_token": "Acquiring AI API token...",
+    "ai_token_success": "AI API token acquired successfully.",
     "ai_token_why": "To use AI features (code review, auto description, etc.), a token is required. You can use basic features without authentication.",
-    "ai_token_failed_why": "AI token issuance failed, so AI features (code review, auto description, etc.) will not be available.",
-    "oauth_why": "Some features, such as PR creation, require this authentication. If you skip, some features will be limited.",
-    "oauth_skipped_why": "If you skip OAuth authentication, some features such as PR creation will be limited.",
-    "oauth_failed_why": "If OAuth authentication fails, you will not be able to use features such as PR creation."
+    "ai_token_failed_why": "AI token issuance failed, so AI features (code review, auto description, etc.) will not be available."
   },
   "error": {
     "auth_failed": "GitHub App authentication failed: {{error}}"
@@ -22,12 +25,30 @@
     "update_language": "Current language is {{language}}. Update it?",
     "language": "Select language:",
     "reviewers": "Default reviewers (comma-separated):",
-    "oauth_authenticate": "Would you like to authenticate with your GitHub user account for PR creation?",
+    "oauth_authenticate": "Would you like to authenticate with your GitHub user account for PR and merge? (Required)",
     "oauth_already_authenticated": "A GitHub user token is already registered. Do you want to re-authenticate?",
     "project_already_initialized": "A project configuration already exists. Would you like to initialize (backup and create new)?",
-    "github_app_already_authenticated": "GitHub App is already authenticated. Do you want to re-authenticate?"
+    "github_app_already_authenticated": "GitHub App is already authenticated. Do you want to re-authenticate?",
+    "github_app_authenticate": "Would you like to authenticate GitHub App for AI review and advanced features? (Optional)"
   },
   "warning": {
-    "oauth_auth_failed": "GitHub user authentication failed."
+    "oauth_auth_failed": "GitHub user authentication failed.",
+    "ai_token_failed": "Failed to acquire AI API token.",
+    "ai_token_error": "An error occurred while acquiring AI API token."
+  },
+  "common": {
+    "success": {
+      "init": "Initialization completed successfully."
+    },
+    "error": {
+      "unknown": "An unknown error occurred."
+    }
+  },
+  "auth": {
+    "github_app": {
+      "description": "Authenticate GitHub App separately",
+      "success": "GitHub App authentication completed successfully.",
+      "failed": "GitHub App authentication failed: {{error}}"
+    }
   }
 }

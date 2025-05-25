@@ -66,7 +66,8 @@
     "line_by_line_review_comment": "Line-by-line code review",
     "pr_review_added": "PR review comments added to PR",
     "current_branch": "Current branch: {{branch}}",
-    "select_base_branch_with_current": "Select target branch for PR (current branch: {{branch}}):"
+    "select_base_branch_with_current": "Select target branch for PR (current branch: {{branch}}):",
+    "github_app_required_for_review": "AI review and advanced features are available after GitHub App authentication. Only PR creation will proceed."
   },
   "prompts": {
     "title": "PR title:",

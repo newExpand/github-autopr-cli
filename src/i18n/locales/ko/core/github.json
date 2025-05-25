@@ -14,7 +14,11 @@
     "get_invitation_statuses": "초대 상태 목록 확인에 실패했습니다: {{error}}",
     "get_conflicts": "풀 리퀘스트 충돌 정보 가져오기에 실패했습니다: {{error}}",
     "github_app_auth": "GitHub API 인증 실패: 서버를 통한 GitHub App 토큰 획득에 실패했습니다. 네트워크 연결 또는 서버 상태를 확인하세요.",
-    "app_info": "앱 정보를 가져오지 못했습니다. 기본값을 사용합니다"
+    "app_info": "앱 정보를 가져오지 못했습니다. 기본값을 사용합니다",
+    "app_auth_failed": "GitHub App 인증에 실패했습니다: {{error}}",
+    "general": "알 수 없는 오류가 발생했습니다: {{error}}",
+    "review_create_failed": "PR 리뷰 생성에 실패했습니다: {{error}}",
+    "file_diff_failed": "PR 파일 diff 가져오기에 실패했습니다: {{error}}"
   },
   "warning": {
     "merge_conflict": "이 풀 리퀘스트에서 병합 충돌이 감지되었습니다",
@@ -25,21 +29,21 @@
   },
   "info": {
     "debug": {
-      "pr_merge_start": "[DEBUG] PR #{{number}} 병합 시작",
-      "owner_repo": "[DEBUG] 소유자: {{owner}}, 저장소: {{repo}}",
-      "merge_method": "[DEBUG] 병합 방법: {{method}}",
-      "pr_state": "[DEBUG] PR 상태: {{state}}",
-      "pr_title": "[DEBUG] PR 제목: {{title}}",
-      "pr_branch": "[DEBUG] PR 브랜치: {{head}} -> {{base}}",
-      "pr_not_open": "[DEBUG] PR이 열려있지 않음: {{state}}",
-      "merge_status": "[DEBUG] 병합 가능 상태: {{status}}",
-      "pr_not_mergeable": "[DEBUG] PR을 병합할 수 없음: {{status}}",
-      "merge_attempt": "[DEBUG] 병합 시도 중...",
-      "merge_success": "[DEBUG] 병합 성공",
-      "merge_failed": "[DEBUG] 병합 실패: {{error}}",
-      "branch_delete_attempt": "[DEBUG] 브랜치 삭제 시도: {{branch}}",
-      "branch_delete_success": "[DEBUG] 브랜치 삭제 성공",
-      "branch_delete_failed": "[DEBUG] 브랜치 삭제 실패: {{error}}"
+      "pr_merge_start": "PR #{{number}} 병합 시작",
+      "owner_repo": "소유자: {{owner}}, 저장소: {{repo}}",
+      "merge_method": "병합 방법: {{method}}",
+      "pr_state": "PR 상태: {{state}}",
+      "pr_title": "PR 제목: {{title}}",
+      "pr_branch": "PR 브랜치: {{head}} -> {{base}}",
+      "pr_not_open": "PR이 열려있지 않음: {{state}}",
+      "merge_status": "병합 가능 상태: {{status}}",
+      "pr_not_mergeable": "PR을 병합할 수 없음: {{status}}",
+      "merge_attempt": "병합 시도 중...",
+      "merge_success": "병합 성공",
+      "merge_failed": "병합 실패: {{error}}",
+      "branch_delete_attempt": "브랜치 삭제 시도: {{branch}}",
+      "branch_delete_success": "브랜치 삭제 성공",
+      "branch_delete_failed": "브랜치 삭제 실패: {{error}}"
     },
     "update_review": "GraphQL API를 사용하여 PR 리뷰 상태 업데이트 중..."
   }
