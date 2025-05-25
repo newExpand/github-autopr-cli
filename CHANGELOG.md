@@ -23,6 +23,15 @@
 - **Other Improvements**
   - Added guidance and solution for hooks undefined error when switching branches
   - Improved workflow for commit/PR/reviewer automation, daily report, template management, and more
+- **Major authentication & workflow structure overhaul**
+  - Separated OAuth authentication as required, GitHub App authentication as optional (for advanced features)
+  - Enhanced UX and guide messages for each authentication step, clarified UX on failure/cancellation
+  - Refactored code to split authentication/config steps into functions
+  - If a user token exists, only ask for re-authentication; 'No' keeps the existing token
+  - GitHub App authentication can be run anytime via a separate command (`autopr auth github-app`)
+  - Basic features (PR/merge) work with OAuth only; advanced features require App authentication (with clear branching)
+  - All guide/warning/success/failure messages managed via i18n
+  - Updated README and docs to reflect new authentication structure, commands, and workflow
 
 ## 0.1.23
 

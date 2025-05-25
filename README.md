@@ -57,13 +57,20 @@ autopr init
 autopr init
 ```
 - Creates/initializes the project config file (.autopr.json)
-- GitHub App authentication (required), AI token issuance, OAuth authentication (optional)
+- **OAuth authentication (required for PR/merge and basic features)**
+- **GitHub App authentication (optional, for AI review and advanced features, can be run anytime with a separate command)**
+- AI token issuance (automatic)
 - Set language, default reviewers, etc.
 
 > ⚠️ **Important:**  
 > When authenticating the GitHub App, make sure you select the **correct user or organization** for your project.  
 > If you authenticate with the wrong account/organization, key features such as PR automation, review, and permission management may not work as expected.  
-> **If you see a 404 not found error after initialization and authentication, please make sure you selected the correct user/organization during GitHub App authentication.**
+> **If you see a '404 not found' or 'Resource not accessible by integration' error after initialization and authentication, please make sure you selected the correct user/organization during GitHub App authentication.**
+
+> **Authentication Notice:**  
+When authenticating with GitHub (during init, auth, etc.), an "authentication code" and "authentication URL" will be shown in your terminal.  
+Copy the code from the terminal, open the provided URL (Device Flow authentication page) in your browser, and paste the code to complete authentication.  
+If your browser does not open automatically, copy and paste the URL from the terminal into your browser manually.
 
 > **Workflow:**
 >
@@ -72,16 +79,32 @@ autopr init
 >    ↓
 > Create/initialize project config file
 >    ↓
-> GitHub App authentication (required)
+> OAuth authentication (required for PR/merge)
 >    ↓
 > AI token issuance (automatic)
 >    ↓
-> OAuth authentication (optional)
+> GitHub App authentication (optional, for AI review/advanced features)
 >    ↓
 > Set language/reviewers/etc
 >    ↓
 > Save config file and show guide message
 > ```
+>
+> - **You can always run GitHub App authentication separately with:**
+>   ```bash
+>   autopr auth github-app
+>   ```
+>
+> - **If a GitHub user token is already registered, you can choose whether to re-authenticate. Selecting 'No' will keep the existing token.**
+
+### 1-1. Run GitHub App Authentication Separately (`auth github-app`)
+
+```bash
+autopr auth github-app
+```
+- Run GitHub App authentication separately (can be run anytime for additional/re-authentication)
+- Required for AI review, automatic review comments, and other advanced features
+- Shows success/failure messages
 
 ### 2. Create PR (`new`)
 
@@ -91,7 +114,7 @@ autopr new
 - Create PRs based on branch patterns/templates
 - AI automatically generates PR title/body/review
 - Link related issues, assign reviewers, support Draft PR
-- Optionally run code review/line-by-line review after PR creation
+- Optionally run code review/line-by-line review after PR creation (**requires GitHub App authentication**)
 
 > **Note:**  
 > The `autopr new` command creates a PR **from the currently checked-out branch**  

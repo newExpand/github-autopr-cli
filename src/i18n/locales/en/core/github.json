@@ -14,7 +14,11 @@
     "get_invitation_statuses": "Failed to get invitation statuses: {{error}}",
     "get_conflicts": "Failed to get pull request conflicts: {{error}}",
     "github_app_auth": "GitHub API authentication failed: Failed to obtain GitHub App token via server. Please check your network connection or server status.",
-    "app_info": "Failed to get app info, using default values"
+    "app_info": "Failed to get app info, using default values",
+    "app_auth_failed": "GitHub App authentication failed: {{error}}",
+    "general": "An unknown error occurred: {{error}}",
+    "review_create_failed": "Failed to create PR review: {{error}}",
+    "file_diff_failed": "Failed to get PR file diff: {{error}}"
   },
   "warning": {
     "merge_conflict": "Merge conflicts detected in this pull request",

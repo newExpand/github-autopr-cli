@@ -43,5 +43,12 @@
     "error": {
       "unknown": "An unknown error occurred."
     }
+  },
+  "auth": {
+    "github_app": {
+      "description": "Authenticate GitHub App separately",
+      "success": "GitHub App authentication completed successfully.",
+      "failed": "GitHub App authentication failed: {{error}}"
+    }
   }
 }

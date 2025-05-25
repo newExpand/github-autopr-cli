@@ -124,17 +124,14 @@ async function runCodeReviewAndAddComments(params: {
       log.info(t("commands.new.info.running_pr_review"));
       const prReviewTask = (async () => {
         try {
-          reviewResults.prReview = await params.ai.reviewPR(
-            {
-              prNumber: params.pull_number,
-              title: params.prTitle || "",
-              changedFiles: params.files,
-              diffContent: params.diffContent || "",
-              repoOwner: params.owner,
-              repoName: params.repo,
-            },
-            "ko",
-          );
+          reviewResults.prReview = await params.ai.reviewPR({
+            prNumber: params.pull_number,
+            title: params.prTitle || "",
+            changedFiles: params.files,
+            diffContent: params.diffContent || "",
+            repoOwner: params.owner,
+            repoName: params.repo,
+          });
           log.info(t("commands.new.info.pr_review_completed"));
         } catch (error) {
           log.warn(t("commands.new.warning.ai_pr_review_failed"), error);
@@ -156,10 +153,7 @@ async function runCodeReviewAndAddComments(params: {
               text,
             })),
           }));
-          reviewResults.overallReview = await params.ai.reviewCode(
-            lineFiles,
-            "ko",
-          );
+          reviewResults.overallReview = await params.ai.reviewCode(lineFiles);
           log.info(t("commands.new.info.code_review_completed"));
         } catch (error) {
           log.warn(t("commands.new.warning.code_review_failed"), error);
@@ -174,16 +168,12 @@ async function runCodeReviewAndAddComments(params: {
       log.info(t("commands.new.info.pr_analysis_info"));
       const lineReviewTask = (async () => {
         try {
-          const comments = await params.ai.lineByLineCodeReview(
-            params.files,
-            {
-              owner: params.owner,
-              repo: params.repo,
-              pull_number: params.pull_number,
-              baseBranch: params.base_branch || params.base || "main",
-            },
-            "ko",
-          );
+          const comments = await params.ai.lineByLineCodeReview(params.files, {
+            owner: params.owner,
+            repo: params.repo,
+            pull_number: params.pull_number,
+            baseBranch: params.base_branch || params.base || "main",
+          });
           reviewResults.lineComments = comments;
           if (comments.length > 0) {
             log.info(t("commands.new.info.line_by_line_review_completed"));
@@ -840,12 +830,9 @@ export async function newCommand(): Promise<void> {
     let generatedTitle = "";
     try {
       const ai = new AIFeatures(config.language);
-      generatedTitle = await ai.generatePRTitle(
-        changedFiles,
-        diffContent,
-        { type: pattern?.type || selectedTemplate },
-        config.language,
-      );
+      generatedTitle = await ai.generatePRTitle(changedFiles, diffContent, {
+        type: pattern?.type || selectedTemplate,
+      });
       log.section(
         t("commands.new.info.generated_title", { title: generatedTitle }),
       );
@@ -907,7 +894,6 @@ export async function newCommand(): Promise<void> {
           pattern?.type || selectedTemplate,
           {
             relatedIssues: relatedIssuesData,
-            language: config.language,
           },
         );
         log.section(t("commands.new.info.generated_pr_content"));
@@ -1019,8 +1005,9 @@ export async function newCommand(): Promise<void> {
 
     // === PR 생성 후, GitHub App(봇) 토큰으로 리뷰 실행 ===
     // GitHub App 설치 토큰 가져오기
+    const hasGithubApp = !!config.githubApp?.installationId;
     let botToken: string | undefined = undefined;
-    if (config.githubApp?.installationId) {
+    if (hasGithubApp) {
       const { getInstallationToken } = await import("../../core/github-app.js");
       try {
         botToken = await getInstallationToken(config.githubApp.installationId);
@@ -1029,36 +1016,39 @@ export async function newCommand(): Promise<void> {
         log.warn(t("commands.new.warning.bot_token_failed"), error);
       }
     }
-    // 봇 토큰으로 AI 인스턴스 생성 (필요시)
     const aiBot = new AIFeatures(config.language);
     const fileContents = await getFileContents(changedFiles);
 
-    // 코드 리뷰 실행 여부 프롬프트
-    const { shouldRunCodeReview } = await inquirer.prompt([
-      {
-        type: "confirm",
-        name: "shouldRunCodeReview",
-        message: t("commands.new.prompts.run_all_code_reviews"),
-        default: true,
-      },
-    ]);
+    if (hasGithubApp) {
+      // 코드 리뷰 실행 여부 프롬프트
+      const { shouldRunCodeReview } = await inquirer.prompt([
+        {
+          type: "confirm",
+          name: "shouldRunCodeReview",
+          message: t("commands.new.prompts.run_all_code_reviews"),
+          default: true,
+        },
+      ]);
 
-    if (shouldRunCodeReview) {
-      await runCodeReviewAndAddComments({
-        owner: repoInfo.owner,
-        repo: repoInfo.repo,
-        pull_number: pr.number,
-        files: fileContents,
-        ai: aiBot,
-        shouldRunPRReview: true,
-        shouldRunOverallReview: true,
-        shouldRunLineByLineReview: true,
-        base_branch: baseBranch,
-        prTitle: answers.title,
-        diffContent: diffContent,
-      });
+      if (shouldRunCodeReview) {
+        await runCodeReviewAndAddComments({
+          owner: repoInfo.owner,
+          repo: repoInfo.repo,
+          pull_number: pr.number,
+          files: fileContents,
+          ai: aiBot,
+          shouldRunPRReview: true,
+          shouldRunOverallReview: true,
+          shouldRunLineByLineReview: true,
+          base_branch: baseBranch,
+          prTitle: answers.title,
+          diffContent: diffContent,
+        });
+      } else {
+        log.info(t("commands.new.info.no_review_comments"));
+      }
     } else {
-      log.info(t("commands.new.info.no_review_comments"));
+      log.info(t("commands.new.info.github_app_required_for_review"));
     }
 
     // === 모든 자동화가 끝난 후 PR URL/브라우저 안내 ===

@@ -33,7 +33,7 @@ export class AIClient {
   private tokenData: TokenData | null = null;
   private fetch;
 
-  constructor(baseUrl: string = "http://localhost:4000/api") {
+  constructor(baseUrl: string = "https://api.newextend.com/api") {
     this.baseUrl = baseUrl;
     this.loadToken();
     // fetch 인스턴스 한 번만 생성 (authRetry 옵션 적용)

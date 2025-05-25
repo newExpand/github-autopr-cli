@@ -43,5 +43,12 @@
     "error": {
       "unknown": "알 수 없는 오류가 발생했습니다."
     }
+  },
+  "auth": {
+    "github_app": {
+      "description": "GitHub App 인증을 별도로 실행합니다",
+      "success": "GitHub App 인증이 성공적으로 완료되었습니다.",
+      "failed": "GitHub App 인증에 실패했습니다: {{error}}"
+    }
   }
 }

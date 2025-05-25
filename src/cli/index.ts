@@ -15,6 +15,7 @@ import { log } from "../utils/logger.js";
 import { createReviewerGroupCommand } from "./commands/reviewer-group.js";
 import { createDailyReportCommand } from "./commands/daily-report.js";
 import { createTemplateCommand } from "./commands/template.js";
+import { authGithubAppCommand } from "./commands/auth.js";
 
 const program = new Command();
 
@@ -102,6 +103,12 @@ async function main() {
 
     // 템플릿 관리 명령어 추가
     program.addCommand(createTemplateCommand());
+
+    // 기타 명령어 등록 후 아래에 추가
+    program
+      .command("auth github-app")
+      .description(t("commands.auth.github_app.description"))
+      .action(authGithubAppCommand);
 
     await program.parseAsync();
   } catch (error) {

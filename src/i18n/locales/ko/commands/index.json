@@ -4,5 +4,21 @@
   },
   "error": {
     "unknown": "알 수 없는 오류가 발생했습니다"
-  }
+  },
+  "examples": [
+    "init",
+    "new",
+    "list",
+    "update <pr-number>",
+    "merge <pr-number>",
+    "reopen <pr-number>",
+    "commit",
+    "daily-report",
+    "lang",
+    "collaborator",
+    "reviewer-group",
+    "template",
+    "auth <github-app>                        commands.auth.github_app.description",
+    "help [command]                           display help for command"
+  ]
 }

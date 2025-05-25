@@ -4,5 +4,21 @@
   },
   "error": {
     "unknown": "An unknown error occurred"
-  }
+  },
+  "examples": [
+    "init",
+    "new",
+    "list",
+    "update <pr-number>",
+    "merge <pr-number>",
+    "reopen <pr-number>",
+    "commit",
+    "daily-report",
+    "lang",
+    "collaborator",
+    "reviewer-group",
+    "template",
+    "auth <github-app>                        commands.auth.github_app.description",
+    "help [command]                           display help for command"
+  ]
 }

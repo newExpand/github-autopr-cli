@@ -65,6 +65,10 @@ async function promptUserOAuth(globalConfig: any): Promise<boolean> {
         default: false,
       },
     ]);
+    if (!reauth) {
+      // 기존 토큰을 그대로 사용
+      return true;
+    }
     needOAuth = reauth;
   } else {
     const { doOAuth } = await inquirer.prompt([

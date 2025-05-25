@@ -34,17 +34,14 @@ const collaboratorsCache = new Map<
 >();
 
 export async function getOctokit(): Promise<Octokit> {
-  // 캐시된 Octokit 인스턴스가 있으면 반환
   if (octokit) return octokit;
 
   try {
-    // 설정 로드
     const config = await loadConfig();
 
-    // GitHub App 설정이 있으면 시도 (이제 project config에서 읽음)
+    // 1순위: GitHub App 인증
     if (config.githubApp && config.githubApp.installationId) {
       try {
-        // 설치 토큰 얻기 - 서버 API를 통해 획득
         const installationToken = await getInstallationToken(
           config.githubApp.installationId,
         );
@@ -58,16 +55,30 @@ export async function getOctokit(): Promise<Octokit> {
         });
         return octokit;
       } catch (appError) {
-        // GitHub App 인증 실패 시 더 명확한 오류 메시지 제공
-        log.error("GitHub App 인증 실패:", appError);
-        throw new Error(t("core.github.error.github_app_auth"));
+        log.error(
+          t("core.github.error.app_auth_failed", { error: String(appError) }),
+        );
+        // App 인증 실패 시 유저 토큰 fallback
       }
-    } else {
-      throw new Error(t("core.github.error.github_token"));
     }
+
+    // 2순위: 유저 OAuth 토큰
+    if (config.githubToken) {
+      octokit = new Octokit({
+        auth: config.githubToken,
+        request: {
+          headers: {
+            "X-GitHub-Api-Version": "2022-11-28",
+          },
+        },
+      });
+      return octokit;
+    }
+
+    // 3순위: 둘 다 없으면 에러
+    throw new Error(t("core.github.error.github_token"));
   } catch (error) {
-    // 인증 정보가 없거나 유효하지 않은 경우
-    log.error("GitHub 인증 실패:", error);
+    log.error(t("core.github.error.general", { error: String(error) }));
     throw error;
   }
 }
@@ -975,9 +986,11 @@ export async function createPullRequestReview(params: {
       url: response.data.html_url,
     };
   } catch (error) {
-    log.error("PR 리뷰 생성 실패:", error);
+    log.error(
+      t("core.github.error.review_create_failed", { error: String(error) }),
+    );
     throw new Error(
-      t("commands.review.error.submit_failed", {
+      t("core.github.error.review_create_failed", {
         error: error instanceof Error ? error.message : String(error),
       }),
     );
@@ -1080,7 +1093,9 @@ export async function getPullRequestFileDiff(params: {
       changes,
     };
   } catch (error) {
-    log.error("PR 파일 diff 가져오기 실패:", error);
+    log.error(
+      t("core.github.error.file_diff_failed", { error: String(error) }),
+    );
     return { changes: [] };
   }
 }
