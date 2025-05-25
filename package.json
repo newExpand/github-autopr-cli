@@ -46,7 +46,7 @@
     "pr-management",
     "github-tools"
   ],
-  "author": "newExpandgit",
+  "author": "newExpand",
   "license": "MIT",
   "dependencies": {
     "commander": "^11.1.0",

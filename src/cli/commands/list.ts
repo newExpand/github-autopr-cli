@@ -118,7 +118,7 @@ export async function listCommand(): Promise<void> {
       log.info(`${i + 1}. ${stateIcon} #${pr.number} ${pr.title}`);
       log.verbose(t("commands.list.author", { login: pr.user.login }));
       log.verbose(
-        t("commands.list.status", {
+        t("commands.list.status_label", {
           status: pr.draft
             ? t("commands.list.status.draft")
             : t("commands.list.status.ready"),

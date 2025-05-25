@@ -25,21 +25,21 @@
   },
   "info": {
     "debug": {
-      "pr_merge_start": "[DEBUG] Starting merge of PR #{{number}}",
-      "owner_repo": "[DEBUG] Owner: {{owner}}, Repository: {{repo}}",
-      "merge_method": "[DEBUG] Merge method: {{method}}",
-      "pr_state": "[DEBUG] PR state: {{state}}",
-      "pr_title": "[DEBUG] PR title: {{title}}",
-      "pr_branch": "[DEBUG] PR branch: {{head}} -> {{base}}",
-      "pr_not_open": "[DEBUG] PR is not open: {{state}}",
-      "merge_status": "[DEBUG] Merge status: {{status}}",
-      "pr_not_mergeable": "[DEBUG] PR cannot be merged: {{status}}",
-      "merge_attempt": "[DEBUG] Attempting to merge...",
-      "merge_success": "[DEBUG] Merge successful",
-      "merge_failed": "[DEBUG] Merge failed: {{error}}",
-      "branch_delete_attempt": "[DEBUG] Attempting to delete branch: {{branch}}",
-      "branch_delete_success": "[DEBUG] Branch deletion successful",
-      "branch_delete_failed": "[DEBUG] Branch deletion failed: {{error}}"
+      "pr_merge_start": "Starting merge of PR #{{number}}",
+      "owner_repo": "Owner: {{owner}}, Repository: {{repo}}",
+      "merge_method": "Merge method: {{method}}",
+      "pr_state": "PR state: {{state}}",
+      "pr_title": "PR title: {{title}}",
+      "pr_branch": "PR branch: {{head}} -> {{base}}",
+      "pr_not_open": "PR is not open: {{state}}",
+      "merge_status": "Merge status: {{status}}",
+      "pr_not_mergeable": "PR cannot be merged: {{status}}",
+      "merge_attempt": "Attempting to merge...",
+      "merge_success": "Merge successful",
+      "merge_failed": "Merge failed: {{error}}",
+      "branch_delete_attempt": "Attempting to delete branch: {{branch}}",
+      "branch_delete_success": "Branch deletion successful",
+      "branch_delete_failed": "Branch deletion failed: {{error}}"
     },
     "update_review": "Updating PR review status using GraphQL API..."
   }

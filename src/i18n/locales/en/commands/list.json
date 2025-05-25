@@ -5,7 +5,7 @@
   "all_prs": "All Pull Requests:",
   "no_prs": "No pull requests found",
   "author": "Author: @{{login}}",
-  "status": "Status: {{status}}",
+  "status_label": "Status: {{status}}",
   "merge_status": "Merge status: {{status}}",
   "state": "State: {{state}}",
   "merged_info": "This PR was merged",
@@ -28,7 +28,6 @@
     "unknown": "Unknown"
   },
   "actions": {
-    "review": "Review",
     "merge": "Merge",
     "update": "Update",
     "reopen": "Reopen",

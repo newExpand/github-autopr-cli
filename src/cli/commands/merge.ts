@@ -510,14 +510,15 @@ export async function mergeCommand(prNumber: string): Promise<void> {
       const hasLocalBase = localBranches.includes(pr.base.ref);
 
       if (hasLocalBase) {
-        // 먼저 대상 브랜치로 전환
-        log.info(
-          t("commands.merge.cleanup.switching_to_base", {
-            branch: pr.base.ref,
-          }),
-        );
-        execSync(`git checkout ${pr.base.ref}`, { stdio: "inherit" });
-
+        if (deleteBranch) {
+          // 먼저 대상 브랜치로 전환
+          log.info(
+            t("commands.merge.cleanup.switching_to_base", {
+              branch: pr.base.ref,
+            }),
+          );
+          execSync(`git checkout ${pr.base.ref}`, { stdio: "inherit" });
+        }
         // PR 브랜치가 로컬에 있는 경우 삭제
         if (deleteBranch) {
           try {
@@ -560,8 +561,7 @@ export async function mergeCommand(prNumber: string): Promise<void> {
             log.info(t("commands.merge.cleanup.branch_already_deleted"));
           }
         }
-
-        // 대상 브랜치 최신화
+        // 대상 브랜치 최신화(항상 실행)
         log.info(t("commands.merge.cleanup.syncing_with_remote"));
         execSync("git fetch origin", { stdio: "inherit" });
         execSync(`git reset --hard origin/${pr.base.ref}`, {

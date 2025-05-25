@@ -25,21 +25,21 @@
   },
   "info": {
     "debug": {
-      "pr_merge_start": "[DEBUG] PR #{{number}} 병합 시작",
-      "owner_repo": "[DEBUG] 소유자: {{owner}}, 저장소: {{repo}}",
-      "merge_method": "[DEBUG] 병합 방법: {{method}}",
-      "pr_state": "[DEBUG] PR 상태: {{state}}",
-      "pr_title": "[DEBUG] PR 제목: {{title}}",
-      "pr_branch": "[DEBUG] PR 브랜치: {{head}} -> {{base}}",
-      "pr_not_open": "[DEBUG] PR이 열려있지 않음: {{state}}",
-      "merge_status": "[DEBUG] 병합 가능 상태: {{status}}",
-      "pr_not_mergeable": "[DEBUG] PR을 병합할 수 없음: {{status}}",
-      "merge_attempt": "[DEBUG] 병합 시도 중...",
-      "merge_success": "[DEBUG] 병합 성공",
-      "merge_failed": "[DEBUG] 병합 실패: {{error}}",
-      "branch_delete_attempt": "[DEBUG] 브랜치 삭제 시도: {{branch}}",
-      "branch_delete_success": "[DEBUG] 브랜치 삭제 성공",
-      "branch_delete_failed": "[DEBUG] 브랜치 삭제 실패: {{error}}"
+      "pr_merge_start": "PR #{{number}} 병합 시작",
+      "owner_repo": "소유자: {{owner}}, 저장소: {{repo}}",
+      "merge_method": "병합 방법: {{method}}",
+      "pr_state": "PR 상태: {{state}}",
+      "pr_title": "PR 제목: {{title}}",
+      "pr_branch": "PR 브랜치: {{head}} -> {{base}}",
+      "pr_not_open": "PR이 열려있지 않음: {{state}}",
+      "merge_status": "병합 가능 상태: {{status}}",
+      "pr_not_mergeable": "PR을 병합할 수 없음: {{status}}",
+      "merge_attempt": "병합 시도 중...",
+      "merge_success": "병합 성공",
+      "merge_failed": "병합 실패: {{error}}",
+      "branch_delete_attempt": "브랜치 삭제 시도: {{branch}}",
+      "branch_delete_success": "브랜치 삭제 성공",
+      "branch_delete_failed": "브랜치 삭제 실패: {{error}}"
     },
     "update_review": "GraphQL API를 사용하여 PR 리뷰 상태 업데이트 중..."
   }

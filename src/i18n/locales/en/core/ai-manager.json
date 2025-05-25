@@ -1,33 +1,23 @@
 {
   "info": {
-    "no_token": "No token found. Requesting a new token...",
-    "token_expiring_soon": "Token is about to expire. Refreshing...",
     "token_acquired": "Token acquired successfully.",
     "token_saved": "Token saved successfully.",
-    "token_loaded": "Token loaded successfully.",
-    "token_refreshed_retrying": "Token refreshed. Retrying request..."
+    "token_loaded": "Token loaded successfully."
   },
   "warning": {
     "token_expired_retrying": "Token expired. Refreshing and retrying..."
   },
   "error": {
-    "api_call_failed": "API call failed ({{endpoint}})",
-    "api_call_error": "API call failed: {{message}}",
-    "unknown_error": "Unknown error",
+    "token_load_failed": "Failed to load token.",
+    "token_save_failed": "Failed to save token.",
+    "token_acquisition_failed": "Failed to acquire token: {{error}}",
     "github_app_info_missing": "GitHub App information is missing",
     "github_app_info_failed": "Failed to get GitHub App information",
-    "github_app_info_error": "Failed to get GitHub App information: {{message}}",
     "token_missing": "Token information is missing",
     "app_token_failed": "Failed to get GitHub App token",
-    "app_token_error": "Failed to get GitHub App token: {{message}}",
     "installations_missing": "Installation list information is missing",
     "installations_failed": "Failed to get GitHub App installations list",
-    "installations_error": "Failed to get GitHub App installations list: {{message}}",
-    "oauth_client_info_failed": "Failed to get GitHub OAuth client info",
-    "oauth_client_info_error": "Failed to get GitHub OAuth client info: {{message}}",
     "oauth_client_info_missing": "GitHub OAuth client info is missing",
-    "no_valid_token": "No valid token available.",
-    "authentication_required": "Authentication required. Please re-initialize or check your token.",
-    "token_acquisition_failed": "Failed to acquire token: {{error}}"
+    "oauth_client_info_failed": "Failed to get GitHub OAuth client info"
   }
 }
