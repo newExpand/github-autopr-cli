@@ -1,5 +1,11 @@
 # Change Log
 
+## 1.0.1
+
+- **Bug Fix: AI Language Setting**
+  - Fixed an issue where the language setting (`language`) was not properly passed to AI features (PR creation, code review, etc.), causing inconsistent Korean/English results
+  - Now all AI feature calls explicitly pass the language setting, ensuring output matches the configured language
+
 ## 1.0.0
 
 - **Complete CLI Command & Option Overhaul**

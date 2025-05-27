@@ -68,6 +68,7 @@ async function handleConflicts(
     const suggestions = await ai.suggestConflictResolution(
       conflicts,
       prContext,
+      config.language || "ko",
     );
 
     log.info("\n" + t("commands.merge.conflict.ai_suggestions"));

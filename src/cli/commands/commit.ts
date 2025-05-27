@@ -283,6 +283,7 @@ export async function commitCommand(
         currentMessage,
         diffContent,
         changedFiles,
+        config.language || "ko",
       );
     } else if (subcommand) {
       // 알 수 없는 서브커맨드
@@ -296,6 +297,7 @@ export async function commitCommand(
         "",
         diffContent,
         changedFiles,
+        config.language || "ko",
       );
     }
 

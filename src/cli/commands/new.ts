@@ -96,6 +96,7 @@ async function runCodeReviewAndAddComments(params: {
   base?: string;
   prTitle?: string;
   diffContent?: string;
+  language?: import("../../core/ai-features.js").SupportedLanguage;
 }): Promise<void> {
   try {
     if (params.files.length === 0) {
@@ -124,14 +125,17 @@ async function runCodeReviewAndAddComments(params: {
       log.info(t("commands.new.info.running_pr_review"));
       const prReviewTask = (async () => {
         try {
-          reviewResults.prReview = await params.ai.reviewPR({
-            prNumber: params.pull_number,
-            title: params.prTitle || "",
-            changedFiles: params.files,
-            diffContent: params.diffContent || "",
-            repoOwner: params.owner,
-            repoName: params.repo,
-          });
+          reviewResults.prReview = await params.ai.reviewPR(
+            {
+              prNumber: params.pull_number,
+              title: params.prTitle || "",
+              changedFiles: params.files,
+              diffContent: params.diffContent || "",
+              repoOwner: params.owner,
+              repoName: params.repo,
+            },
+            params.language,
+          );
           log.info(t("commands.new.info.pr_review_completed"));
         } catch (error) {
           log.warn(t("commands.new.warning.ai_pr_review_failed"), error);
@@ -153,7 +157,10 @@ async function runCodeReviewAndAddComments(params: {
               text,
             })),
           }));
-          reviewResults.overallReview = await params.ai.reviewCode(lineFiles);
+          reviewResults.overallReview = await params.ai.reviewCode(
+            lineFiles,
+            params.language,
+          );
           log.info(t("commands.new.info.code_review_completed"));
         } catch (error) {
           log.warn(t("commands.new.warning.code_review_failed"), error);
@@ -168,12 +175,16 @@ async function runCodeReviewAndAddComments(params: {
       log.info(t("commands.new.info.pr_analysis_info"));
       const lineReviewTask = (async () => {
         try {
-          const comments = await params.ai.lineByLineCodeReview(params.files, {
-            owner: params.owner,
-            repo: params.repo,
-            pull_number: params.pull_number,
-            baseBranch: params.base_branch || params.base || "main",
-          });
+          const comments = await params.ai.lineByLineCodeReview(
+            params.files,
+            {
+              owner: params.owner,
+              repo: params.repo,
+              pull_number: params.pull_number,
+              baseBranch: params.base_branch || params.base || "main",
+            },
+            params.language,
+          );
           reviewResults.lineComments = comments;
           if (comments.length > 0) {
             log.info(t("commands.new.info.line_by_line_review_completed"));
@@ -830,9 +841,12 @@ export async function newCommand(): Promise<void> {
     let generatedTitle = "";
     try {
       const ai = new AIFeatures(config.language);
-      generatedTitle = await ai.generatePRTitle(changedFiles, diffContent, {
-        type: pattern?.type || selectedTemplate,
-      });
+      generatedTitle = await ai.generatePRTitle(
+        changedFiles,
+        diffContent,
+        { type: pattern?.type || selectedTemplate },
+        config.language,
+      );
       log.section(
         t("commands.new.info.generated_title", { title: generatedTitle }),
       );
@@ -894,6 +908,7 @@ export async function newCommand(): Promise<void> {
           pattern?.type || selectedTemplate,
           {
             relatedIssues: relatedIssuesData,
+            language: config.language,
           },
         );
         log.section(t("commands.new.info.generated_pr_content"));
@@ -1043,6 +1058,7 @@ export async function newCommand(): Promise<void> {
           base_branch: baseBranch,
           prTitle: answers.title,
           diffContent: diffContent,
+          language: config.language,
         });
       } else {
         log.info(t("commands.new.info.no_review_comments"));

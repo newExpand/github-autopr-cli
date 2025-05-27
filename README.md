@@ -1,5 +1,7 @@
 # AutoPR CLI User Guide
 
+[➡️ Changelog (CHANGELOG.md)](https://github.com/newExpand/github-autopr-cli/blob/main/CHANGELOG.md)
+
 **한국어 문서:** [README-kr.md](https://github.com/newExpand/github-autopr-cli/blob/main/README-kr.md)
 
 ## AI-powered PR & Review: Test Case
