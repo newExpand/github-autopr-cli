@@ -1,13 +1,9 @@
 import { minimatch } from "minimatch";
-import { BranchPattern, Config } from "../types/config.js";
+import { BranchPattern } from "../types/config.js";
 import { loadConfig } from "../core/config.js";
-import { getOctokit, validateReviewers } from "../core/github.js";
 import { t } from "../i18n/index.js";
 import { loadTemplate } from "../utils/template.js";
 import { log } from "../utils/logger.js";
-import { join, dirname } from "path";
-import { homedir } from "os";
-import { readFile, writeFile, mkdir } from "fs/promises";
 
 export function matchBranchPattern(
   branchName: string,

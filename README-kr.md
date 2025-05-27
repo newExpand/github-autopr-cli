@@ -1,5 +1,7 @@
 # AutoPR CLI 사용 설명서 (한글)
 
+[➡️ 변경 이력(CHANGELOG-kr.md) 바로가기](https://github.com/newExpand/github-autopr-cli/blob/main/CHANGELOG-kr.md)
+
 ## AI 기반 PR/리뷰: 테스트 사례
 
 [v1.0.0 릴리스 Pull Request](https://github.com/newExpand/github-autopr-cli/pull/147)는 **AI 기반 PR 및 리뷰 자동화의 효과를 검증하기 위한 테스트 케이스**로 생성·리뷰되었습니다.
