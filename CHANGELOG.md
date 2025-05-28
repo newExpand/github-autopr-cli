@@ -1,5 +1,14 @@
 # Change Log
 
+## 1.0.2
+
+- **Enhanced UX: Auto push prompt before PR creation**
+  - When running autopr new, if the current branch does not exist on origin (remote), a prompt is shown to push the branch first
+  - If the user selects "Yes", automatically runs `git push --set-upstream origin <branch>` and proceeds with PR creation
+  - If "No" is selected, PR creation is cancelled with a clear message
+  - All related guide/warning/success messages are added to i18n (Korean/English)
+  - Users can now safely create PRs without manual git commands or errors
+
 ## 1.0.1
 
 - **Bug Fix: AI Language Setting**
