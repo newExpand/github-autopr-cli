@@ -29,7 +29,9 @@
     "push_branch_prompt": "Branch does not exist on remote. Would you like to push now?",
     "push_branch_success": "Branch has been pushed to remote.",
     "push_branch_cancelled": "Cannot create PR if branch does not exist on remote.",
-    "push_branch_failed": "Failed to push branch to remote: {{error}}"
+    "push_branch_failed": "Failed to push branch to remote: {{error}}",
+    "push_branch_ahead_prompt": "There are local commits not pushed to origin. Would you like to push now?",
+    "push_branch_ahead_notice": "There are local commits not pushed to origin. Please run git push and try again to include the latest commits in your PR."
   },
   "info": {
     "creating": "Creating PR...",
@@ -118,7 +120,9 @@
     "pr_description_updated": "PR description updated with AI-generated content"
   },
   "debug": {
-    "line_comment_mapping_failed": "Line comment mapping failed ({{file}}:{{line}}):"
+    "line_comment_mapping_failed": "Line comment mapping failed ({{file}}:{{line}}):",
+    "debug_local_hash_failed": "Failed to get local branch hash: {{branch}} (ignored)",
+    "debug_remote_hash_failed": "Failed to get origin branch hash: origin/{{branch}} (ignored)"
   },
   "pr_update": {
     "previous_content": "# Previous Content",

@@ -29,7 +29,9 @@
     "push_branch_prompt": "원격 저장소에 브랜치가 없습니다. 지금 push 하시겠습니까?",
     "push_branch_success": "브랜치가 원격 저장소에 push 되었습니다.",
     "push_branch_cancelled": "브랜치가 원격 저장소에 없으면 PR을 생성할 수 없습니다.",
-    "push_branch_failed": "브랜치를 원격 저장소에 푸시하지 못했습니다: {{error}}"
+    "push_branch_failed": "브랜치를 원격 저장소에 푸시하지 못했습니다: {{error}}",
+    "push_branch_ahead_prompt": "로컬 브랜치에 origin에 없는 커밋이 있습니다. 지금 push 하시겠습니까?",
+    "push_branch_ahead_notice": "로컬 커밋이 origin에 반영되어 있지 않습니다. 최신 커밋을 PR에 포함하려면 git push 후 다시 시도하세요."
   },
   "info": {
     "creating": "PR 생성 중...",
@@ -118,7 +120,9 @@
     "pr_review_added": "PR에 PR 리뷰 코멘트가 추가되었습니다"
   },
   "debug": {
-    "line_comment_mapping_failed": "라인 코멘트 매핑 실패 ({{file}}:{{line}}):"
+    "line_comment_mapping_failed": "라인 코멘트 매핑 실패 ({{file}}:{{line}}):",
+    "debug_local_hash_failed": "로컬 브랜치 해시 조회 실패: {{branch}} (무시됨)",
+    "debug_remote_hash_failed": "origin 브랜치 해시 조회 실패: origin/{{branch}} (무시됨)"
   },
   "pr_update": {
     "previous_content": "# 이전 내용",
