@@ -572,6 +572,74 @@ export async function newCommand(): Promise<void> {
       },
     ]);
 
+    // === PR 생성 전, origin에 브랜치가 있는지 확인 ===
+    const branch = repoInfo.currentBranch;
+    let branchExistsOnOrigin = false;
+    try {
+      const { stdout: remoteBranches } = await execAsync(
+        `git ls-remote --heads origin ${branch}`,
+      );
+      branchExistsOnOrigin = remoteBranches.includes(branch);
+    } catch (error) {
+      branchExistsOnOrigin = false;
+    }
+    if (!branchExistsOnOrigin) {
+      const { shouldPush } = await inquirer.prompt([
+        {
+          type: "confirm",
+          name: "shouldPush",
+          message: t("commands.new.warning.push_branch_prompt"),
+          default: true,
+        },
+      ]);
+      if (shouldPush) {
+        try {
+          await execAsync(`git push --set-upstream origin ${branch}`);
+          log.info(t("commands.new.warning.push_branch_success"));
+          // push 후 origin 정보 갱신
+          await execAsync(`git fetch origin ${branch}`);
+        } catch (error) {
+          log.warn(
+            t("commands.new.warning.push_branch_failed", {
+              error: String(error),
+            }),
+          );
+          return;
+        }
+      } else {
+        log.info(t("commands.new.warning.push_branch_cancelled"));
+        return;
+      }
+    } else {
+      // origin에 브랜치가 있을 때, 로컬 커밋이 origin에 없는 경우 push 안내
+      let localHash = "";
+      let remoteHash = "";
+      try {
+        const { stdout: lh } = await execAsync(`git rev-parse ${branch}`);
+        localHash = lh.trim();
+      } catch (error) {
+        log.debug(
+          t("commands.new.debug.debug_local_hash_failed", { branch }),
+          error,
+        );
+      }
+      try {
+        const { stdout: rh } = await execAsync(
+          `git rev-parse origin/${branch}`,
+        );
+        remoteHash = rh.trim();
+      } catch (error) {
+        log.debug(
+          t("commands.new.debug.debug_remote_hash_failed", { branch }),
+          error,
+        );
+      }
+      if (localHash && remoteHash && localHash !== remoteHash) {
+        log.info(t("commands.new.warning.push_branch_ahead_notice"));
+        return;
+      }
+    }
+
     // 변경사항 수집
     const changedFiles = await getChangedFiles(baseBranch);
     const diffContent = await getDiffContent(baseBranch);
@@ -657,6 +725,28 @@ export async function newCommand(): Promise<void> {
               };
             });
 
+            // 체크박스(이슈 선택) 프롬프트 먼저
+            const { selectedIssues } = await inquirer.prompt([
+              {
+                type: "checkbox",
+                name: "selectedIssues",
+                message: t("commands.new.prompts.select_related_issues"),
+                choices: issueChoices,
+              },
+            ]);
+
+            // 선택한 이슈들 업데이트
+            selectedIssues.forEach((issueNumber: string) => {
+              selectedIssuesSet.add(issueNumber);
+            });
+            // 선택 취소된 이슈들 제거
+            openIssues.forEach((issue) => {
+              const issueNumber = issue.number.toString();
+              if (!selectedIssues.includes(issueNumber)) {
+                selectedIssuesSet.delete(issueNumber);
+              }
+            });
+
             // 페이지 네비게이션과 완료 옵션 추가
             const navigationChoices = [];
 
@@ -729,29 +819,6 @@ export async function newCommand(): Promise<void> {
               relatedIssues = Array.from(selectedIssuesSet);
               break;
             }
-
-            // 현재 페이지에서 이슈 선택
-            const { selectedIssues } = await inquirer.prompt([
-              {
-                type: "checkbox",
-                name: "selectedIssues",
-                message: t("commands.new.prompts.select_related_issues"),
-                choices: issueChoices,
-              },
-            ]);
-
-            // 선택한 이슈들 업데이트
-            selectedIssues.forEach((issueNumber: string) => {
-              selectedIssuesSet.add(issueNumber);
-            });
-
-            // 선택 취소된 이슈들 제거
-            openIssues.forEach((issue) => {
-              const issueNumber = issue.number.toString();
-              if (!selectedIssues.includes(issueNumber)) {
-                selectedIssuesSet.delete(issueNumber);
-              }
-            });
           } else {
             // 열린 이슈가 없으면 입력 프롬프트 없이 바로 빈 배열 처리
             if (currentPage === 1) {
@@ -835,44 +902,6 @@ export async function newCommand(): Promise<void> {
       }
     }
     // 변경 끝
-
-    // === PR 생성 전, origin에 브랜치가 있는지 확인 ===
-    const branch = repoInfo.currentBranch;
-    let branchExistsOnOrigin = false;
-    try {
-      const { stdout: remoteBranches } = await execAsync(
-        `git ls-remote --heads origin ${branch}`,
-      );
-      branchExistsOnOrigin = remoteBranches.includes(branch);
-    } catch (error) {
-      branchExistsOnOrigin = false;
-    }
-    if (!branchExistsOnOrigin) {
-      const { shouldPush } = await inquirer.prompt([
-        {
-          type: "confirm",
-          name: "shouldPush",
-          message: t("commands.new.warning.push_branch_prompt"),
-          default: true,
-        },
-      ]);
-      if (shouldPush) {
-        try {
-          await execAsync(`git push --set-upstream origin ${branch}`);
-          log.info(t("commands.new.warning.push_branch_success"));
-        } catch (error) {
-          log.warn(
-            t("commands.new.warning.push_branch_failed", {
-              error: String(error),
-            }),
-          );
-          return;
-        }
-      } else {
-        log.info(t("commands.new.warning.push_branch_cancelled"));
-        return;
-      }
-    }
 
     // === PR 생성 전, AI로 PR 제목 생성 ===
     log.info(t("commands.new.info.generating_title"));
