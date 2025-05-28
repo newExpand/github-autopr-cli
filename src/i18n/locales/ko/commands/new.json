@@ -25,7 +25,11 @@
     "issue_fetch_failed": "이슈 #{{issueNumber}}을(를) 가져오지 못했습니다. 이슈가 존재하지 않거나 접근 권한이 없을 수 있습니다.",
     "issues_list_failed": "이슈 목록을 가져오지 못했습니다. 직접 이슈 번호를 입력해주세요.",
     "browser_open_failed": "PR을 브라우저에서 열지 못했습니다.",
-    "no_github_token_for_pr": "사용자 인증 토큰이 없어 PR 생성이 스킵되고, 리뷰만 진행됩니다. PR 생성을 원하시면 autopr init을 통해 인증을 먼저 진행해 주세요."
+    "no_github_token_for_pr": "사용자 인증 토큰이 없어 PR 생성이 스킵되고, 리뷰만 진행됩니다. PR 생성을 원하시면 autopr init을 통해 인증을 먼저 진행해 주세요.",
+    "push_branch_prompt": "원격 저장소에 브랜치가 없습니다. 지금 push 하시겠습니까?",
+    "push_branch_success": "브랜치가 원격 저장소에 push 되었습니다.",
+    "push_branch_cancelled": "브랜치가 원격 저장소에 없으면 PR을 생성할 수 없습니다.",
+    "push_branch_failed": "브랜치를 원격 저장소에 푸시하지 못했습니다: {{error}}"
   },
   "info": {
     "creating": "PR 생성 중...",
@@ -65,7 +69,8 @@
     "bot_token_acquired": "GitHub App 봇 토큰을 획득했습니다.",
     "line_by_line_review_comment": "라인별 코드 리뷰",
     "current_branch": "현재 브랜치: {{branch}}",
-    "github_app_required_for_review": "AI 리뷰 등 고급 기능은 GitHub App 인증 시 사용 가능합니다. PR 생성만 진행합니다."
+    "github_app_required_for_review": "AI 리뷰 등 고급 기능은 GitHub App 인증 시 사용 가능합니다. PR 생성만 진행합니다.",
+    "pr_created_checking_ai_review": "PR이 성공적으로 생성되었습니다. AI 리뷰 사용 가능 여부를 확인 중입니다..."
   },
   "prompts": {
     "title": "PR 제목:",

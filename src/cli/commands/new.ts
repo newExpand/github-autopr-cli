@@ -836,6 +836,44 @@ export async function newCommand(): Promise<void> {
     }
     // 변경 끝
 
+    // === PR 생성 전, origin에 브랜치가 있는지 확인 ===
+    const branch = repoInfo.currentBranch;
+    let branchExistsOnOrigin = false;
+    try {
+      const { stdout: remoteBranches } = await execAsync(
+        `git ls-remote --heads origin ${branch}`,
+      );
+      branchExistsOnOrigin = remoteBranches.includes(branch);
+    } catch (error) {
+      branchExistsOnOrigin = false;
+    }
+    if (!branchExistsOnOrigin) {
+      const { shouldPush } = await inquirer.prompt([
+        {
+          type: "confirm",
+          name: "shouldPush",
+          message: t("commands.new.warning.push_branch_prompt"),
+          default: true,
+        },
+      ]);
+      if (shouldPush) {
+        try {
+          await execAsync(`git push --set-upstream origin ${branch}`);
+          log.info(t("commands.new.warning.push_branch_success"));
+        } catch (error) {
+          log.warn(
+            t("commands.new.warning.push_branch_failed", {
+              error: String(error),
+            }),
+          );
+          return;
+        }
+      } else {
+        log.info(t("commands.new.warning.push_branch_cancelled"));
+        return;
+      }
+    }
+
     // === PR 생성 전, AI로 PR 제목 생성 ===
     log.info(t("commands.new.info.generating_title"));
     let generatedTitle = "";
@@ -1017,6 +1055,8 @@ export async function newCommand(): Promise<void> {
         }),
       );
     }
+
+    log.info(t("commands.new.info.pr_created_checking_ai_review"));
 
     // === PR 생성 후, GitHub App(봇) 토큰으로 리뷰 실행 ===
     // GitHub App 설치 토큰 가져오기

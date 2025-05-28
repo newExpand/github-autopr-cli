@@ -25,7 +25,11 @@
     "issue_fetch_failed": "Failed to fetch issue #{{issueNumber}}. The issue may not exist or you may not have access to it.",
     "issues_list_failed": "Failed to fetch issues list. Please enter issue numbers manually.",
     "browser_open_failed": "Failed to open browser to view PR.",
-    "no_github_token_for_pr": "No user authentication token found. PR creation is skipped and only review will proceed. To create a PR, please run autopr init and complete authentication first."
+    "no_github_token_for_pr": "No user authentication token found. PR creation is skipped and only review will proceed. To create a PR, please run autopr init and complete authentication first.",
+    "push_branch_prompt": "Branch does not exist on remote. Would you like to push now?",
+    "push_branch_success": "Branch has been pushed to remote.",
+    "push_branch_cancelled": "Cannot create PR if branch does not exist on remote.",
+    "push_branch_failed": "Failed to push branch to remote: {{error}}"
   },
   "info": {
     "creating": "Creating PR...",
@@ -66,7 +70,8 @@
     "line_by_line_review_comment": "Line-by-line code review",
     "current_branch": "Current branch: {{branch}}",
     "select_base_branch_with_current": "Select target branch for PR (current branch: {{branch}}):",
-    "github_app_required_for_review": "AI review and advanced features are available after GitHub App authentication. Only PR creation will proceed."
+    "github_app_required_for_review": "AI review and advanced features are available after GitHub App authentication. Only PR creation will proceed.",
+    "pr_created_checking_ai_review": "PR has been successfully created. Checking if AI review is available..."
   },
   "prompts": {
     "title": "PR title:",
