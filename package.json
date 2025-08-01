@@ -1,6 +1,6 @@
 {
   "name": "newexpand-autopr",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "GitHub PR Automation CLI Tool with AI",
   "type": "module",
   "main": "dist/index.js",
@@ -48,6 +48,9 @@
   ],
   "author": "newExpand",
   "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "dependencies": {
     "commander": "^11.1.0",
     "dotenv": "^16.4.7",

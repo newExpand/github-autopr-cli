@@ -1,6 +1,15 @@
 # Change Log
 
-## Unreleased
+## 1.0.4
+
+- **Improvement: Enhanced language setting priority in init command**
+  - Moved language setting to the first step when running `autopr init`
+  - All subsequent prompts now immediately display in the selected language
+  - Before: Language setting was in the middle, showing English until configuration completed
+  - After: Selected language applies immediately, entire initialization proceeds in chosen language
+  - Technical implementation: Calls `setLanguage()` to instantly apply i18n language change
+
+## 1.0.3
 
 - **New Feature: Force option for commit command**
   - Added `-f, --force` option to skip AI message confirmation prompts

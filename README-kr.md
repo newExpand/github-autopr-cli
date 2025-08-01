@@ -68,9 +68,13 @@ autopr init
 > **초기 설정(init) 및 인증을 마친 후 기능을 사용하려 할 때 '404 not found' 또는 'Resource not accessible by integration' 에러가 발생한다면, 인증한 계정/조직이 올바른지 꼭 다시 확인해보세요.**
 
 > **인증 안내:**  
-GitHub 인증(초기화, auth 등)을 진행할 때, 터미널에 "인증 코드"와 "인증 URL"이 표시됩니다.  
-터미널에 출력된 인증 코드를 복사하여, 안내된 URL(디바이스 플로우 인증 페이지)에 접속한 뒤 붙여넣으면 인증이 완료됩니다.  
-브라우저가 자동으로 열리지 않는 경우, 터미널에 표시된 URL을 직접 복사해 브라우저에 붙여넣으세요.
+> GitHub 인증(OAuth, GitHub App)을 진행할 때:
+> 1. 터미널에 8자리 인증 코드(예: ABCD-1234)가 표시됩니다
+> 2. 함께 표시되는 인증 URL(https://github.com/login/device)도 확인할 수 있습니다
+> 3. 브라우저에서 인증 URL에 접속하여 터미널에 표시된 코드를 입력하세요
+> 4. GitHub 계정으로 로그인 후 권한을 승인하면 인증이 완료됩니다
+> 
+> 💡 **팁**: 브라우저가 자동으로 열리지 않으면, 터미널에 표시된 URL을 복사하여 직접 접속하세요.
 
 > **워크플로우:**
 > 
@@ -265,25 +269,41 @@ autopr template view [name]
 
 ## 설정 파일 구조
 
-- **글로벌 설정:** `~/.autopr/config.json`
-- **프로젝트 설정:** `.autopr.json`
+### 글로벌 설정 (`~/.autopr/config.json`)
+사용자별 전역 설정을 저장합니다:
+- **githubToken**: GitHub OAuth 인증 토큰 (로컬 저장, 외부 전송 없음)
+- **language**: 사용 언어 설정 ("en" 또는 "ko")
 
-주요 필드 예시:
+### AI 토큰 (`~/.autopr/token.json`)
+AI 기능 사용을 위한 인증 토큰:
+- **token**: AI 서비스 접근 토큰 (무단 사용 방지용)
+- **expiresAt**: 토큰 만료 시간
+- ⚠️ 이 토큰은 라이브러리 무단 사용을 방지하기 위한 보안 장치입니다.
+
+### 프로젝트 설정 (`.autopr.json`)
+프로젝트별 설정을 저장합니다:
+
 ```json
 {
   "githubApp": {
-    "appId": "...",
-    "clientId": "...",
-    "installationId": 123456
+    "appId": "...",        // GitHub App ID (로컬 저장)
+    "clientId": "...",     // Client ID (로컬 저장)
+    "installationId": 123456  // 설치 ID (로컬 저장)
   },
+  "owner": "username",     // (선택) 저장소 소유자
+  "repo": "repository",    // (선택) 저장소 이름
   "defaultReviewers": ["user1", "user2"],
   "reviewerGroups": [
-    { "name": "FE", "members": ["user1", "user2"], "rotationStrategy": "round-robin" }
+    { 
+      "name": "FE", 
+      "members": ["user1", "user2"], 
+      "rotationStrategy": "round-robin"  // round-robin, random, least-busy
+    }
   ],
   "branchPatterns": [
     {
       "pattern": "feat/*",
-      "type": "feat",
+      "type": "feat",  // feat, fix, refactor, docs, chore, test
       "draft": true,
       "labels": ["feature"],
       "template": "feature",
@@ -294,6 +314,8 @@ autopr template view [name]
   ]
 }
 ```
+
+> 💡 **보안 안내**: 모든 인증 정보(GitHub OAuth 토큰, GitHub App 정보)는 로컬 파일시스템에만 저장되며, 외부 서버로 전송되거나 수집되지 않습니다.
 
 ---
 
@@ -347,9 +369,18 @@ autopr template view [name]
 
 ## 보안 및 개인정보 안내
 
+### AI 기능 및 데이터 처리
 - 본 CLI의 AI 기능(커밋 메시지, PR 설명, 코드리뷰 등)을 사용할 때, 관련 데이터(코드, PR, 커밋 등)는 AI 분석을 위해 개발자 개인 서버로 전송됩니다.
 - 해당 서버는 오픈되어 있지 않으며, 전송된 데이터(코드, PR, 커밋 등)는 저장하지 않습니다.
 - 서버에서는 API 요청이 정상적으로 들어왔는지와 에러 발생 여부만 기록하며, 코드/PR/커밋 등 실제 내용은 로그로도 남기지 않습니다.
 - AI 분석 결과는 구글 AI(Gemini 등) 기반으로 생성됩니다.
-- GitHub 인증/토큰 등 민감 정보는 로컬에만 저장되며, 외부로 전송되지 않습니다.
+
+### 인증 정보 보안
+- **GitHub OAuth 토큰**: `~/.autopr/config.json`에 로컬 저장, 외부 전송 없음
+- **GitHub App 인증 정보** (appId, clientId, installationId): `.autopr.json`에 로컬 저장, 외부 수집 없음
+- **AI 액세스 토큰**: `~/.autopr/token.json`에 로컬 저장, 라이브러리 무단 사용 방지용
+- 모든 인증 정보는 사용자의 로컬 파일시스템에만 저장되며, 어떠한 외부 서버로도 전송되거나 수집되지 않습니다.
+
+### 오픈소스 투명성
 - 모든 코드는 오픈소스이며, 데이터 흐름 및 보안 정책을 직접 확인할 수 있습니다.
+- 의심스러운 부분이 있다면 GitHub 저장소에서 소스코드를 직접 검토하실 수 있습니다.

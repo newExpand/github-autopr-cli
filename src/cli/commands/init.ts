@@ -1,5 +1,5 @@
 import inquirer from "inquirer";
-import { t, supportedLanguages } from "../../i18n/index.js";
+import { t, supportedLanguages, setLanguage } from "../../i18n/index.js";
 import {
   updateConfig,
   loadGlobalConfig,
@@ -186,6 +186,8 @@ async function promptLanguage(globalConfig: any) {
         },
       ]);
       globalConfig.language = language;
+      // 선택한 언어를 즉시 적용
+      await setLanguage(language);
     }
   } else {
     const { language } = await inquirer.prompt([
@@ -198,6 +200,8 @@ async function promptLanguage(globalConfig: any) {
       },
     ]);
     globalConfig.language = language;
+    // 선택한 언어를 즉시 적용
+    await setLanguage(language);
   }
 }
 
@@ -248,23 +252,23 @@ async function saveConfigAndGitignore(globalConfig: any, projectAnswers: any) {
 
 export async function initCommand(): Promise<void> {
   try {
-    // 1. 프로젝트 설정 파일 생성/초기화
-    const projectConfig = await initializeProjectConfig();
-    // 2. 최신 config, globalConfig 불러오기
+    // 1. 최신 config, globalConfig 불러오기 (언어 설정을 위해 먼저 로드)
     const config = await loadConfig();
     const globalConfig = await loadGlobalConfig();
-    // 3. 유저 OAuth 인증 (필수)
+    // 2. 언어 설정 (가장 먼저 실행)
+    await promptLanguage(globalConfig);
+    // 3. 프로젝트 설정 파일 생성/초기화
+    const projectConfig = await initializeProjectConfig();
+    // 4. 유저 OAuth 인증 (필수)
     const oauthSuccess = await promptUserOAuth(globalConfig);
     if (!oauthSuccess) {
       log.error(t("commands.init.info.oauth_required_exit"));
       process.exit(1);
     }
-    // 4. AI 토큰 발급
+    // 5. AI 토큰 발급
     await acquireAIToken();
-    // 5. GitHub App 인증 (선택)
+    // 6. GitHub App 인증 (선택)
     await promptGitHubAppAuth(projectConfig);
-    // 6. 언어 설정
-    await promptLanguage(globalConfig);
     // 7. 프로젝트 설정 입력
     const projectAnswers = await promptProjectSettings(projectConfig);
     // 8. 설정 저장 및 .gitignore 처리

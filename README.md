@@ -69,10 +69,14 @@ autopr init
 > If you authenticate with the wrong account/organization, key features such as PR automation, review, and permission management may not work as expected.  
 > **If you see a '404 not found' or 'Resource not accessible by integration' error after initialization and authentication, please make sure you selected the correct user/organization during GitHub App authentication.**
 
-> **Authentication Notice:**  
-When authenticating with GitHub (during init, auth, etc.), an "authentication code" and "authentication URL" will be shown in your terminal.  
-Copy the code from the terminal, open the provided URL (Device Flow authentication page) in your browser, and paste the code to complete authentication.  
-If your browser does not open automatically, copy and paste the URL from the terminal into your browser manually.
+> **Authentication Guide:**  
+> When authenticating with GitHub (OAuth, GitHub App):
+> 1. An 8-character authentication code (e.g., ABCD-1234) will be displayed in your terminal
+> 2. An authentication URL (https://github.com/login/device) will also be shown
+> 3. Open the URL in your browser and enter the code displayed in your terminal
+> 4. Log in to your GitHub account and approve the permissions to complete authentication
+> 
+> 💡 **Tip**: If the browser doesn't open automatically, copy the URL from your terminal and paste it into your browser.
 
 > **Workflow:**
 >
@@ -266,25 +270,41 @@ autopr template view [name]
 
 ## Configuration File Structure
 
-- **Global config:** `~/.autopr/config.json`
-- **Project config:** `.autopr.json`
+### Global Configuration (`~/.autopr/config.json`)
+Stores user-specific global settings:
+- **githubToken**: GitHub OAuth authentication token (stored locally, never transmitted)
+- **language**: Language setting ("en" or "ko")
 
-Example fields:
+### AI Token (`~/.autopr/token.json`)
+Authentication token for AI features:
+- **token**: AI service access token (for preventing unauthorized use)
+- **expiresAt**: Token expiration time
+- ⚠️ This token is a security measure to prevent unauthorized use of the library.
+
+### Project Configuration (`.autopr.json`)
+Stores project-specific settings:
+
 ```json
 {
   "githubApp": {
-    "appId": "...",
-    "clientId": "...",
-    "installationId": 123456
+    "appId": "...",        // GitHub App ID (stored locally)
+    "clientId": "...",     // Client ID (stored locally)
+    "installationId": 123456  // Installation ID (stored locally)
   },
+  "owner": "username",     // (optional) Repository owner
+  "repo": "repository",    // (optional) Repository name
   "defaultReviewers": ["user1", "user2"],
   "reviewerGroups": [
-    { "name": "FE", "members": ["user1", "user2"], "rotationStrategy": "round-robin" }
+    { 
+      "name": "FE", 
+      "members": ["user1", "user2"], 
+      "rotationStrategy": "round-robin"  // round-robin, random, least-busy
+    }
   ],
   "branchPatterns": [
     {
       "pattern": "feat/*",
-      "type": "feat",
+      "type": "feat",  // feat, fix, refactor, docs, chore, test
       "draft": true,
       "labels": ["feature"],
       "template": "feature",
@@ -295,6 +315,8 @@ Example fields:
   ]
 }
 ```
+
+> 💡 **Security Notice**: All authentication information (GitHub OAuth token, GitHub App credentials) is stored only in the local filesystem and is never transmitted or collected by external servers.
 
 ---
 
@@ -311,12 +333,21 @@ Example fields:
 
 ## Security & Privacy Notice
 
+### AI Features and Data Processing
 - When using the CLI's AI features (commit message, PR description, code review, etc.), related data (code, PR, commit, etc.) is sent to the developer's private server for AI analysis.
 - This server is not open to the public, and the transmitted data (code, PR, commit, etc.) is not stored.
 - The server only logs whether the API request was received and if any errors occurred; the actual content of code/PR/commit is not logged.
 - AI analysis results are generated based on Google AI (Gemini, etc).
-- Sensitive information such as GitHub authentication/tokens is stored only locally and is never sent externally.
+
+### Authentication Information Security
+- **GitHub OAuth Token**: Stored locally in `~/.autopr/config.json`, never transmitted externally
+- **GitHub App Credentials** (appId, clientId, installationId): Stored locally in `.autopr.json`, never collected
+- **AI Access Token**: Stored locally in `~/.autopr/token.json`, used to prevent unauthorized library usage
+- All authentication information is stored only in your local filesystem and is never transmitted to or collected by any external servers.
+
+### Open Source Transparency
 - All code is open source, and you can directly check the data flow and security policy.
+- If you have any concerns, you can review the source code directly on the GitHub repository.
 
 ---
 
