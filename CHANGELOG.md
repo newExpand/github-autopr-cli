@@ -1,5 +1,14 @@
 # Change Log
 
+## Unreleased
+
+- **New Feature: Force option for commit command**
+  - Added `-f, --force` option to skip AI message confirmation prompts
+  - Enables seamless integration with AI CLI tools (Claude Code, Gemini CLI, etc.)
+  - Useful combinations: `autopr commit -f`, `autopr commit -af`, `autopr commit improve -f`
+  - For selective file commits: use `git add <files>` followed by `autopr commit -f`
+  - Updated documentation in README with usage examples
+
 ## 1.0.2
 
 - **Enhanced UX: Auto push prompt and sync before PR creation**

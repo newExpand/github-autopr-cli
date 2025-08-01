@@ -1,4 +1,30 @@
 {
+  "description": "Smart commit with AI-powered message generation",
+  "args": {
+    "subcommand": "Subcommand (e.g., improve)",
+    "message": "Commit message to improve"
+  },
+  "options": {
+    "all_with_push": "Stage all changes and push after commit",
+    "patch": "Interactive patch mode",
+    "select": "Select files to stage",
+    "select_with_push": "Select files to stage and push after commit",
+    "force": "Skip confirmation prompts"
+  },
+  "help": {
+    "examples": "Examples",
+    "default": "AI-powered commit message generation",
+    "all_with_push": "Stage all changes, commit with AI message, and push",
+    "select": "Select files to stage and commit with AI message",
+    "select_with_push": "Select files, commit with AI message, and push",
+    "force": "Skip confirmation and commit with AI message",
+    "all_force": "Stage all, skip confirmation, commit and push",
+    "improve_last": "Improve the last commit message",
+    "improve_message": "Improve the given commit message",
+    "improve_all_with_push": "Improve message, stage all changes, and push",
+    "improve_select_with_push": "Improve message, select files, and push",
+    "improve_force": "Improve message and commit without confirmation"
+  },
   "error": {
     "staging_failed": "Failed to stage changes",
     "files_failed": "Failed to get changed files",

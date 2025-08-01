@@ -1,4 +1,30 @@
 {
+  "description": "AI 기반 메시지 생성을 통한 스마트 커밋",
+  "args": {
+    "subcommand": "서브커맨드 (예: improve)",
+    "message": "개선할 커밋 메시지"
+  },
+  "options": {
+    "all_with_push": "모든 변경사항 스테이징 후 커밋 및 푸시",
+    "patch": "대화형 패치 모드",
+    "select": "스테이징할 파일 선택",
+    "select_with_push": "파일 선택 후 커밋 및 푸시",
+    "force": "확인 프롬프트 건너뛰기"
+  },
+  "help": {
+    "examples": "예시",
+    "default": "AI 기반 커밋 메시지 생성",
+    "all_with_push": "모든 변경사항 스테이징, AI 메시지로 커밋 후 푸시",
+    "select": "파일 선택하여 AI 메시지로 커밋",
+    "select_with_push": "파일 선택, AI 메시지로 커밋 후 푸시",
+    "force": "확인 없이 AI 메시지로 커밋",
+    "all_force": "모든 변경사항 스테이징, 확인 없이 커밋 후 푸시",
+    "improve_last": "마지막 커밋 메시지 개선",
+    "improve_message": "주어진 커밋 메시지 개선",
+    "improve_all_with_push": "메시지 개선, 모든 변경사항 스테이징 후 푸시",
+    "improve_select_with_push": "메시지 개선, 파일 선택 후 푸시",
+    "improve_force": "메시지 개선 후 확인 없이 커밋"
+  },
   "error": {
     "staging_failed": "변경사항 스테이징에 실패했습니다",
     "files_failed": "변경된 파일 목록을 가져오지 못했습니다",

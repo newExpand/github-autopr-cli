@@ -167,11 +167,30 @@ autopr commit [improve] [message] [options]
 | `-p, --patch`       | Patch mode (interactive, git add -p)         |
 | `-s, --select`      | Select files to commit                       |
 | `-sp, --selectpush` | Select files + push                          |
+| `-f, --force`       | Skip confirmation prompts (for automation)   |
 | `improve`           | Improve last commit message with AI          |
 
 - Stage/select/patch/auto-commit changes
 - AI suggests/improves commit messages
 - After commit, auto push and PR creation guide
+- **Force option (`-f`)**: Skip AI message confirmation prompts for automation with AI CLI tools (Claude Code, Gemini CLI, etc.)
+
+#### Usage Examples with Force Option
+
+```bash
+# AI message generation without confirmation
+autopr commit -f
+
+# Stage all files and commit without confirmation
+autopr commit -af
+
+# Improve message without confirmation
+autopr commit improve -f
+
+# For selective file commits in automation
+git add src/file1.js src/file2.js
+autopr commit -f
+```
 
 ### 8. Daily Commit Report (`daily-report`)
 

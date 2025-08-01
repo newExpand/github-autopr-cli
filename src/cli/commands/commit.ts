@@ -20,6 +20,7 @@ interface CommitOptions {
   selectPush?: boolean;
   selectpush?: boolean;
   "select-push"?: boolean;
+  force?: boolean;
 }
 
 async function stageChanges(options: CommitOptions): Promise<boolean> {
@@ -308,46 +309,48 @@ export async function commitCommand(
       log.verbose(commitMessage);
       log.section("-------------------");
 
-      // 사용자 확인
-      try {
-        const { useMessage } = await inquirer.prompt([
-          {
-            type: "confirm",
-            name: "useMessage",
-            message: t("commands.commit.prompts.use_message"),
-            default: true,
-          },
-        ]);
-
-        if (!useMessage) {
-          // 사용자가 메시지를 수정하고 싶은 경우
-          const { editedMessage } = await inquirer.prompt([
+      // 사용자 확인 (force 옵션이 없을 때만)
+      if (!options.force) {
+        try {
+          const { useMessage } = await inquirer.prompt([
             {
-              type: "editor",
-              name: "editedMessage",
-              message: t("commands.commit.prompts.edit_message"),
-              default: commitMessage,
+              type: "confirm",
+              name: "useMessage",
+              message: t("commands.commit.prompts.use_message"),
+              default: true,
             },
           ]);
-          commitMessage = editedMessage;
-        }
-      } catch (error) {
-        log.debug("프롬프트 처리 중 오류 발생:", error);
-        // 중단 신호로 인한 오류인 경우 프로세스 종료
-        if (
-          (error instanceof Error && error.message.includes("canceled")) ||
-          (error as any)?.name === "CancelError" ||
-          String(error).includes("User force closed")
-        ) {
+
+          if (!useMessage) {
+            // 사용자가 메시지를 수정하고 싶은 경우
+            const { editedMessage } = await inquirer.prompt([
+              {
+                type: "editor",
+                name: "editedMessage",
+                message: t("commands.commit.prompts.edit_message"),
+                default: commitMessage,
+              },
+            ]);
+            commitMessage = editedMessage;
+          }
+        } catch (error) {
+          log.debug("프롬프트 처리 중 오류 발생:", error);
+          // 중단 신호로 인한 오류인 경우 프로세스 종료
+          if (
+            (error instanceof Error && error.message.includes("canceled")) ||
+            (error as any)?.name === "CancelError" ||
+            String(error).includes("User force closed")
+          ) {
+            log.info(t("commands.commit.info.operation_cancelled"));
+            process.exit(0);
+          }
+          // 다른 종류의 오류도 작업 취소로 처리
           log.info(t("commands.commit.info.operation_cancelled"));
           process.exit(0);
         }
-        // 다른 종류의 오류도 작업 취소로 처리
-        log.info(t("commands.commit.info.operation_cancelled"));
-        process.exit(0);
       }
-    } else {
-      // AI 초기화에 실패했거나 메시지 생성에 실패한 경우: 직접 입력
+    } else if (!options.force) {
+      // AI 초기화에 실패했거나 메시지 생성에 실패한 경우: 직접 입력 (force 옵션이 없을 때만)
       try {
         const { editedMessage } = await inquirer.prompt([
           {
@@ -371,6 +374,14 @@ export async function commitCommand(
         // 다른 종류의 오류도 작업 취소로 처리
         log.info(t("commands.commit.info.operation_cancelled"));
         process.exit(0);
+      }
+    } else if (options.force && !commitMessage) {
+      // force 옵션이 있고 AI가 없는 경우 기본 메시지 생성
+      const changedFilesCount = changedFiles.length;
+      if (changedFilesCount === 1) {
+        commitMessage = `Update ${changedFiles[0]}`;
+      } else {
+        commitMessage = `Update ${changedFilesCount} files`;
       }
     }
 

@@ -73,6 +73,7 @@ async function main() {
         "-sp, --selectpush",
         t("commands.commit.options.select_with_push"),
       )
+      .option("-f, --force", t("commands.commit.options.force"))
       .addHelpText(
         "after",
         `
@@ -81,10 +82,13 @@ async function main() {
           $ autopr commit -a                 - ${t("commands.commit.help.all_with_push")}
           $ autopr commit -s                 - ${t("commands.commit.help.select")}
           $ autopr commit -sp                - ${t("commands.commit.help.select_with_push")}
+          $ autopr commit -f                 - ${t("commands.commit.help.force")}
+          $ autopr commit -af                - ${t("commands.commit.help.all_force")}
           $ autopr commit improve            - ${t("commands.commit.help.improve_last")}
           $ autopr commit improve "message"  - ${t("commands.commit.help.improve_message")}
           $ autopr commit improve -a         - ${t("commands.commit.help.improve_all_with_push")}
           $ autopr commit improve -sp        - ${t("commands.commit.help.improve_select_with_push")}
+          $ autopr commit improve -f         - ${t("commands.commit.help.improve_force")}
       `,
       )
       .action(commitCommand);

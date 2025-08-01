@@ -1,5 +1,14 @@
 # 변경 이력
 
+## 미출시
+
+- **새 기능: commit 명령어에 force 옵션 추가**
+  - AI 메시지 확인 프롬프트를 건너뛰는 `-f, --force` 옵션 추가
+  - AI CLI 도구(Claude Code, Gemini CLI 등)와의 원활한 통합 지원
+  - 유용한 조합: `autopr commit -f`, `autopr commit -af`, `autopr commit improve -f`
+  - 선택적 파일 커밋: `git add <파일>` 후 `autopr commit -f` 사용
+  - README에 사용 예시와 함께 문서화 업데이트
+
 ## 1.0.2
 
 - **PR 생성 전 원격 브랜치 자동 push 및 동기화 UX 개선**

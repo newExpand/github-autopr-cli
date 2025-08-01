@@ -166,11 +166,30 @@ autopr commit [improve] [메시지] [옵션]
 | `-p, --patch`    | 패치 모드(대화형, git add -p)             |
 | `-s, --select`   | 파일 선택 커밋                            |
 | `-sp, --selectpush` | 파일 선택 + push                        |
+| `-f, --force`    | 확인 프롬프트 건너뛰기 (자동화용)         |
 | `improve`        | 마지막 커밋 메시지 AI로 개선              |
 
 - 변경사항 스테이징/선택/패치/자동 커밋
 - AI가 커밋 메시지 제안/개선
 - 커밋 후 자동 push 및 PR 생성 안내
+- **Force 옵션 (`-f`)**: AI 메시지 확인 프롬프트를 건너뛰어 AI CLI 도구(Claude Code, Gemini CLI 등)와 함께 자동화 가능
+
+#### Force 옵션 사용 예시
+
+```bash
+# AI 메시지 생성 후 확인 없이 커밋
+autopr commit -f
+
+# 모든 파일을 스테이징하고 확인 없이 커밋
+autopr commit -af
+
+# 메시지 개선 후 확인 없이 커밋
+autopr commit improve -f
+
+# 자동화 환경에서 선택적 파일 커밋
+git add src/file1.js src/file2.js
+autopr commit -f
+```
 
 ### 8. 일일 커밋 리포트 (`daily-report`)
 
